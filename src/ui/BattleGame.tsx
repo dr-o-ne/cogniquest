@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
-import type { Exercise } from '@/core/exercises'
+import type { Exercise, MathOp } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
 import { availableMonsters, PLAYER_HEARTS, type Monster } from '@/game'
 import { t } from '@/locale'
@@ -287,6 +287,21 @@ function WinnerPopup({
   )
 }
 
+/**
+ * The sign as it is drawn. A real minus, not a hyphen — at this size the
+ * difference is plain to see.
+ */
+function sign(op: MathOp): string {
+  switch (op) {
+    case '+':
+      return '+'
+    case '-':
+      return '−'
+    default:
+      return assertNever(op, 'math operation')
+  }
+}
+
 function Expression({ exercise }: { exercise: Exercise }) {
   const prompt = exercise.prompt
 
@@ -299,9 +314,7 @@ function Expression({ exercise }: { exercise: Exercise }) {
         <div className={long ? 'expression expression--long' : 'expression'}>
           {prompt.terms.map((term, i) => (
             <Fragment key={i}>
-              {i > 0 && (
-                <span className="expression__op">{prompt.ops[i - 1] === '+' ? '+' : '−'}</span>
-              )}
+              {i > 0 && <span className="expression__op">{sign(prompt.ops[i - 1]!)}</span>}
               <span>{term}</span>
             </Fragment>
           ))}

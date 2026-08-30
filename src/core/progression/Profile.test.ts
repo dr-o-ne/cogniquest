@@ -11,7 +11,7 @@ function exercise(id: string, level = 1): Exercise {
     subject: 'math',
     level,
     prompt: { kind: 'arithmetic', terms: [8, 5], ops: ['+'] },
-    answer: new ArithmeticAnswer(13, { min: 0, max: 20 }),
+    answer: new ArithmeticAnswer(13, 20),
   }
 }
 

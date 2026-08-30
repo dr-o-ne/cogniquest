@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { MathOp } from '../exercises'
 import { createRandom } from '../random'
 import {
   createArithmeticExercise,
@@ -25,8 +26,8 @@ describe('generateProblem — rules that hold everywhere', () => {
 
       it('the answer stays inside the range the problem declares', () => {
         for (const p of problems) {
-          expect(p.answer).toBeGreaterThanOrEqual(p.range.min)
-          expect(p.answer).toBeLessThanOrEqual(p.range.max)
+          expect(p.answer).toBeGreaterThanOrEqual(0)
+          expect(p.answer).toBeLessThanOrEqual(p.heardUpTo)
         }
       })
 
@@ -243,6 +244,16 @@ describe('level 5 — a pair that makes ten', () => {
     it('the pair is worth spotting — it is not three small digits', () => {
       for (const p of added) expect(p.terms[0]! + p.terms[2]!).toBeGreaterThanOrEqual(20)
     })
+
+    it('at least two of the three carry tens', () => {
+      // «6 + 5 + 14» used to be one problem in ten here: the pair spanned
+      // twenty, but with a digit on one side and a digit in the middle the
+      // whole thing was lighter work than level 4.
+      for (const p of added) {
+        expect(p.terms[1]!).toBeGreaterThanOrEqual(10)
+        expect(p.terms.filter((term) => term >= 10).length).toBeGreaterThanOrEqual(2)
+      }
+    })
   })
 
   describe('taken away — «83 − 27 − 3»', () => {
@@ -251,6 +262,11 @@ describe('level 5 — a pair that makes ten', () => {
         expect(units(p.terms[1]!) + units(p.terms[2]!)).toBe(10)
         expect((p.terms[1]! + p.terms[2]!) % 10).toBe(0)
       }
+    })
+
+    it('what is taken away is worth combining', () => {
+      // Two single digits — «71 − 3 − 7» — save almost nothing when combined.
+      for (const p of taken) expect(p.terms[1]! + p.terms[2]!).toBeGreaterThanOrEqual(20)
     })
 
     it('there is always enough to take, and the trick is one step', () => {
@@ -276,6 +292,26 @@ describe('evaluate', () => {
     expect(evaluate([8, 3, 2], ['-', '+'])).toBe(7)
     expect(evaluate([2, 3, 4], ['+', '+'])).toBe(9)
     expect(evaluate([2, 3], ['+'])).toBe(5)
+  })
+
+  it('refuses a chain of the wrong shape instead of returning nonsense', () => {
+    // «8 +» used to evaluate to NaN, and NaN as an answer marks every reply
+    // the child gives as wrong, forever. Better to fall over at the seam.
+    expect(() => evaluate([8], ['+'])).toThrow(RangeError)
+    expect(() => evaluate([1, 2, 3], ['+'])).toThrow(RangeError)
+    expect(() => evaluate([], [])).toThrow(RangeError)
+    expect(() => evaluate([5], [])).not.toThrow()
+  })
+
+  it('a lone number is a chain of one and evaluates to itself', () => {
+    expect(evaluate([5], [])).toBe(5)
+  })
+
+  it('refuses an operation it has never heard of', () => {
+    // The compiler stops this at the three places that branch on MathOp; the
+    // cast is here to prove the runtime does not shrug either. Treating an
+    // unknown sign as a minus would be the quiet kind of wrong.
+    expect(() => evaluate([6, 7], ['×' as MathOp])).toThrow()
   })
 })
 
@@ -323,10 +359,10 @@ describe('createArithmeticExercise', () => {
     // The point of the whole arrangement: a level says how hard, the generator
     // says what may be heard. A second kind of task will declare something else
     // entirely, and nothing here has to know about it.
-    expect(sample(1)[0]!.range).toEqual({ min: 0, max: 10 })
-    expect(sample(2)[0]!.range).toEqual({ min: 0, max: 20 })
+    expect(sample(1)[0]!.heardUpTo).toBe(10)
+    expect(sample(2)[0]!.heardUpTo).toBe(20)
     for (const level of [3, 4, 5]) {
-      expect(sample(level)[0]!.range).toEqual({ min: 0, max: 100 })
+      expect(sample(level)[0]!.heardUpTo).toBe(100)
     }
   })
 

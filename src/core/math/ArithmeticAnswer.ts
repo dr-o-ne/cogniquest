@@ -1,5 +1,5 @@
 import type { AnswerAttempt, AnswerSpec, Verdict, VoiceAnswerable } from '../exercises'
-import { numberGrammar, parseNumber } from './numerals'
+import { MIN_NUMBER, numberGrammar, parseNumber } from './numerals'
 
 /**
  * Checking a numeric answer. Answerable by voice too (A5): the exercise hands
@@ -9,13 +9,19 @@ export class ArithmeticAnswer implements AnswerSpec, VoiceAnswerable {
   readonly kind = 'number'
   readonly grammar: readonly string[]
 
+  /**
+   * @param heardUpTo the highest number the child might say here. There is no
+   * matching lower bound and there must not be one: the grammar always starts
+   * at zero, because a child can always name something smaller than the right
+   * answer, and hearing them be wrong is the entire point of T16. A grammar
+   * narrowed towards the correct answer makes Vosk hear that answer in any
+   * sound at all, and the child is then right no matter what they said.
+   */
   constructor(
     readonly value: number,
-    range: { readonly min: number; readonly max: number },
+    heardUpTo: number,
   ) {
-    // The whole range of the level, not just the correct answer (T16):
-    // otherwise Vosk «hears» the one word on the list in any sound at all.
-    this.grammar = numberGrammar(range.min, range.max)
+    this.grammar = numberGrammar(MIN_NUMBER, heardUpTo)
   }
 
   check(attempt: AnswerAttempt): Verdict {

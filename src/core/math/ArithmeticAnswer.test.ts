@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { ArithmeticAnswer } from './ArithmeticAnswer'
 
-const range = { min: 0, max: 20 }
+const heardUpTo = 20
 
 describe('ArithmeticAnswer', () => {
-  const answer = new ArithmeticAnswer(5, range)
+  const answer = new ArithmeticAnswer(5, heardUpTo)
 
   it('checks a number', () => {
     expect(answer.check({ kind: 'number', value: 5 })).toBe('correct')
@@ -18,10 +18,10 @@ describe('ArithmeticAnswer', () => {
   })
 
   it('compound numerals', () => {
-    const seventeen = new ArithmeticAnswer(17, range)
+    const seventeen = new ArithmeticAnswer(17, heardUpTo)
     expect(seventeen.check({ kind: 'text', value: 'семнадцать' })).toBe('correct')
 
-    const fortySeven = new ArithmeticAnswer(47, { min: 0, max: 100 })
+    const fortySeven = new ArithmeticAnswer(47, 100)
     expect(fortySeven.check({ kind: 'text', value: 'сорок семь' })).toBe('correct')
   })
 
@@ -55,7 +55,25 @@ describe('ArithmeticAnswer', () => {
     })
 
     it('a range up to a hundred is a hundred and one phrases', () => {
-      expect(new ArithmeticAnswer(47, { min: 0, max: 100 }).grammar).toHaveLength(101)
+      expect(new ArithmeticAnswer(47, 100).grammar).toHaveLength(101)
+    })
+
+    it('always starts at zero, wherever the answer sits', () => {
+      // There is no lower bound to pass and there must not be one. Narrowing
+      // the grammar towards the answer looks like an optimisation and is the
+      // trap T16 exists to name: with a short list Vosk hears the answer in
+      // any sound at all, the child is right whatever they said, and the game
+      // stops teaching.
+      for (const [value, top] of [
+        [0, 10],
+        [5, 10],
+        [47, 100],
+        [100, 100],
+      ] as const) {
+        const grammar = new ArithmeticAnswer(value, top).grammar
+        expect(grammar[0]).toBe('ноль')
+        expect(grammar).toHaveLength(top + 1)
+      }
     })
   })
 })

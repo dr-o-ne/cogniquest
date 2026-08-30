@@ -1,4 +1,5 @@
 import type { Exercise, MathOp } from '../exercises'
+import { assertNever } from '../exhaustive'
 import { randomInt, type Random } from '../random'
 import { ArithmeticAnswer } from './ArithmeticAnswer'
 
@@ -7,27 +8,73 @@ export interface ArithmeticProblem {
   readonly ops: readonly MathOp[]
   readonly answer: number
   /**
-   * Everything the child might plausibly say here, correct or not. The
-   * recognition grammar is built from the whole of it (T16), and it travels
-   * with the problem rather than being looked up by level number — a level
-   * means «how hard», and only the generator knows what its answers can be.
+   * The highest number the child might plausibly say here, right or wrong.
+   * The recognition grammar spans zero to this (T16), and it travels with the
+   * problem rather than being looked up by level number — a level means «how
+   * hard», and only the generator knows what its answers can be.
+   *
+   * Deliberately not a pair of bounds. The bottom is always zero, so storing
+   * it would only offer a later reader the chance to raise it and quietly
+   * hand every answer to the child.
    */
-  readonly range: { readonly min: number; readonly max: number }
+  readonly heardUpTo: number
 }
 
-/** Evaluates a chain left to right: 8 − 3 + 2 = 7. */
+/**
+ * Evaluates a chain left to right: 8 − 3 + 2 = 7.
+ *
+ * The shape is checked rather than assumed. A chain one number short used to
+ * add `undefined` and hand back NaN without a word, and NaN does not stay
+ * quiet for long in a useful way: as an answer it makes `check` compare
+ * against NaN, which is false for every number, so the child answers
+ * correctly and is marked wrong every single time, with no way to win. The
+ * other path reaches `numberToWords`, which throws deep inside the battle
+ * loop, far from whatever built the chain.
+ *
+ * Both are programming errors rather than anything a child can cause, so the
+ * place to notice them is here, loudly, at the seam they come through.
+ */
 export function evaluate(terms: readonly number[], ops: readonly MathOp[]): number {
-  let total = terms[0] ?? 0
+  if (terms.length !== ops.length + 1) {
+    throw new RangeError(
+      `A chain has one operation fewer than it has numbers, but got ${terms.length} numbers and ${ops.length} operations`,
+    )
+  }
+
+  let total = terms[0]!
   for (let i = 0; i < ops.length; i++) {
-    total = ops[i] === '+' ? total + terms[i + 1]! : total - terms[i + 1]!
+    const term = terms[i + 1]!
+    const op = ops[i]!
+
+    switch (op) {
+      case '+':
+        total += term
+        break
+      case '-':
+        total -= term
+        break
+      default:
+        // Not «everything that is not a plus is a minus»: the day MathOp grows
+        // a multiplication, this must fail to compile rather than quietly
+        // subtract.
+        assertNever(op, 'math operation')
+    }
   }
   return total
 }
 
 /**
- * Problems are built straight to the rule of the level, never «generate and
- * check». That way the generator cannot spin forever and always lands inside
- * the rule (C1).
+ * Problems are built to the rule of the level, never «generate and check»:
+ * nothing is made at random and then thrown away, so the generator cannot spin
+ * and always lands inside the rule (C1).
+ *
+ * Two of them — level 3 subtraction and level 5 addition — enumerate the legal
+ * choices and draw one. That is a third thing, neither retrying nor building
+ * digit by digit, and it keeps what the rule above is for: the work is bounded
+ * (a hundred steps at worst, once per task), the draw is uniform, and no
+ * problem is ever created only to be rejected. Index arithmetic over a
+ * rectangle with two corners missing would avoid the list and read far worse;
+ * speed is not the constraint at one task per ten seconds of a child's time.
  *
  * Every second operand is at least one: «7 + 0» teaches nothing.
  *
@@ -69,7 +116,7 @@ export function createArithmeticExercise(levelId: number, random: Random): Exerc
     subject: 'math',
     level: levelId,
     prompt: { kind: 'arithmetic', terms: problem.terms, ops: problem.ops },
-    answer: new ArithmeticAnswer(problem.answer, problem.range),
+    answer: new ArithmeticAnswer(problem.answer, problem.heardUpTo),
   }
 }
 
@@ -91,7 +138,7 @@ function problem(
   ops: readonly MathOp[],
   ceiling: number,
 ): ArithmeticProblem {
-  return { terms, ops, answer: evaluate(terms, ops), range: { min: 0, max: ceiling } }
+  return { terms, ops, answer: evaluate(terms, ops), heardUpTo: ceiling }
 }
 
 /**
@@ -102,9 +149,16 @@ function problem(
  * beside it. Level 3 rules this out on purpose; here it is compulsory.
  */
 function addAcrossPlace(random: Random): ArithmeticProblem {
-  // Units are picked to overflow, tens to leave room for the ten that arrives.
+  // The units must overflow: leftUnits + rightUnits >= 10, so the second one
+  // starts at 10 - leftUnits. That floor is never above 9, so there is always
+  // something left to draw.
   const leftUnits = randomInt(random, 1, 9)
   const rightUnits = randomInt(random, 10 - leftUnits, 9)
+
+  // The tens then have to hold the ten that arrives from below:
+  //   leftTens + rightTens + 1 <= 9,  hence  rightTens <= 8 - leftTens.
+  // Which also keeps the sum under a hundred — 98 at the very most, since the
+  // units can carry at most 18 and leave 8 behind.
   const leftTens = randomInt(random, 1, 8)
   const rightTens = randomInt(random, 0, 8 - leftTens)
 
@@ -119,10 +173,15 @@ function addAcrossPlace(random: Random): ArithmeticProblem {
  * same borrowing happens under twenty.
  */
 function subtractAcrossPlace(random: Random): ArithmeticProblem {
+  // The borrow is forced by making the units below strictly larger:
+  //   rightUnits > leftUnits,  so leftUnits stops at 8 and leaves room for it.
   const leftUnits = randomInt(random, 0, 8)
   const rightUnits = randomInt(random, leftUnits + 1, 9)
+
+  // One ten is then broken open for the units, so the subtrahend has to leave
+  // it there:  rightTens <= leftTens - 1,  and the answer never goes negative.
+  // Two tens at least up top, or this would be level 2 wearing another name.
   const leftTens = randomInt(random, 2, 9)
-  // One ten goes to the units, so the subtrahend must leave at least that.
   const rightTens = randomInt(random, 0, leftTens - 1)
 
   return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['-'], 100)
@@ -178,11 +237,22 @@ function addWithCarry(random: Random): ArithmeticProblem {
   return problem([left, right], ['+'], 20)
 }
 
-/** Level 2: the units fall short, so a ten has to be borrowed — 13 − 6. */
+/**
+ * Level 2: the units fall short, so a ten has to be broken open — «13 − 6».
+ *
+ * Read from the minuend downwards: a number in the teens, and something larger
+ * than its units taken from it. The units stop at 8 because a 9 would leave
+ * the subtrahend nowhere to sit — it has to fit in [leftUnits + 1, 9].
+ *
+ * An earlier version worked backwards from the answer instead. It reached
+ * exactly the same problems, verified by enumeration, and said far less about
+ * why they look the way they do.
+ */
 function subtractWithBorrow(random: Random): ArithmeticProblem {
-  const right = randomInt(random, 2, 9)
-  const answer = randomInt(random, 11 - right, 9)
-  return problem([answer + right, right], ['-'], 20)
+  const leftUnits = randomInt(random, 1, 8)
+  const right = randomInt(random, leftUnits + 1, 9)
+
+  return problem([10 + leftUnits, right], ['-'], 20)
 }
 
 /**
@@ -227,30 +297,41 @@ function subtractByPlace(random: Random): ArithmeticProblem {
  * Level 5: three numbers, two of them with units that complete each other to
  * ten, and those two are kept apart — «47 + 19 + 3».
  *
- * Head-on this is level 4 twice over: three two-digit numbers with a carry at
- * every step. Notice that 47 and 3 make 50 and it turns into one easy sum.
+ * Head-on this is level 4 twice over: carrying at every step. Notice that 47
+ * and 3 make 50 and it turns into one easy sum.
  *
- * The size of the numbers is the point, not an accident. An earlier version
- * built this rung out of digits — «7 + 8 + 3» — and it came out easier than
- * level 4, because a trick that shortens an easy sum saves nothing. A rung
- * where insight is the difficulty still has to sit above the one below it.
+ * At least two of the three numbers carry tens — the middle one always, and
+ * one of the pair. The third may be a digit, as the 3 is here: spotting a pair
+ * across a two-digit number is the skill, and it does not need both halves to
+ * be large.
+ *
+ * The size is the point, not an accident. An earlier version built this rung
+ * out of digits — «7 + 8 + 3» — and it came out easier than level 4, because a
+ * trick that shortens an easy sum saves nothing. Even after that was fixed at
+ * the level, one problem in ten still slipped through with a single two-digit
+ * number in it: «6 + 5 + 14». A rung where insight is the difficulty still has
+ * to sit above the one below it, problem by problem and not just on average.
  */
 function addWithGrouping(random: Random): ArithmeticProblem {
   const leftUnits = randomInt(random, 1, 9)
   const rightUnits = 10 - leftUnits
 
-  // At least one of the pair carries tens: a trick that shortens «7 + 8 + 3»
-  // saves nothing, because the long way round was easy anyway.
+  // The pair spans at least twenty, so at least one of the two carries tens.
+  // Not necessarily both — «7 + 42 + 13» still asks the child to spot a pair
+  // across a two-digit number — but a trick that shortens «7 + 8 + 3» saves
+  // nothing, because the long way round was easy anyway.
   const tensTogether = randomInt(random, 1, 8)
   const leftTens = randomInt(random, 0, tensTogether)
   const left = leftTens * 10 + leftUnits
   const right = (tensTogether - leftTens) * 10 + rightUnits
 
   // The term in between must not complete a ten with either of the pair —
-  // a second pair on the board would hand the trick away.
+  // a second pair on the board would hand the trick away. It also carries
+  // tens of its own: with «6 + 5 + 14» there is nothing much to save, and
+  // three small numbers on the top rung are easier than the rung below.
   const pair = left + right
   const candidates: number[] = []
-  for (let n = 1; n <= 100 - pair; n++) {
+  for (let n = 10; n <= 100 - pair; n++) {
     const digit = n % 10
     if (digit !== leftUnits && digit !== rightUnits) candidates.push(n)
   }
@@ -274,7 +355,9 @@ function subtractWithGrouping(random: Random): ArithmeticProblem {
   const firstUnits = randomInt(random, 1, 9)
   const secondUnits = 10 - firstUnits
 
-  const tensTogether = randomInt(random, 0, 8)
+  // As with the addition: what is taken away has to be worth combining, so the
+  // two subtrahends span at least twenty between them.
+  const tensTogether = randomInt(random, 1, 8)
   const firstTens = randomInt(random, 0, tensTogether)
   const first = firstTens * 10 + firstUnits
   const second = (tensTogether - firstTens) * 10 + secondUnits

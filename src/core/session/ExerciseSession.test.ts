@@ -10,7 +10,7 @@ function exercise(answer: number): Exercise {
     subject: 'math',
     level: 1,
     prompt: { kind: 'arithmetic', terms: [answer, 0], ops: ['+'] },
-    answer: new ArithmeticAnswer(answer, { min: 0, max: 10 }),
+    answer: new ArithmeticAnswer(answer, 10),
   }
 }
 

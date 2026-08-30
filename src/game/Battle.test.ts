@@ -18,7 +18,7 @@ const exercise: Exercise = {
   subject: 'math',
   level: 1,
   prompt: { kind: 'arithmetic', terms: [2, 3], ops: ['+'] },
-  answer: new ArithmeticAnswer(5, { min: 0, max: 10 }),
+  answer: new ArithmeticAnswer(5, 10),
 }
 
 function answer(verdict: AnswerResult['verdict']): AnswerResult {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { AnswerAttempt, Exercise, Verdict } from '@/core/exercises'
+import type { AnswerAttempt, Exercise, MathOp, Verdict } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
 import { createArithmeticExercise, evaluate, numberToWords } from '@/core/math'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
@@ -55,6 +55,22 @@ function deferred<T>() {
   return { promise, resolve }
 }
 
+/**
+ * The sign as the teacher says it. Worth an exhaustive switch of its own: a
+ * new operation falling through to «минус» would have the child hear one thing
+ * while the game counts another.
+ */
+function spoken(op: MathOp): string {
+  switch (op) {
+    case '+':
+      return t.teacher.plus
+    case '-':
+      return t.teacher.minus
+    default:
+      return assertNever(op, 'math operation')
+  }
+}
+
 /** The problem as the teacher says it out loud (T12). */
 function questionText(exercise: Exercise): string {
   const prompt = exercise.prompt
@@ -63,8 +79,7 @@ function questionText(exercise: Exercise): string {
     case 'arithmetic':
       return prompt.terms.reduce((text, term, i) => {
         if (i === 0) return numberToWords(term)
-        const action = prompt.ops[i - 1] === '+' ? t.teacher.plus : t.teacher.minus
-        return `${text} ${action} ${numberToWords(term)}`
+        return `${text} ${spoken(prompt.ops[i - 1]!)} ${numberToWords(term)}`
       }, '')
 
     // «Read aloud» works only if the child does the reading. Saying the word
