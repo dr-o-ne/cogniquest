@@ -97,6 +97,7 @@ const BY_LEVEL: Record<number, { hearts: number; levels: number[]; color: string
 
 const IMAGES: Record<string, string> = {
   'forest-fairy': '/monsters/fairy.webp',
+  skeleton: '/monsters/skeleton.webp',
   'skeleton-archer': '/monsters/skeleton-archer.webp',
   goblin: '/monsters/goblin.webp',
   zombie: '/monsters/zombie.webp',
@@ -119,6 +120,7 @@ const IMAGES: Record<string, string> = {
 const TUNING: Record<string, { hearts?: number; levels?: number[]; avatar?: string }> = {
   // The fairy has no stats, so her hearts are set by hand
   'forest-fairy': { hearts: 8, avatar: '🧚' },
+  skeleton: { avatar: '💀' },
   'skeleton-archer': { avatar: '💀' },
   goblin: { avatar: '👺' },
   zombie: { avatar: '🧟' },
