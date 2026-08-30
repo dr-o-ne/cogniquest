@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AnswerAttempt, Exercise } from '@/core/exercises'
+import { assertNever } from '@/core/exhaustive'
 import { createArithmeticExercise, evaluate, numberToWords } from '@/core/math'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
 import { pick, systemRandom } from '@/core/random'
@@ -57,19 +58,44 @@ function deferred<T>() {
 /** The problem as the teacher says it out loud (T12). */
 function questionText(exercise: Exercise): string {
   const prompt = exercise.prompt
-  if (prompt.kind !== 'arithmetic') return ''
 
-  return prompt.terms.reduce((text, term, i) => {
-    if (i === 0) return numberToWords(term)
-    const action = prompt.ops[i - 1] === '+' ? t.teacher.plus : t.teacher.minus
-    return `${text} ${action} ${numberToWords(term)}`
-  }, '')
+  switch (prompt.kind) {
+    case 'arithmetic':
+      return prompt.terms.reduce((text, term, i) => {
+        if (i === 0) return numberToWords(term)
+        const action = prompt.ops[i - 1] === '+' ? t.teacher.plus : t.teacher.minus
+        return `${text} ${action} ${numberToWords(term)}`
+      }, '')
+
+    // «Read aloud» works only if the child does the reading. Saying the word
+    // first would do the exercise for them, so the teacher stays quiet.
+    case 'syllables':
+      return ''
+
+    // This prompt is nothing but speech — it never appears on screen.
+    case 'spoken':
+      return prompt.text
+
+    default:
+      return assertNever(prompt, 'exercise prompt')
+  }
 }
 
 function correctAnswerOf(exercise: Exercise): number | null {
   const prompt = exercise.prompt
-  if (prompt.kind !== 'arithmetic') return null
-  return evaluate(prompt.terms, prompt.ops)
+
+  switch (prompt.kind) {
+    case 'arithmetic':
+      return evaluate(prompt.terms, prompt.ops)
+
+    // Nothing numeric to announce: the teacher does not read the answer out.
+    case 'syllables':
+    case 'spoken':
+      return null
+
+    default:
+      return assertNever(prompt, 'exercise prompt')
+  }
 }
 
 const initial: GameState = {

@@ -1,4 +1,5 @@
 export * from './exercises'
+export * from './exhaustive'
 export * from './session'
 export * from './ports'
 export * from './progression'

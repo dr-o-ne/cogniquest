@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import type { Exercise } from '@/core/exercises'
+import { assertNever } from '@/core/exhaustive'
 import { availableMonsters, PLAYER_HEARTS, type Monster } from '@/game'
 import { t } from '@/locale'
 import { MonsterAvatar } from './MonsterAvatar'
@@ -288,21 +289,36 @@ function WinnerPopup({
 
 function Expression({ exercise }: { exercise: Exercise }) {
   const prompt = exercise.prompt
-  if (prompt.kind !== 'arithmetic') return null
 
-  // A long chain is set smaller, or «8 − 3 + 2» will not fit a narrow window.
-  const long = prompt.terms.length > 2
+  switch (prompt.kind) {
+    case 'arithmetic': {
+      // A long chain is set smaller, or «8 − 3 + 2» will not fit a narrow window.
+      const long = prompt.terms.length > 2
 
-  return (
-    <div className={long ? 'expression expression--long' : 'expression'}>
-      {prompt.terms.map((term, i) => (
-        <Fragment key={i}>
-          {i > 0 && <span className="expression__op">{prompt.ops[i - 1] === '+' ? '+' : '−'}</span>}
-          <span>{term}</span>
-        </Fragment>
-      ))}
-    </div>
-  )
+      return (
+        <div className={long ? 'expression expression--long' : 'expression'}>
+          {prompt.terms.map((term, i) => (
+            <Fragment key={i}>
+              {i > 0 && (
+                <span className="expression__op">{prompt.ops[i - 1] === '+' ? '+' : '−'}</span>
+              )}
+              <span>{term}</span>
+            </Fragment>
+          ))}
+        </div>
+      )
+    }
+
+    // Reading (C2) arrives in phase 4 with a screen of its own. Showing nothing
+    // here is deliberate, not an oversight — and it is written down as a case
+    // so that a genuinely new kind of prompt cannot slip through unnoticed.
+    case 'syllables':
+    case 'spoken':
+      return null
+
+    default:
+      return assertNever(prompt, 'exercise prompt')
+  }
 }
 
 function MicState({ state }: { state: GameState }) {
