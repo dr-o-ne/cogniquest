@@ -225,6 +225,9 @@ const ROSTER: readonly Row[] = [
   ['rotting-zombie', 2, 40, 13, 15, 1, 2, 48, '5–6'],
   ['ghost', 3, 80, 18, 13, 4, 4, 40, '4–8'],
   ['cursed-ghost', 3, 130, 21, 17, 6, 4, 60, '6–9'],
+  // Undead by race, whatever the name suggests — hence filed here and not
+  // beside the living pirate.
+  ['ghost-pirate', 3, 50, 12, 6, 4, 3, 25, '4–6'],
   ['vampire', 3, 80, 20, 20, 5, 2, 70, '6–12'],
   ['ancient-vampire', 4, 180, 25, 25, 6, 2, 140, '10–18'],
   ['vampire-bat', 3, 80, 20, 15, 6, 4, 50, '5–8'],
@@ -260,10 +263,6 @@ const ROSTER: readonly Row[] = [
   ['ice-ball', 1, 5, 10, 40, 2, 2, 10, '10–15'],
   ['sea-devil', 1, 12, 6, 4, 7, 3, 10, '1–3'],
   ['pirate', 2, 25, 8, 4, 5, 3, 25, '3–5'],
-  // Stats unknown — not in the table we were given. Level 3 is a judgement,
-  // not a reading: it puts him a step above the ordinary pirate, which is what
-  // a ghost version of anything ought to be. Fill in the row to correct it.
-  ['ghost-pirate', 3],
 
   // Lizards
   ['lizardman', 1, 15, 7, 1, 7, 3, 6, '1–2'],
