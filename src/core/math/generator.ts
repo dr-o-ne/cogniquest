@@ -186,25 +186,40 @@ function subtractByPlace(random: Random): ArithmeticProblem {
 }
 
 /**
- * Level 5: two of the three terms make a round ten, and they are deliberately
- * kept apart — «7 + 8 + 3».
+ * Level 5: three numbers, two of them with units that complete each other to
+ * ten, and those two are kept apart — «47 + 19 + 3».
  *
- * Head-on it is three additions across the ten. Spot that 7 and 3 make ten and
- * it collapses into one. The difficulty is in seeing the pair, not in the size
- * of the numbers, which is what makes it the olympiad-flavoured step.
+ * Head-on this is level 4 twice over: three two-digit numbers with a carry at
+ * every step. Notice that 47 and 3 make 50 and it turns into one easy sum.
+ *
+ * The size of the numbers is the point, not an accident. An earlier version
+ * built this rung out of digits — «7 + 8 + 3» — and it came out easier than
+ * level 4, because a trick that shortens an easy sum saves nothing. A rung
+ * where insight is the difficulty still has to sit above the one below it.
  */
 function addWithGrouping(random: Random): ArithmeticProblem {
-  const first = randomInt(random, 1, 9)
-  const partner = 10 - first
+  const leftUnits = randomInt(random, 1, 9)
+  const rightUnits = 10 - leftUnits
 
-  // The third term is either a digit or a round ten, so totals run 11 to 90.
-  // A digit that would make ten with either neighbour is excluded: that would
-  // put a second, adjacent pair on the board and hand the trick away.
-  const digits = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter((d) => d !== first && d !== partner)
-  const other =
-    random() < 0.5 ? digits[randomInt(random, 0, digits.length - 1)]! : randomInt(random, 1, 8) * 10
+  // At least one of the pair carries tens: a trick that shortens «7 + 8 + 3»
+  // saves nothing, because the long way round was easy anyway.
+  const tensTogether = randomInt(random, 1, 8)
+  const leftTens = randomInt(random, 0, tensTogether)
+  const left = leftTens * 10 + leftUnits
+  const right = (tensTogether - leftTens) * 10 + rightUnits
+
+  // The term in between must not complete a ten with either of the pair —
+  // a second pair on the board would hand the trick away.
+  const pair = left + right
+  const candidates: number[] = []
+  for (let n = 1; n <= 100 - pair; n++) {
+    const digit = n % 10
+    if (digit !== leftUnits && digit !== rightUnits) candidates.push(n)
+  }
+  const other = candidates[randomInt(random, 0, candidates.length - 1)]!
+
   // The pair straddles the odd term; side by side there would be nothing to spot.
-  const terms = random() < 0.5 ? [first, other, partner] : [partner, other, first]
+  const terms = random() < 0.5 ? [left, other, right] : [right, other, left]
 
   return problem(terms, ['+', '+'], 100)
 }
@@ -212,17 +227,22 @@ function addWithGrouping(random: Random): ArithmeticProblem {
 /**
  * Level 5 read backwards: two subtractions that are really one.
  *
- * «50 − 7 − 3» can be taken one step at a time, or the seven and the three can
- * be seen to make ten and taken in a single move. Here the pair stands
- * together on purpose — combining two subtractions is the whole insight, and
- * there is nothing to gain by hiding them from each other.
+ * «83 − 27 − 3» can be taken one step at a time, both times across the place,
+ * or the 27 and the 3 can be seen to make 30 and taken in a single move. Here
+ * the pair stands together on purpose — combining two subtractions is the
+ * whole insight, and there is nothing to gain by hiding them from each other.
  */
 function subtractWithGrouping(random: Random): ArithmeticProblem {
-  const first = randomInt(random, 1, 9)
-  const partner = 10 - first
-  // Round numbers make the trick worth spotting; the rest keep it from
-  // becoming a pattern the child answers without looking.
-  const total = random() < 0.5 ? randomInt(random, 1, 9) * 10 : randomInt(random, 10, 99)
+  const firstUnits = randomInt(random, 1, 9)
+  const secondUnits = 10 - firstUnits
 
-  return problem([total, first, partner], ['-', '-'], 100)
+  const tensTogether = randomInt(random, 0, 8)
+  const firstTens = randomInt(random, 0, tensTogether)
+  const first = firstTens * 10 + firstUnits
+  const second = (tensTogether - firstTens) * 10 + secondUnits
+
+  const taken = first + second
+  const total = randomInt(random, taken, 99)
+
+  return problem([total, first, second], ['-', '-'], 100)
 }

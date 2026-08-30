@@ -78,18 +78,26 @@ Generators live in `src/core/math/generator.ts`, the level table in
 | 2 | two numbers, the ten **has** to be crossed | 0–20 | `8+5`, `13−6` |
 | 3 | up to a hundred, digit by digit, nothing carried | 0–100 | `45+20`, `68−14` |
 | 4 | two-digit, the units overflow | 0–100 | `19+32`, `70−26` |
-| 5 | three numbers where a pair makes ten | 0–100 | `7+8+3`, `50−7−3` |
+| 5 | three numbers where a pair makes a round one | 0–100 | `47+19+3`, `83−27−3` |
 
 Each step adds exactly one new difficulty: size, then place value, then
 carrying, and finally a trick rather than a size. Levels 3 and 4 are a pair —
 one forbids carrying, the other insists on it — which is what makes carrying a
 rung of its own rather than something the child meets by accident.
 
-Level 5 is the olympiad-flavoured one. Head-on it is three operations across
-the ten; spot that 7 and 3 make ten and it collapses into one. In the addition
-form the pair is deliberately kept apart and no second pair may form with a
-neighbour; in the subtraction form the two subtrahends stand together, because
-combining them *is* the insight.
+Level 5 is the olympiad-flavoured one. Head-on it is level 4 twice over —
+three two-digit numbers, a carry at every step; spot that 47 and 3 make 50 and
+it turns into one easy sum. In the addition form the pair is kept apart and no
+second pair may form with the term between them; in the subtraction form the
+two subtrahends stand together, because combining them *is* the insight.
+
+**The numbers there are big on purpose.** An earlier version of this rung was
+built out of digits — `7 + 8 + 3` — and came out *easier* than level 4, since
+a trick that shortens an easy sum saves nothing. That was not only a
+pedagogical wrinkle: with a monster drawing from levels 4 and 5, easing the
+difficulty down (**C4**) would have handed the child harder work, which is the
+exact opposite of what that mechanism is for. A rung whose difficulty is
+insight still has to sit above the one below it.
 
 Round tens are no longer a level of their own: `30+40` is the case of level 3
 where both units happen to be zero, not a separate skill.

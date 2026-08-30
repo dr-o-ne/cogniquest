@@ -169,37 +169,49 @@ describe('level 5 — a pair that makes ten', () => {
     }
   })
 
-  describe('added — «7 + 8 + 3»', () => {
-    it('the outer two always make ten', () => {
-      for (const p of added) expect(p.terms[0]! + p.terms[2]!).toBe(10)
+  describe('added — «47 + 19 + 3»', () => {
+    it('the outer two make a round number', () => {
+      for (const p of added) {
+        expect(units(p.terms[0]!) + units(p.terms[2]!)).toBe(10)
+        expect((p.terms[0]! + p.terms[2]!) % 10).toBe(0)
+      }
     })
 
     it('the pair is never adjacent — otherwise there is nothing to spot', () => {
       for (const p of added) {
-        expect(p.terms[0]! + p.terms[1]!).not.toBe(10)
-        expect(p.terms[1]! + p.terms[2]!).not.toBe(10)
+        expect(units(p.terms[0]!) + units(p.terms[1]!)).not.toBe(10)
+        expect(units(p.terms[1]!) + units(p.terms[2]!)).not.toBe(10)
       }
     })
 
-    it('the odd term is a digit or a round ten', () => {
-      for (const p of added) {
-        const other = p.terms[1]!
-        expect(other <= 9 || other % 10 === 0).toBe(true)
+    it('the pair is worth spotting — it is not three small digits', () => {
+      for (const p of added) expect(p.terms[0]! + p.terms[2]!).toBeGreaterThanOrEqual(20)
+    })
+  })
+
+  describe('taken away — «83 − 27 − 3»', () => {
+    it('the two subtrahends make a round number', () => {
+      for (const p of taken) {
+        expect(units(p.terms[1]!) + units(p.terms[2]!)).toBe(10)
+        expect((p.terms[1]! + p.terms[2]!) % 10).toBe(0)
+      }
+    })
+
+    it('there is always enough to take, and the trick is one step', () => {
+      for (const p of taken) {
+        expect(p.terms[0]!).toBeGreaterThanOrEqual(p.terms[1]! + p.terms[2]!)
+        expect(p.answer).toBe(p.terms[0]! - (p.terms[1]! + p.terms[2]!))
       }
     })
   })
 
-  describe('taken away — «50 − 7 − 3»', () => {
-    it('the two subtrahends make ten', () => {
-      for (const p of taken) expect(p.terms[1]! + p.terms[2]!).toBe(10)
-    })
-
-    it('there is always a ten to take', () => {
-      for (const p of taken) {
-        expect(p.terms[0]!).toBeGreaterThanOrEqual(10)
-        expect(p.answer).toBe(p.terms[0]! - 10)
-      }
-    })
+  it('level 5 asks more of the child than level 4, not less', () => {
+    // The rung this replaced was built from digits and came out easier than
+    // level 4. Three terms and a two-digit sum is the floor now.
+    for (const p of problems) {
+      expect(p.terms).toHaveLength(3)
+      expect(Math.max(...p.terms)).toBeGreaterThanOrEqual(10)
+    }
   })
 })
 
