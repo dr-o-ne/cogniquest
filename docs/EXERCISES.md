@@ -78,7 +78,7 @@ Generators live in `src/core/math/generator.ts`, the level table in
 | 2 | two numbers, the ten **has** to be crossed | 0–20 | `8+5`, `13−6` |
 | 3 | up to a hundred, digit by digit, nothing carried | 0–100 | `45+20`, `68−14` |
 | 4 | three numbers, still one place per step | 0–100 | `35+4+20`, `88−60−2` |
-| 5 | three numbers where a pair makes ten | 0–100 | `7+8+3` |
+| 5 | three numbers where a pair makes ten | 0–100 | `7+8+3`, `50−7−3` |
 
 Each step adds exactly one new difficulty: size, then place value, then how
 many numbers, and finally a trick rather than a size. Level 5 is the
@@ -115,12 +115,13 @@ Second operands are never zero: «7 + 0» teaches nothing.
 The target: sixteen types across five levels. Types are added one at a time and
 ticked off here as they land.
 
-✅ playable · ☐ not written · ✖ outside the current answer model
+✅ playable · ☐ not written · ✖ outside the current answer model ·
+— the grid does not ask for this cell
 
 | Type | 1 | 2 | 3 | 4 | 5 |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Subtraction | ✅ | ✅ | ✅ | ✅ | — |
+| Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ☐ |
 | Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -138,8 +139,8 @@ ticked off here as they land.
 
 Addition and subtraction now run the full ladder, and they run it together:
 one level table serves both, so redefining a level moves the pair of them at
-once. Level 5 is addition only — a subtraction in the middle would destroy the
-pair that makes ten.
+once. That includes level 5, where the trick simply reads backwards —
+`7 + 8 + 3` finds a pair that makes ten, `50 − 7 − 3` takes one away.
 
 **Two places where our ladder is not the grid's.** The grid asks for three
 numbers at level 3; we put two-digit-without-carrying there and moved three

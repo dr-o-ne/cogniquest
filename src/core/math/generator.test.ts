@@ -50,9 +50,7 @@ describe('generateProblem — rules that hold everywhere', () => {
     })
   }
 
-  // Level 5 is addition only: its whole point is spotting a pair that makes
-  // ten, and a subtraction in the middle would destroy that.
-  for (const level of MATH_LEVELS.filter((candidate) => candidate <= 4)) {
+  for (const level of MATH_LEVELS) {
     it(`level ${level}: both operations show up`, () => {
       const problems = sample(level)
       expect(problems.some((p) => p.ops.includes('+'))).toBe(true)
@@ -160,32 +158,47 @@ describe('level 4 — three numbers up to a hundred', () => {
 
 describe('level 5 — a pair that makes ten', () => {
   const problems = sample(5)
+  const added = problems.filter((p) => p.ops[0] === '+')
+  const taken = problems.filter((p) => p.ops[0] === '-')
 
-  it('three numbers, added', () => {
+  it('always three numbers, and the two operations match', () => {
     for (const p of problems) {
       expect(p.terms).toHaveLength(3)
-      expect(p.ops).toEqual(['+', '+'])
+      expect(p.ops).toEqual(p.ops[0] === '+' ? ['+', '+'] : ['-', '-'])
     }
   })
 
-  it('the outer two always make ten', () => {
-    for (const p of problems) {
-      expect(p.terms[0]! + p.terms[2]!).toBe(10)
-    }
+  describe('added — «7 + 8 + 3»', () => {
+    it('the outer two always make ten', () => {
+      for (const p of added) expect(p.terms[0]! + p.terms[2]!).toBe(10)
+    })
+
+    it('the pair is never adjacent — otherwise there is nothing to spot', () => {
+      for (const p of added) {
+        expect(p.terms[0]! + p.terms[1]!).not.toBe(10)
+        expect(p.terms[1]! + p.terms[2]!).not.toBe(10)
+      }
+    })
+
+    it('the odd term is a digit or a round ten', () => {
+      for (const p of added) {
+        const other = p.terms[1]!
+        expect(other <= 9 || other % 10 === 0).toBe(true)
+      }
+    })
   })
 
-  it('the pair is never adjacent — otherwise there is nothing to spot', () => {
-    for (const p of problems) {
-      expect(p.terms[0]! + p.terms[1]!).not.toBe(10)
-      expect(p.terms[1]! + p.terms[2]!).not.toBe(10)
-    }
-  })
+  describe('taken away — «50 − 7 − 3»', () => {
+    it('the two subtrahends make ten', () => {
+      for (const p of taken) expect(p.terms[1]! + p.terms[2]!).toBe(10)
+    })
 
-  it('the odd term is a digit or a round ten', () => {
-    for (const p of problems) {
-      const other = p.terms[1]!
-      expect(other <= 9 || other % 10 === 0).toBe(true)
-    }
+    it('there is always a ten to take', () => {
+      for (const p of taken) {
+        expect(p.terms[0]!).toBeGreaterThanOrEqual(10)
+        expect(p.answer).toBe(p.terms[0]! - 10)
+      }
+    })
   })
 })
 

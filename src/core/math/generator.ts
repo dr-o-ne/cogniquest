@@ -52,7 +52,7 @@ export function generateProblem(levelId: number, random: Random): ArithmeticProb
       return chainByPlace(random, 3)
 
     case 5:
-      return addWithGrouping(random)
+      return plus ? addWithGrouping(random) : subtractWithGrouping(random)
 
     default:
       throw new RangeError(`No generator for level ${levelId}`)
@@ -212,4 +212,22 @@ function addWithGrouping(random: Random): ArithmeticProblem {
   const terms = random() < 0.5 ? [first, other, partner] : [partner, other, first]
 
   return problem(terms, ['+', '+'], 100)
+}
+
+/**
+ * Level 5 read backwards: two subtractions that are really one.
+ *
+ * «50 − 7 − 3» can be taken one step at a time, or the seven and the three can
+ * be seen to make ten and taken in a single move. Here the pair stands
+ * together on purpose — combining two subtractions is the whole insight, and
+ * there is nothing to gain by hiding them from each other.
+ */
+function subtractWithGrouping(random: Random): ArithmeticProblem {
+  const first = randomInt(random, 1, 9)
+  const partner = 10 - first
+  // Round numbers make the trick worth spotting; the rest keep it from
+  // becoming a pattern the child answers without looking.
+  const total = random() < 0.5 ? randomInt(random, 1, 9) * 10 : randomInt(random, 10, 99)
+
+  return problem([total, first, partner], ['-', '-'], 100)
 }
