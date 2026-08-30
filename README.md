@@ -30,6 +30,18 @@ npm run typecheck  # type checking
 npm run build      # build
 ```
 
+## Deployment
+
+Every push to `main` builds and publishes to GitHub Pages —
+**https://dr-o-ne.github.io/cogniquest/** — through
+`.github/workflows/deploy.yml`.
+
+The workflow fetches the Vosk model itself, so the published site carries all
+44 MB of it: a first visit downloads some 50 MB and the browser caches it from
+then on. The site is served from `/cogniquest/`, not from a domain root, so
+anything resolved by path at runtime has to go through `publicUrl()` in
+`src/assets.ts` — an absolute `/models/…` would escape to the domain root.
+
 ## Layout
 
 ```

@@ -48,9 +48,15 @@ try {
   writeFileSync(zipPath, Buffer.from(await response.arrayBuffer()))
   console.log(`Downloaded ${mb(statSync(zipPath).size)} MB`)
 
-  // bsdtar on Windows 10+ reads zip, so unpacking and repacking take one tool.
+  // Windows 10+ ships bsdtar, which reads zip, so there one tool does both
+  // steps. GNU tar on Linux cannot read zip at all — the CI build would fail
+  // right here — so everywhere else unzip does the unpacking.
   console.log('Unpacking...')
-  run('tar', ['-xf', zipPath, '-C', temp])
+  if (process.platform === 'win32') {
+    run('tar', ['-xf', zipPath, '-C', temp])
+  } else {
+    run('unzip', ['-q', zipPath, '-d', temp])
+  }
 
   if (!existsSync(join(temp, MODEL_NAME, 'am', 'final.mdl'))) {
     throw new Error(`The archive does not have the expected model layout: ${MODEL_NAME}/am/final.mdl`)

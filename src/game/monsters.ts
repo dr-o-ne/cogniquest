@@ -12,6 +12,7 @@
  * task difficulty from its level. The display name comes from the text pack
  * (src/locale), keyed by the same id.
  */
+import { publicUrl } from '@/assets'
 import { t } from '@/locale'
 
 export interface UnitStats {
@@ -318,7 +319,9 @@ function build(row: Row): Monster {
     // Falling back to the id keeps a missing translation visible instead of
     // blank. A test makes sure it never actually comes to that.
     name: t.monsters[id] ?? id,
-    ...(image !== undefined ? { image } : {}),
+    // Written as a root path in IMAGES, resolved against wherever the app is
+    // actually served from — see src/assets.ts.
+    ...(image !== undefined ? { image: publicUrl(image) } : {}),
     ...(tuned.avatar !== undefined ? { avatar: tuned.avatar } : {}),
     hearts: tuned.hearts ?? (health !== undefined ? heartsFromHealth(health) : base.hearts),
     levels: tuned.levels ?? base.levels,
