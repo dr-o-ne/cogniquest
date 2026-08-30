@@ -124,35 +124,36 @@ describe('level 3 — up to a hundred, digit by digit', () => {
   })
 })
 
-describe('level 4 — three numbers up to a hundred', () => {
+describe('level 4 — two-digit, across the place', () => {
   const problems = sample(4)
 
-  it('three numbers and two operations', () => {
+  it('two numbers, and the first one has at least a ten', () => {
     for (const p of problems) {
-      expect(p.terms).toHaveLength(3)
-      expect(p.ops).toHaveLength(2)
+      expect(p.terms).toHaveLength(2)
+      expect(p.terms[0]!).toBeGreaterThanOrEqual(10)
+      expect(p.terms[0]!).toBeLessThanOrEqual(99)
     }
   })
 
-  it('every intermediate step stays within a hundred', () => {
-    for (const p of problems) {
-      // The child works step by step, so no single step may leave the bounds,
-      // not just the final answer.
-      let total = p.terms[0]!
-      expect(total).toBeGreaterThanOrEqual(0)
-      expect(total).toBeLessThanOrEqual(100)
-
-      for (let i = 0; i < p.ops.length; i++) {
-        total = p.ops[i] === '+' ? total + p.terms[i + 1]! : total - p.terms[i + 1]!
-        expect(total).toBeGreaterThanOrEqual(0)
-        expect(total).toBeLessThanOrEqual(100)
-      }
+  it('addition always carries', () => {
+    for (const p of problems.filter((x) => x.ops[0] === '+')) {
+      const [left, right] = [p.terms[0]!, p.terms[1]!]
+      expect(units(left) + units(right)).toBeGreaterThanOrEqual(10)
+      expect(p.answer).toBeLessThanOrEqual(100)
     }
   })
 
-  it('all four combinations of operations occur', () => {
-    const seen = new Set(problems.map((p) => p.ops.join('')))
-    expect(seen).toEqual(new Set(['++', '+-', '-+', '--']))
+  it('subtraction always borrows', () => {
+    for (const p of problems.filter((x) => x.ops[0] === '-')) {
+      const [left, right] = [p.terms[0]!, p.terms[1]!]
+      expect(units(right)).toBeGreaterThan(units(left))
+      // Twenty and up, or this would be level 2 again under another name.
+      expect(left).toBeGreaterThanOrEqual(20)
+    }
+  })
+
+  it('the second number is never zero', () => {
+    for (const p of problems) expect(p.terms[1]!).toBeGreaterThanOrEqual(1)
   })
 })
 
@@ -219,7 +220,7 @@ describe('createArithmeticExercise', () => {
   })
 
   it('a chain carries every link in its id', () => {
-    const exercise = createArithmeticExercise(4, createRandom(5))
+    const exercise = createArithmeticExercise(5, createRandom(5))
     expect(exercise.id).toMatch(/^math:\d+[+-]\d+[+-]\d+$/)
   })
 

@@ -77,21 +77,22 @@ Generators live in `src/core/math/generator.ts`, the level table in
 | 1 | two numbers within ten | 0–10 | `3+4`, `9−4` |
 | 2 | two numbers, the ten **has** to be crossed | 0–20 | `8+5`, `13−6` |
 | 3 | up to a hundred, digit by digit, nothing carried | 0–100 | `45+20`, `68−14` |
-| 4 | three numbers, still one place per step | 0–100 | `35+4+20`, `88−60−2` |
+| 4 | two-digit, the units overflow | 0–100 | `19+32`, `70−26` |
 | 5 | three numbers where a pair makes ten | 0–100 | `7+8+3`, `50−7−3` |
 
-Each step adds exactly one new difficulty: size, then place value, then how
-many numbers, and finally a trick rather than a size. Level 5 is the
-olympiad-flavoured one — head-on it is three additions across the ten, but spot
-that 7 and 3 make ten and it collapses into one. The pair is deliberately kept
-apart, and no second pair is allowed to form with a neighbour.
+Each step adds exactly one new difficulty: size, then place value, then
+carrying, and finally a trick rather than a size. Levels 3 and 4 are a pair —
+one forbids carrying, the other insists on it — which is what makes carrying a
+rung of its own rather than something the child meets by accident.
+
+Level 5 is the olympiad-flavoured one. Head-on it is three operations across
+the ten; spot that 7 and 3 make ten and it collapses into one. In the addition
+form the pair is deliberately kept apart and no second pair may form with a
+neighbour; in the subtraction form the two subtrahends stand together, because
+combining them *is* the insight.
 
 Round tens are no longer a level of their own: `30+40` is the case of level 3
 where both units happen to be zero, not a separate skill.
-
-**A gap worth knowing about:** two-digit addition *with* carrying — `47+28` —
-is generated nowhere on this ladder. Level 3 forbids carrying and level 4 keeps
-one place per step. It is the obvious next cell to fill.
 
 The answer range is not decoration: the recognition grammar is built from the
 whole of it (**T16**), so a wider range widens what the child can be heard
@@ -122,7 +123,7 @@ ticked off here as they land.
 |---|:-:|:-:|:-:|:-:|:-:|
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Addition + subtraction | ✅ | ✅ | ☐ | ☐ | ☐ |
+| Addition + subtraction | ✅ | ☐ | ☐ | ☐ | ☐ |
 | Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -142,17 +143,19 @@ one level table serves both, so redefining a level moves the pair of them at
 once. That includes level 5, where the trick simply reads backwards —
 `7 + 8 + 3` finds a pair that makes ten, `50 − 7 − 3` takes one away.
 
-The mixed row is ticked only twice, and the ticks sit on other rungs than the
-grid puts them: one operation is our level 1, two operations our level 4.
-Three operations exist nowhere — every chain is built from three numbers, so
-two is the most it can produce — and brackets and conditions have never been
-represented at all.
+**The mixed row is down to one tick, and that is a real loss.** Chains that mix
+a plus and a minus — `73 − 3 + 10` — used to come out of level 4, and level 4
+is now two-digit carrying. Level 5 has two operations but never two different
+ones: the pair that makes ten only works with matching signs.
 
-**Two places where our ladder is not the grid's.** The grid asks for three
-numbers at level 3; we put two-digit-without-carrying there and moved three
-numbers to level 4, so that each step introduces one difficulty rather than
-three. And carrying beyond twenty (`47+28`) is not generated at all — see the
-gap noted above.
+That is the right place to lose them. «Addition + subtraction» is its own row
+in the grid, wanting two, three and four operations of its own, and riding
+along inside the addition ladder was never going to deliver that. It needs
+generators of its own when its turn comes.
+
+**Where our ladder is not the grid's.** The grid asks for three numbers at
+level 3; we put two-digit without carrying there, carrying at 4, and three
+numbers at 5 — so that each rung introduces one difficulty instead of three.
 
 ### What each unwritten type will cost
 

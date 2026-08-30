@@ -49,7 +49,7 @@ export function generateProblem(levelId: number, random: Random): ArithmeticProb
       return plus ? addByPlace(random) : subtractByPlace(random)
 
     case 4:
-      return chainByPlace(random, 3)
+      return plus ? addAcrossPlace(random) : subtractAcrossPlace(random)
 
     case 5:
       return plus ? addWithGrouping(random) : subtractWithGrouping(random)
@@ -95,42 +95,37 @@ function problem(
 }
 
 /**
- * Level 4: more numbers, and that is the only new thing about it.
+ * Level 4: two-digit numbers where the units overflow — «47 + 28».
  *
- * The child works «20 + 30 + 7» out step by step while holding a running
- * total, which is hard enough on its own. So every step still touches one
- * place at a time — a round ten or a single digit — and nothing is ever
- * carried or borrowed on the way. Arbitrary two-digit chains like
- * «55 − 23 − 29» would pile three new difficulties onto one step of the
- * ladder.
+ * The central skill of the second year, and the one the ladder is built
+ * towards: the units make more than ten, so a ten is carried into the column
+ * beside it. Level 3 rules this out on purpose; here it is compulsory.
  */
-function chainByPlace(random: Random, termCount: number): ArithmeticProblem {
-  let tens = randomInt(random, 1, 8)
-  let units = randomInt(random, 0, 9)
+function addAcrossPlace(random: Random): ArithmeticProblem {
+  // Units are picked to overflow, tens to leave room for the ten that arrives.
+  const leftUnits = randomInt(random, 1, 9)
+  const rightUnits = randomInt(random, 10 - leftUnits, 9)
+  const leftTens = randomInt(random, 1, 8)
+  const rightTens = randomInt(random, 0, 8 - leftTens)
 
-  const terms: number[] = [tens * 10 + units]
-  const ops: MathOp[] = []
+  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['+'], 100)
+}
 
-  for (let i = 1; i < termCount; i++) {
-    // Which place a step touches, and which way it goes, is decided by the room
-    // there is — which is exactly what keeps every step free of carrying.
-    const moves: { place: 'tens' | 'units'; op: MathOp; steps: number }[] = []
-    if (tens < 9) moves.push({ place: 'tens', op: '+', steps: randomInt(random, 1, 9 - tens) })
-    if (tens > 0) moves.push({ place: 'tens', op: '-', steps: randomInt(random, 1, tens) })
-    if (units < 9) moves.push({ place: 'units', op: '+', steps: randomInt(random, 1, 9 - units) })
-    if (units > 0) moves.push({ place: 'units', op: '-', steps: randomInt(random, 1, units) })
+/**
+ * Level 4 the other way — «63 − 27».
+ *
+ * The units above are too few, so a ten has to be broken open. The minuend
+ * always has at least two tens, which keeps this clear of level 2, where the
+ * same borrowing happens under twenty.
+ */
+function subtractAcrossPlace(random: Random): ArithmeticProblem {
+  const leftUnits = randomInt(random, 0, 8)
+  const rightUnits = randomInt(random, leftUnits + 1, 9)
+  const leftTens = randomInt(random, 2, 9)
+  // One ten goes to the units, so the subtrahend must leave at least that.
+  const rightTens = randomInt(random, 0, leftTens - 1)
 
-    const move = moves[randomInt(random, 0, moves.length - 1)]!
-    const delta = move.op === '+' ? move.steps : -move.steps
-
-    if (move.place === 'tens') tens += delta
-    else units += delta
-
-    ops.push(move.op)
-    terms.push(move.place === 'tens' ? move.steps * 10 : move.steps)
-  }
-
-  return problem(terms, ops, 100)
+  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['-'], 100)
 }
 
 /** Level 1: a + b, where a ∈ [minLeft, maxLeft], b ≥ 1, sum ≤ ceiling. */
