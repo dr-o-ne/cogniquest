@@ -1,0 +1,561 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen--center {
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.splash__title {
+  margin: 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.splash__title--bad {
+  color: #c0392b;
+}
+
+.splash__note {
+  margin: 0;
+  color: var(--muted);
+}
+
+.big-button {
+  padding: 0.9rem 2.6rem;
+  border: none;
+  border-radius: 999px;
+  background: #4a7de0;
+  color: #fff;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.big-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.big-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.name-input {
+  padding: 0.7rem 1.2rem;
+  border: 2px solid color-mix(in srgb, var(--fg) 15%, transparent);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 1.5rem;
+  text-align: center;
+  width: 12ch;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: #4a7de0;
+}
+
+/* --- Picking an opponent --- */
+
+.roster {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 11rem;
+  padding: 1.25rem 1rem;
+  border: 2px solid color-mix(in srgb, var(--card) 40%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--card) 8%, var(--bg));
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--card);
+}
+
+/* --- Characters: the picture from the config, or an emoji --- */
+
+.avatar {
+  display: block;
+  flex: none;
+  object-fit: contain;
+}
+
+.avatar--emoji {
+  line-height: 1;
+  text-align: center;
+}
+
+/* The stand-in for when the picture fails to load */
+.avatar--letter {
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.avatar--hud {
+  width: 2.8rem;
+  height: 2.8rem;
+  font-size: 2.6rem;
+}
+
+.avatar--card {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 3.5rem;
+}
+
+.avatar--popup {
+  width: 5.5rem;
+  height: 5.5rem;
+  font-size: 4.5rem;
+}
+
+/* A picture needs a backing plate: with a transparent png, a dark outline is
+   lost against the dark theme and a light one against the light theme. */
+img.avatar {
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.card__name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.card__hearts {
+  line-height: 1.2;
+  color: #d64545;
+  letter-spacing: -1px;
+  /* Twenty hearts will not fit one line — wrap them, but keep them centred */
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.card__hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Beaten: struck through diagonally, but still playable */
+.card--beaten {
+  opacity: 0.62;
+}
+
+.card--beaten:hover {
+  opacity: 1;
+}
+
+.card--beaten::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 2px),
+    var(--card) calc(50% - 2px),
+    var(--card) calc(50% + 2px),
+    transparent calc(50% + 2px)
+  );
+}
+
+.card__badge {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  color: var(--card);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.card__times {
+  font-size: 0.7rem;
+}
+
+/* Start over — at the top of the selection screen */
+.reset__start {
+  padding: 0.6rem 1.6rem;
+  border: 2px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.reset__start:hover {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.reset-corner {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reset__ask {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.reset__yes,
+.reset__no {
+  padding: 0.55rem 1.4rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reset__yes {
+  background: #c0392b;
+  color: #fff;
+}
+
+.reset__no {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--fg) 20%, transparent);
+  color: var(--fg);
+}
+
+/* --- The battle --- */
+
+.fight {
+  transition: background 0.25s ease;
+}
+
+.hit-monster {
+  background: color-mix(in srgb, #2e9e5b 10%, var(--bg));
+}
+
+.hit-player {
+  background: color-mix(in srgb, #d64545 10%, var(--bg));
+}
+
+.hud {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+}
+
+.hud__vs {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.fighter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.fighter--right {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.fighter__avatar {
+  display: block;
+  line-height: 1;
+}
+
+.fighter__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.fighter__name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* Size and row width are set in the markup: they depend on the heart count */
+.fighter__hearts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  line-height: 1.15;
+}
+
+.fighter--right .fighter__hearts {
+  justify-content: flex-end;
+}
+
+.heart {
+  color: #d64545;
+  transition: transform 0.2s ease;
+}
+
+/* A lost heart does not vanish but fades: you can see how many there were */
+.heart--lost {
+  color: color-mix(in srgb, var(--fg) 18%, transparent);
+  transform: scale(0.82);
+}
+
+/* A hit: shake whichever side took it */
+.hit-monster .fighter--right .fighter__avatar {
+  animation: shake 0.4s ease;
+}
+
+.hit-player .fighter:not(.fighter--right) .fighter__avatar {
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  20% {
+    transform: translateX(-7px) rotate(-9deg);
+  }
+  50% {
+    transform: translateX(6px) rotate(7deg);
+  }
+  80% {
+    transform: translateX(-3px);
+  }
+}
+
+.fight__stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+}
+
+.expression {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+  font-size: clamp(3.5rem, 14vw, 8rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.expression--long {
+  gap: 0.9rem;
+  font-size: clamp(2.4rem, 9vw, 5.5rem);
+}
+
+.expression__op {
+  color: var(--muted);
+}
+
+.mic-state {
+  margin: 0;
+  min-height: 1.6rem;
+  font-size: 1.05rem;
+  color: var(--muted);
+}
+
+.mic-state--live {
+  color: #4a7de0;
+  font-weight: 600;
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.mic-state--correct {
+  color: #2e9e5b;
+  font-weight: 600;
+}
+
+.mic-state--wrong {
+  color: #d98324;
+}
+
+/* On the left: the right corner is taken by the switch to the rig. */
+.fight__bottom {
+  display: flex;
+  justify-content: flex-start;
+  padding: 1rem 1.5rem;
+}
+
+.fight__bottom .link {
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
+/* --- The result of the battle --- */
+
+.popup {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--fg) 45%, transparent);
+  animation: fade-in 0.25s ease;
+  z-index: 10;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.popup__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 2rem 3rem;
+  border-radius: 24px;
+  background: var(--bg);
+  text-align: center;
+  animation: pop-in 0.35s cubic-bezier(0.2, 1.4, 0.5, 1);
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+}
+
+.popup__title {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.popup__note {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+}
+
+/* --- The fallback input (T5) --- */
+
+.pad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.1rem;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  animation: pad-in 0.3s ease-out;
+}
+
+@keyframes pad-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+.pad__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.pad__value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 3ch;
+  text-align: center;
+}
+
+.pad__keys {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
+}
+
+.pad__key {
+  width: 2.8rem;
+  height: 2.8rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 15%, transparent);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pad__key:hover:not(:disabled) {
+  border-color: #4a7de0;
+}
+
+.pad__key--wide {
+  grid-column: span 5;
+  width: 100%;
+  height: 2.4rem;
+  font-size: 0.95rem;
+  background: #4a7de0;
+  border-color: #4a7de0;
+  color: #fff;
+}
+
+.pad__key--wide:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

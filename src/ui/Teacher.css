@@ -1,0 +1,99 @@
+.teacher {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex: none;
+}
+
+.teacher__face {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.teacher__head {
+  fill: #f2c14e;
+  stroke: #d9a72f;
+  stroke-width: 2;
+  transition: fill 0.25s ease;
+}
+
+.teacher__eye {
+  fill: #3a3320;
+  transition: r 0.18s ease;
+}
+
+.teacher__eye-arc,
+.teacher__mouth {
+  fill: none;
+  stroke: #3a3320;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.teacher__mouth--wide {
+  stroke-width: 5;
+}
+
+.teacher__mouth-o {
+  fill: #3a3320;
+}
+
+/* Breathes while idle, so he does not look dead */
+.teacher--idle .teacher__face {
+  animation: teacher-breathe 3.4s ease-in-out infinite;
+}
+
+@keyframes teacher-breathe {
+  50% {
+    transform: translateY(-3px) scale(1.02);
+  }
+}
+
+.teacher--happy .teacher__face {
+  animation: teacher-jump 0.55s ease-out;
+}
+
+.teacher--happy .teacher__head {
+  fill: #9ede9a;
+  stroke: #63bf68;
+}
+
+@keyframes teacher-jump {
+  40% {
+    transform: translateY(-14px) rotate(-6deg);
+  }
+  70% {
+    transform: translateY(0) rotate(3deg);
+  }
+}
+
+.teacher--encouraging .teacher__face {
+  animation: teacher-tilt 0.7s ease-in-out;
+}
+
+@keyframes teacher-tilt {
+  50% {
+    transform: rotate(-8deg);
+  }
+}
+
+/* Listening: an expanding ring, visible even out of the corner of an eye */
+.teacher__ear {
+  position: absolute;
+  inset: -8px;
+  border: 3px solid #4a7de0;
+  border-radius: 50%;
+  animation: teacher-ping 1.3s ease-out infinite;
+}
+
+@keyframes teacher-ping {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}

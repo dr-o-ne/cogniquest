@@ -1,0 +1,223 @@
+.spike {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.spike__head {
+  text-align: center;
+}
+
+.spike__head h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.spike__sub {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.spike__status {
+  color: var(--muted);
+}
+
+.spike__status--bad {
+  color: #c0392b;
+}
+
+/* Range */
+.spike__ranges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.chip--on {
+  border-color: #4a7de0;
+  background: color-mix(in srgb, #4a7de0 14%, transparent);
+}
+
+.chip__note {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* Task */
+.spike__task {
+  font-size: clamp(3.5rem, 12vw, 6rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Microphone */
+.mic {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1rem 2.5rem;
+  border: none;
+  border-radius: 999px;
+  background: #4a7de0;
+  color: #fff;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.mic:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.mic:disabled {
+  background: #b44a4a;
+  cursor: default;
+  animation: pulse 1.1s ease-in-out infinite;
+}
+
+.mic__hint {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.72;
+  }
+}
+
+/* Verdict */
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.verdict--correct {
+  background: color-mix(in srgb, #2e9e5b 16%, transparent);
+}
+
+.verdict--wrong {
+  background: color-mix(in srgb, #d98324 18%, transparent);
+}
+
+.verdict--unrecognised {
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  color: var(--muted);
+}
+
+.verdict__ms {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Statistics */
+.stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat b {
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.stat--good b {
+  color: #2e9e5b;
+}
+
+.stat--warn b {
+  color: #d98324;
+}
+
+.stat--muted b {
+  color: var(--muted);
+}
+
+/* Log */
+.spike__actions {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.link {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.log {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.log th {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  color: var(--muted);
+  font-weight: 500;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
+.log td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.log__row--correct td:nth-child(4) {
+  color: #2e9e5b;
+}
+
+.log__row--wrong td:nth-child(4) {
+  color: #d98324;
+}
+
+.log__row--unrecognised {
+  color: var(--muted);
+}
