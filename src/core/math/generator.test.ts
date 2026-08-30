@@ -59,18 +59,35 @@ describe('generateProblem — rules that hold everywhere', () => {
   }
 })
 
-describe('subtraction always leaves something behind', () => {
+describe('subtraction and zero', () => {
   // «a - a» used to be 29% of everything level 1 asked and 8% of level 3:
   // subtrahends were drawn from [1, a], so hitting a exactly had odds of 1/a,
-  // and «1 - 1» was the only problem a minuend of one could produce.
-  for (const level of MATH_LEVELS) {
-    it(`level ${level}`, () => {
+  // and «1 - 1» was the only problem a minuend of one could produce. Zero is
+  // worth meeting, but on purpose and rarely.
+  for (const level of MATH_LEVELS.filter((candidate) => candidate > 1)) {
+    it(`level ${level} always leaves something behind`, () => {
       for (const p of sample(level).filter((x) => x.ops[0] === '-')) {
         expect(p.answer).toBeGreaterThanOrEqual(1)
         expect(p.terms[0]).not.toBe(p.terms[1])
       }
     })
   }
+
+  it('level 1 meets zero now and then — often enough to learn it', () => {
+    const subtractions = sample(1, 3000).filter((p) => p.ops[0] === '-')
+    const zeros = subtractions.filter((p) => p.answer === 0)
+
+    expect(zeros.length).toBeGreaterThan(0)
+    for (const p of zeros) expect(p.terms[0]).toBe(p.terms[1])
+  })
+
+  it('level 1 does not drown in it', () => {
+    const subtractions = sample(1, 3000).filter((p) => p.ops[0] === '-')
+    const share = subtractions.filter((p) => p.answer === 0).length / subtractions.length
+
+    expect(share).toBeGreaterThan(0.02)
+    expect(share).toBeLessThan(0.15)
+  })
 })
 
 describe('level 1 — within ten', () => {

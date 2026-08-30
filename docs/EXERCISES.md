@@ -117,6 +117,12 @@ review queue recognises it next session.
 
 Second operands are never zero: «7 + 0» teaches nothing.
 
+An answer of zero is another matter. «9 − 9 = 0» is a fact of its own, so
+level 1 takes a number away from itself about one subtraction in fifteen —
+often enough to learn, rare enough not to become a way of answering without
+counting. It used to arrive by accident instead, at 29%. No other level does
+it: by level 2 the borrowing rules it out anyway.
+
 ---
 
 ## The grades 1–2 grid

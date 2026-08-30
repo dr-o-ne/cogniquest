@@ -136,15 +136,20 @@ function add(random: Random, minLeft: number, maxLeft: number, ceiling: number):
 }
 
 /**
- * Level 1: a − b, where b ∈ [1, a−1].
+ * How often the first level takes a number away from itself.
  *
- * Not [1, a]: taking a number away from itself is no subtraction to solve, and
- * the odds of drawing it are 1/a — which made «1 − 1» certain and «a − a»
- * nearly a third of everything the first level ever asked.
+ * «9 − 9 = 0» is a fact of its own and a child who never meets it has nowhere
+ * to have learned it. But it used to arrive by accident rather than by design:
+ * subtrahends were drawn from [1, a], so the odds of landing on a were 1/a,
+ * which made almost a third of the level a chance to answer «zero» without
+ * counting anything. Rare and deliberate beats common and accidental.
  */
+const ZERO_ANSWER_CHANCE = 1 / 15
+
+/** Level 1: a − b, where b ∈ [1, a−1] — or a itself, once in a while. */
 function subtract(random: Random, minLeft: number, maxLeft: number): ArithmeticProblem {
   const left = randomInt(random, Math.max(minLeft, 2), maxLeft)
-  const right = randomInt(random, 1, left - 1)
+  const right = random() < ZERO_ANSWER_CHANCE ? left : randomInt(random, 1, left - 1)
   return problem([left, right], ['-'], maxLeft)
 }
 
