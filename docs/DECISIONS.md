@@ -427,7 +427,7 @@ either.
 |---|---|---|
 | `ScriptProcessorNode` in `VoskRecognizer` is deprecated | AudioWorklet needs a separate worklet file and is noticeably more complex; this works in Chromium | phase 3, if audio artefacts turn up |
 | A 6 MB bundle: the Vosk WASM build is inlined whole | it loads instantly on a local machine, there is nothing to optimise | phase 7 — a lazy import, so the window draws before the model loads |
-| The silence thresholds in `VoskRecognizer` were eyeballed | tuning them is only worth doing against live measurements | phase 1, off the back of the rig |
+| The silence thresholds in `VoskRecognizer` are set by feel | retuned on live play 2026-08-30 (the child was being asked to repeat while still thinking), but never measured numerically | when misses come back; the rig logs milliseconds per attempt |
 
 ---
 

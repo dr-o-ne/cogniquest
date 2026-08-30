@@ -106,7 +106,10 @@ will later plug into. So the seam is real, not merely drawn.
 - [x] the «3 of 8» bar, a result screen with stars
 - [x] progress survives restarts
 - [x] **checked on the child** (2026-08-30)
-- [x] pause timings — left as they are; live play gave no reason to touch them
+- [x] pause timings tuned on live play: the recogniser now waits far longer
+      before deciding nothing was said (6 s → 15 s) and sits through a pause
+      inside a two-word number (0.7 s → 1.2 s), because both were asking the
+      child to repeat while they were still thinking
 
 **Done when:** the child gets through a session of eight problems by voice from
 beginning to end **and asks for more**.

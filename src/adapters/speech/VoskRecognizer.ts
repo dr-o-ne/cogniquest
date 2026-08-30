@@ -1,14 +1,28 @@
 import { createModel, type Model } from 'vosk-browser'
 import type { SpeechRecognizer } from '@/core/ports'
 
+// The waiting is deliberately generous. A six-year-old works «8 + 5» out in
+// their head first and only then speaks, and a number like «сорок семь» comes
+// out in two pieces with a think in between. Every one of these timers, when
+// too tight, ends the same way: silence is taken for an answer that never came,
+// the teacher asks for a repeat, and the child is nudged to hurry — which is
+// the one thing the game must never do. Tuned on live play, 2026-08-30.
+
 /** Loudness below this counts as silence. Tuned in phase 1. */
 const SILENCE_RMS = 0.012
-/** How much silence after speech we wait through before closing recognition. */
-const SILENCE_AFTER_SPEECH_MS = 700
-/** If the child said nothing at all — do not hang around forever. */
-const NO_SPEECH_TIMEOUT_MS = 6000
-/** A backstop against endless mumbling. */
-const MAX_LISTEN_MS = 12000
+/**
+ * How much silence after speech we wait through before closing recognition.
+ * Wide enough to sit through the pause inside «сорок… семь» rather than cut
+ * the answer down to its first half.
+ */
+const SILENCE_AFTER_SPEECH_MS = 1200
+/**
+ * If the child has not started speaking at all — do not hang around forever.
+ * This is thinking time, not dead time, so it is long.
+ */
+const NO_SPEECH_TIMEOUT_MS = 15000
+/** A backstop against endless mumbling. Has to outlast the timer above. */
+const MAX_LISTEN_MS = 25000
 
 /**
  * Speech recognition through vosk-browser (T3): Kaldi built to WebAssembly.
