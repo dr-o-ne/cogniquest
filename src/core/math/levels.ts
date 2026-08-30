@@ -1,32 +1,18 @@
 /**
- * The five math levels (C1).
+ * The rungs of the math ladder (C1).
  *
- * Only the rules live here. What a level is called, and any «Ten Meadow»
- * geography, is presentation: it belongs to the text pack and the theme (A6).
+ * Nothing but the rungs. What a level generates lives with the generators, and
+ * what the child might plausibly be heard saying travels with the exercise
+ * itself. A level number means one thing only: how hard it is.
+ *
+ * It used to carry the answer range as well, and that range became the
+ * recognition grammar (T16). That held while every exercise was arithmetic and
+ * a level number meant one thing. It stops holding the moment a second kind of
+ * task arrives: the answer to a comparison is a word, not a number in a range,
+ * and its level 2 is a different level 2 altogether.
  */
-
-export interface MathLevel {
-  readonly id: number
-  /**
-   * Bounds of a possible answer. The recognition grammar is built from this:
-   * the whole range, not just the correct answer (T16).
-   */
-  readonly answerRange: { readonly min: number; readonly max: number }
-}
-
-export const MATH_LEVELS: readonly MathLevel[] = [
-  { id: 1, answerRange: { min: 0, max: 10 } },
-  { id: 2, answerRange: { min: 0, max: 20 } },
-  { id: 3, answerRange: { min: 0, max: 100 } },
-  { id: 4, answerRange: { min: 0, max: 100 } },
-  { id: 5, answerRange: { min: 0, max: 100 } },
-]
-
 export const FIRST_LEVEL = 1
-export const LAST_LEVEL = MATH_LEVELS.length
+export const LAST_LEVEL = 5
 
-export function mathLevel(id: number): MathLevel {
-  const level = MATH_LEVELS.find((candidate) => candidate.id === id)
-  if (!level) throw new RangeError(`No such math level: ${id}`)
-  return level
-}
+/** Every rung, for walking the ladder. */
+export const MATH_LEVELS: readonly number[] = [1, 2, 3, 4, 5]

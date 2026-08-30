@@ -6,7 +6,8 @@ import {
   generateProblem,
   type ArithmeticProblem,
 } from './generator'
-import { MATH_LEVELS, mathLevel } from './levels'
+import { MATH_LEVELS } from './levels'
+import { numberToWords } from './numerals'
 
 /** Many seeds are run through: the rule of the level must hold on every one. */
 function sample(levelId: number, count = 400): ArithmeticProblem[] {
@@ -19,13 +20,13 @@ const tens = (n: number) => Math.floor(n / 10)
 
 describe('generateProblem — rules that hold everywhere', () => {
   for (const level of MATH_LEVELS) {
-    describe(`level ${level.id}`, () => {
-      const problems = sample(level.id)
+    describe(`level ${level}`, () => {
+      const problems = sample(level)
 
-      it('the answer stays inside the range of the level', () => {
+      it('the answer stays inside the range the problem declares', () => {
         for (const p of problems) {
-          expect(p.answer).toBeGreaterThanOrEqual(level.answerRange.min)
-          expect(p.answer).toBeLessThanOrEqual(level.answerRange.max)
+          expect(p.answer).toBeGreaterThanOrEqual(p.range.min)
+          expect(p.answer).toBeLessThanOrEqual(p.range.max)
         }
       })
 
@@ -51,9 +52,9 @@ describe('generateProblem — rules that hold everywhere', () => {
 
   // Level 5 is addition only: its whole point is spotting a pair that makes
   // ten, and a subtraction in the middle would destroy that.
-  for (const level of MATH_LEVELS.filter((candidate) => candidate.id <= 4)) {
-    it(`level ${level.id}: both operations show up`, () => {
-      const problems = sample(level.id)
+  for (const level of MATH_LEVELS.filter((candidate) => candidate <= 4)) {
+    it(`level ${level}: both operations show up`, () => {
+      const problems = sample(level)
       expect(problems.some((p) => p.ops.includes('+'))).toBe(true)
       expect(problems.some((p) => p.ops.includes('-'))).toBe(true)
     })
@@ -216,16 +217,34 @@ describe('createArithmeticExercise', () => {
     expect(exercise.prompt.kind).toBe('arithmetic')
   })
 
-  it('the exercise grammar covers the correct answer (A5, T16)', () => {
+  it('the exercise grammar covers its own answer (A5, T16)', () => {
     const random = createRandom(11)
     for (const level of MATH_LEVELS) {
       for (let i = 0; i < 50; i++) {
-        const exercise = createArithmeticExercise(level.id, random)
+        const exercise = createArithmeticExercise(level, random)
+        const prompt = exercise.prompt
+        if (prompt.kind !== 'arithmetic') throw new Error('expected an arithmetic prompt')
+
+        const answer = evaluate(prompt.terms, prompt.ops)
         const grammar = (exercise.answer as unknown as { grammar: string[] }).grammar
-        const range = mathLevel(level.id).answerRange
-        expect(grammar).toHaveLength(range.max - range.min + 1)
+
+        expect(grammar).toContain(numberToWords(answer))
+        // Never a list of one: a single word would be heard in anything (T16).
+        expect(grammar.length).toBeGreaterThan(10)
+        expect(exercise.answer.check({ kind: 'number', value: answer })).toBe('correct')
         expect(exercise.answer.check({ kind: 'number', value: -1 })).toBe('wrong')
       }
+    }
+  })
+
+  it('the range comes from the problem, not from the level number', () => {
+    // The point of the whole arrangement: a level says how hard, the generator
+    // says what may be heard. A second kind of task will declare something else
+    // entirely, and nothing here has to know about it.
+    expect(sample(1)[0]!.range).toEqual({ min: 0, max: 10 })
+    expect(sample(2)[0]!.range).toEqual({ min: 0, max: 20 })
+    for (const level of [3, 4, 5]) {
+      expect(sample(level)[0]!.range).toEqual({ min: 0, max: 100 })
     }
   })
 

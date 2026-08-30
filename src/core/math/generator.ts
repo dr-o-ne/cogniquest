@@ -1,12 +1,18 @@
 import type { Exercise, MathOp } from '../exercises'
 import { randomInt, type Random } from '../random'
 import { ArithmeticAnswer } from './ArithmeticAnswer'
-import { mathLevel } from './levels'
 
 export interface ArithmeticProblem {
   readonly terms: readonly number[]
   readonly ops: readonly MathOp[]
   readonly answer: number
+  /**
+   * Everything the child might plausibly say here, correct or not. The
+   * recognition grammar is built from the whole of it (T16), and it travels
+   * with the problem rather than being looked up by level number — a level
+   * means «how hard», and only the generator knows what its answers can be.
+   */
+  readonly range: { readonly min: number; readonly max: number }
 }
 
 /** Evaluates a chain left to right: 8 − 3 + 2 = 7. */
@@ -54,7 +60,6 @@ export function generateProblem(levelId: number, random: Random): ArithmeticProb
 }
 
 export function createArithmeticExercise(levelId: number, random: Random): Exercise {
-  const level = mathLevel(levelId)
   const problem = generateProblem(levelId, random)
 
   return {
@@ -64,7 +69,7 @@ export function createArithmeticExercise(levelId: number, random: Random): Exerc
     subject: 'math',
     level: levelId,
     prompt: { kind: 'arithmetic', terms: problem.terms, ops: problem.ops },
-    answer: new ArithmeticAnswer(problem.answer, level.answerRange),
+    answer: new ArithmeticAnswer(problem.answer, problem.range),
   }
 }
 
@@ -76,8 +81,17 @@ export function describe(problem: ArithmeticProblem): string {
   )
 }
 
-function problem(terms: readonly number[], ops: readonly MathOp[]): ArithmeticProblem {
-  return { terms, ops, answer: evaluate(terms, ops) }
+/**
+ * @param ceiling the highest answer this kind of problem can produce. Wrong
+ * answers within reach of it are just as much part of the grammar as the right
+ * one — a list of one word would be heard everywhere (T16).
+ */
+function problem(
+  terms: readonly number[],
+  ops: readonly MathOp[],
+  ceiling: number,
+): ArithmeticProblem {
+  return { terms, ops, answer: evaluate(terms, ops), range: { min: 0, max: ceiling } }
 }
 
 /**
@@ -116,35 +130,35 @@ function chainByPlace(random: Random, termCount: number): ArithmeticProblem {
     terms.push(move.place === 'tens' ? move.steps * 10 : move.steps)
   }
 
-  return problem(terms, ops)
+  return problem(terms, ops, 100)
 }
 
 /** Level 1: a + b, where a ∈ [minLeft, maxLeft], b ≥ 1, sum ≤ ceiling. */
 function add(random: Random, minLeft: number, maxLeft: number, ceiling: number): ArithmeticProblem {
   const left = randomInt(random, minLeft, maxLeft)
   const right = randomInt(random, 1, ceiling - left)
-  return problem([left, right], ['+'])
+  return problem([left, right], ['+'], ceiling)
 }
 
 /** Level 1: a − b, where b ∈ [1, a]. */
 function subtract(random: Random, minLeft: number, maxLeft: number): ArithmeticProblem {
   const left = randomInt(random, minLeft, maxLeft)
   const right = randomInt(random, 1, left)
-  return problem([left, right], ['-'])
+  return problem([left, right], ['-'], maxLeft)
 }
 
 /** Level 2: the sum has to cross the ten — 8 + 5. */
 function addWithCarry(random: Random): ArithmeticProblem {
   const left = randomInt(random, 2, 9)
   const right = randomInt(random, 11 - left, 9)
-  return problem([left, right], ['+'])
+  return problem([left, right], ['+'], 20)
 }
 
 /** Level 2: the units fall short, so a ten has to be borrowed — 13 − 6. */
 function subtractWithBorrow(random: Random): ArithmeticProblem {
   const right = randomInt(random, 2, 9)
   const answer = randomInt(random, 11 - right, 9)
-  return problem([answer + right, right], ['-'])
+  return problem([answer + right, right], ['-'], 20)
 }
 
 /**
@@ -161,7 +175,7 @@ function addByPlace(random: Random): ArithmeticProblem {
   // The second operand must not come out as zero, so with no units it needs tens.
   const rightTens = randomInt(random, rightUnits === 0 ? 1 : 0, 9 - leftTens)
 
-  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['+'])
+  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['+'], 100)
 }
 
 /** Level 3: the mirror image — every digit of the subtrahend fits under its own. */
@@ -173,7 +187,7 @@ function subtractByPlace(random: Random): ArithmeticProblem {
   const rightUnits =
     rightTens === 0 ? randomInt(random, 1, leftUnits) : randomInt(random, 0, leftUnits)
 
-  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['-'])
+  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['-'], 100)
 }
 
 /**
@@ -197,5 +211,5 @@ function addWithGrouping(random: Random): ArithmeticProblem {
   // The pair straddles the odd term; side by side there would be nothing to spot.
   const terms = random() < 0.5 ? [first, other, partner] : [partner, other, first]
 
-  return problem(terms, ['+', '+'])
+  return problem(terms, ['+', '+'], 100)
 }

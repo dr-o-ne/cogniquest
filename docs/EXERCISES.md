@@ -94,8 +94,14 @@ is generated nowhere on this ladder. Level 3 forbids carrying and level 4 keeps
 one place per step. It is the obvious next cell to fill.
 
 The answer range is not decoration: the recognition grammar is built from the
-whole of it (**T16**), so a level that widens its range widens what the child
-can be heard saying.
+whole of it (**T16**), so a wider range widens what the child can be heard
+saying.
+
+**The range travels with the problem, not with the level number.** A generator
+declares what its answers can be; `levels.ts` holds nothing but the rungs. That
+separation is what lets a second kind of task in: a comparison answers with a
+word, and its «level 2» is a different level 2 altogether, so a shared table of
+ranges per level could only have lied about one of them.
 
 Ids look like `math:8+5` — the expression itself. Same problem, same id, so the
 review queue recognises it next session.

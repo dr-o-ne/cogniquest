@@ -6,5 +6,5 @@ export {
   generateProblem,
   type ArithmeticProblem,
 } from './generator'
-export { FIRST_LEVEL, LAST_LEVEL, MATH_LEVELS, mathLevel, type MathLevel } from './levels'
+export { FIRST_LEVEL, LAST_LEVEL, MATH_LEVELS } from './levels'
 export { MAX_NUMBER, MIN_NUMBER, numberGrammar, numberToWords, parseNumber } from './numerals'
