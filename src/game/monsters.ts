@@ -122,6 +122,7 @@ const IMAGES: Record<string, string> = {
   'sea-devil': '/monsters/sea-devil.webp',
   pirate: '/monsters/pirate.webp',
   'ghost-pirate': '/monsters/ghost-pirate.webp',
+  archdemon: '/monsters/archdemon.webp',
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -155,6 +156,7 @@ const TUNING: Record<
   'sea-devil': { avatar: '🦑' },
   pirate: { avatar: '🏴‍☠️' },
   'ghost-pirate': { avatar: '👻' },
+  archdemon: { avatar: '😈' },
 }
 
 // ─────────────────────────────────────────────────────────────────────────
