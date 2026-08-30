@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AnswerAttempt, Exercise, MathOp, Verdict } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
-import { createMathExercise, evaluate, numberToWords } from '@/core/math'
+import { createMathExercise, evaluate, numberToWords, taskChoices } from '@/core/math'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
 import { pick, systemRandom } from '@/core/random'
 import { ExerciseSession } from '@/core/session'
@@ -216,16 +216,18 @@ export function useBattle() {
         level: Math.max(...monster.levels),
         // No length given: the battle runs until somebody wins.
         nextExercise: () => {
-          // Both the level and the kind of task are drawn afresh each time, so
-          // an opponent listing more than one keeps the child moving between
+          // Kind and level are drawn together, afresh each time, so an
+          // opponent listing more than one kind keeps the child moving between
           // them rather than settling into a rhythm.
+          //
+          // Together rather than one after the other, because not every kind
+          // reaches every level: drawing them separately can land on a pair
+          // that has no rung, and there is nothing sensible to do about it
+          // that late.
           const affordable = monster.levels.filter((level) => level <= difficulty.current)
+          const choice = pick(systemRandom, taskChoices(monster.tasks, affordable))
 
-          return createMathExercise(
-            pick(systemRandom, monster.tasks),
-            pick(systemRandom, affordable),
-            systemRandom,
-          )
+          return createMathExercise(choice.kind, choice.level, systemRandom)
         },
         observers: [d.profile, battle],
       })

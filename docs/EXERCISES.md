@@ -217,11 +217,17 @@ they are written in.
 
 | Level | Numbers | Range | Example |
 |---|---|---|---|
-| 1 | 2 | 0–20 | `13 − 5 = 8` |
 | 2 | 3 | 0–20 | `19 − 13 + 8 = 14` |
 | 3 | 4 | 0–100 | `90 − 13 + 18 + 3 = 98` |
 | 4 | 3 | 0–100 | `97 − (63 − 34) = 68` |
 | 5 | 4 | 0–100 | `27 + 15 − 7 + 40 = 75` |
+
+**The ladder starts at level 2.** A chain of one operation is `9 − 6`, which is
+exactly what the subtraction row asks — the same question wearing another row's
+name. Written as its own rung it made a third of an opponent's «new» questions
+indistinguishable from the old ones. Level 1 of this row is served by the two
+rows beside it, and `levelsFor()` in `kinds.ts` is what stops an opponent from
+asking for a rung that does not exist.
 
 At levels 2 and 3 both signs are **guaranteed**, not merely likely: the point
 is that the child cannot settle into one operation and stay there, and left to
@@ -267,8 +273,24 @@ flip between plus and minus now lives. It used to be hidden inside the
 generator, which meant two mechanisms deciding what to ask; picking a kind from
 the pool is the only one left.
 
-Nothing draws chains yet: the ladder is written and tested, but today's battles
-are unchanged until an opponent opts in.
+**Kind and level are drawn together, not one after the other**, because not
+every row reaches every level. `taskChoices()` pairs each of an opponent's
+kinds with each of the levels that kind actually has, and one pair is drawn
+from the result. Drawing them separately could land on a pair with no rung —
+chains at level 1 — with nothing sensible left to do about it.
+
+The goblin is the first opponent switched over. With levels 1–2 and all three
+kinds its legal pairs are:
+
+```
+addition@1  addition@2  subtraction@1  subtraction@2  addition-subtraction@2
+```
+
+so chains are about a fifth of its questions and always the level-2 ones —
+`5 + 4 − 1`, `6 − 3 + 5`. Everyone else still asks addition and subtraction
+only. Listing kinds one by one rather than «all of them» is deliberate: a row
+implemented later should not turn up in a child's fight because it exists, but
+because someone put it there.
 
 ---
 

@@ -12,7 +12,6 @@ import { buildProblem, toExercise, type ArithmeticProblem } from './generator'
  *
  * | Level | Numbers | Range | New |
  * |---|---|---|---|
- * | 1 | 2 | ≤ 20 | a chain of one, either sign |
  * | 2 | 3 | ≤ 20 | the signs are mixed — «13 − 5 + 4» |
  * | 3 | 4 | ≤ 100 | longer, and bigger — «20 + 15 − 5 + 10» |
  * | 4 | 3 | ≤ 100 | brackets: the order is given — «70 − (25 + 15)» |
@@ -31,9 +30,11 @@ import { buildProblem, toExercise, type ArithmeticProblem } from './generator'
  */
 export function generateChain(levelId: number, random: Random): ArithmeticProblem {
   switch (levelId) {
-    case 1:
-      return chain(random, 2, 20)
-
+    // There is no rung at level 1 on purpose. A chain of one operation is a
+    // plain sum — «9 − 6» is indistinguishable from what the subtraction row
+    // asks — so the first level of this row is served by the two rows beside
+    // it rather than duplicated here under another name. `RUNGS` in kinds.ts
+    // is what keeps an opponent from asking for it.
     case 2:
       return mixedChain(random, 3, 20)
 
@@ -53,12 +54,6 @@ export function generateChain(levelId: number, random: Random): ArithmeticProble
 
 export function createChainExercise(levelId: number, random: Random): Exercise {
   return toExercise(generateChain(levelId, random), levelId)
-}
-
-/** A chain of one operation, either sign. */
-function chain(random: Random, termCount: number, ceiling: number): ArithmeticProblem {
-  const ops: MathOp[] = Array.from({ length: termCount - 1 }, () => (random() < 0.5 ? '+' : '-'))
-  return alongSigns(random, ops, ceiling)
 }
 
 /**

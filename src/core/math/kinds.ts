@@ -3,6 +3,7 @@ import { assertNever } from '../exhaustive'
 import type { Random } from '../random'
 import { createChainExercise } from './chains'
 import { generateProblem, toExercise } from './generator'
+import { MATH_LEVELS } from './levels'
 
 /**
  * A kind of task, named for the row of the grid it comes from
@@ -20,6 +21,40 @@ export type TaskKind = 'addition' | 'subtraction' | 'addition-subtraction'
 
 /** Every kind that exists today, for defaults and for tests. */
 export const TASK_KINDS: readonly TaskKind[] = ['addition', 'subtraction', 'addition-subtraction']
+
+/**
+ * Which levels each kind actually has a rung on.
+ *
+ * Not every row of the grid reaches every level, and pretending otherwise
+ * throws in the middle of a battle. Chains have nothing at level 1: one
+ * operation is a plain sum, which the two rows beside them already ask.
+ */
+const RUNGS: Record<TaskKind, readonly number[]> = {
+  addition: MATH_LEVELS,
+  subtraction: MATH_LEVELS,
+  'addition-subtraction': MATH_LEVELS.filter((level) => level > 1),
+}
+
+export function levelsFor(kind: TaskKind): readonly number[] {
+  return RUNGS[kind]
+}
+
+/**
+ * Every question an opponent could legally be asked: each of its kinds paired
+ * with each of the levels that kind reaches.
+ *
+ * Enumerated rather than drawn and checked, for the same reason the generators
+ * enumerate — a draw that can come up illegal has to be retried, and a retry
+ * that can fail has no bound. Fifteen pairs at the very most.
+ */
+export function taskChoices(
+  kinds: readonly TaskKind[],
+  levels: readonly number[],
+): readonly { readonly kind: TaskKind; readonly level: number }[] {
+  return kinds.flatMap((kind) =>
+    levels.filter((level) => levelsFor(kind).includes(level)).map((level) => ({ kind, level })),
+  )
+}
 
 export function createMathExercise(kind: TaskKind, levelId: number, random: Random): Exercise {
   switch (kind) {

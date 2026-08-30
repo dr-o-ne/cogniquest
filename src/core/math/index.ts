@@ -1,6 +1,6 @@
 export { ArithmeticAnswer } from './ArithmeticAnswer'
 export { createChainExercise, generateChain } from './chains'
-export { createMathExercise, TASK_KINDS, type TaskKind } from './kinds'
+export { createMathExercise, levelsFor, TASK_KINDS, taskChoices, type TaskKind } from './kinds'
 export {
   describe,
   evaluate,

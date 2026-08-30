@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Exercise } from '@/core/exercises'
-import { ArithmeticAnswer } from '@/core/math'
+import { ArithmeticAnswer, taskChoices } from '@/core/math'
 import type { AnswerResult } from '@/core/session'
 import { t } from '@/locale'
 import { Battle } from './Battle'
@@ -130,11 +130,14 @@ describe('the monster config', () => {
     }
   })
 
-  it('every unit draws from at least one kind of task', () => {
-    // An empty pool would have `pick` throw in the middle of a battle rather
-    // than here, and only for whichever opponent was misconfigured.
+  it('every unit has a question it can actually be asked', () => {
+    // Not just a non-empty pool of kinds: the kinds and the levels can miss
+    // each other entirely. An opponent at level 1 that asks only chains has
+    // nothing legal to draw, and would throw on its first question of a real
+    // battle rather than here.
     for (const monster of MONSTERS) {
-      expect(monster.tasks.length).toBeGreaterThan(0)
+      const choices = taskChoices(monster.tasks, monster.levels)
+      expect(choices.length, `nothing to ask for ${monster.id}`).toBeGreaterThan(0)
     }
   })
 

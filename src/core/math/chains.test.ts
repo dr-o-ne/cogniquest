@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createRandom } from '../random'
 import { createChainExercise, generateChain } from './chains'
 import { evaluate, type ArithmeticProblem } from './generator'
-import { MATH_LEVELS } from './levels'
+import { levelsFor, taskChoices } from './kinds'
 
 function sample(levelId: number, count = 500): ArithmeticProblem[] {
   const random = createRandom(levelId * 313 + 11)
@@ -20,7 +20,7 @@ function runningTotals(problem: ArithmeticProblem): number[] {
 }
 
 describe('chains — rules that hold on every level', () => {
-  for (const level of MATH_LEVELS) {
+  for (const level of levelsFor('addition-subtraction')) {
     describe(`level ${level}`, () => {
       const problems = sample(level)
 
@@ -60,20 +60,20 @@ describe('chains — rules that hold on every level', () => {
   }
 })
 
-describe('level 1 — a chain of one', () => {
-  const problems = sample(1)
-
-  it('two numbers, one operation, inside twenty', () => {
-    for (const p of problems) {
-      expect(p.terms).toHaveLength(2)
-      expect(p.ops).toHaveLength(1)
-      expect(p.heardUpTo).toBe(20)
-    }
+describe('there is no level 1', () => {
+  it('the ladder starts at two operations', () => {
+    // A chain of one operation is «9 − 6», which is what the subtraction row
+    // asks — the same question wearing another row's name. The first rung of
+    // this row is served by the two beside it.
+    expect(levelsFor('addition-subtraction')).toEqual([2, 3, 4, 5])
+    expect(() => generateChain(1, createRandom(1))).toThrow(RangeError)
   })
 
-  it('both signs turn up', () => {
-    expect(problems.some((p) => p.ops[0] === '+')).toBe(true)
-    expect(problems.some((p) => p.ops[0] === '-')).toBe(true)
+  it('and no opponent can ask for it', () => {
+    // The throw above is the last line of defence, not the first: an opponent
+    // that draws chains at level 1 would hit it mid-battle.
+    const choices = taskChoices(['addition-subtraction'], [1, 2])
+    expect(choices).toEqual([{ kind: 'addition-subtraction', level: 2 }])
   })
 })
 
