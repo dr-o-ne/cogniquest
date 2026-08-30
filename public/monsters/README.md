@@ -22,4 +22,6 @@ it will stop working once packaged into an `.exe`. So a file here is better.
 If a picture fails to load, the game quietly falls back to the emoji from
 TUNING and carries on.
 
-The files themselves are not kept in git — only this note.
+The files are kept in git alongside this note. There is only a handful of them
+and they weigh some 120 KB in total, so there is nothing to gain by leaving them
+out — and a lot to lose, since otherwise they exist on one machine only.

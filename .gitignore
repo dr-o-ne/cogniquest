@@ -12,10 +12,6 @@ coverage/
 public/models/*
 !public/models/.gitkeep
 
-# Character pictures are added by hand, see public/monsters/README.md
-public/monsters/*
-!public/monsters/README.md
-
 # Local settings and secrets
 *.local
 .env
