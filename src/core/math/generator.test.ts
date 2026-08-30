@@ -14,6 +14,9 @@ function sample(levelId: number, count = 400): ArithmeticProblem[] {
   return Array.from({ length: count }, () => generateProblem(levelId, random))
 }
 
+const units = (n: number) => n % 10
+const tens = (n: number) => Math.floor(n / 10)
+
 describe('generateProblem — rules that hold everywhere', () => {
   for (const level of MATH_LEVELS) {
     describe(`level ${level.id}`, () => {
@@ -34,7 +37,7 @@ describe('generateProblem — rules that hold everywhere', () => {
         for (const p of problems) expect(p.ops).toHaveLength(p.terms.length - 1)
       })
 
-      it('no zero operands — «7 + 0» teaches nothing', () => {
+      it('no zero operands', () => {
         for (const p of problems) {
           for (const term of p.terms.slice(1)) expect(term).toBeGreaterThanOrEqual(1)
         }
@@ -43,16 +46,21 @@ describe('generateProblem — rules that hold everywhere', () => {
       it('nothing negative', () => {
         for (const p of problems) expect(p.answer).toBeGreaterThanOrEqual(0)
       })
+    })
+  }
 
-      it('both operations show up', () => {
-        expect(problems.some((p) => p.ops.includes('+'))).toBe(true)
-        expect(problems.some((p) => p.ops.includes('-'))).toBe(true)
-      })
+  // Level 5 is addition only: its whole point is spotting a pair that makes
+  // ten, and a subtraction in the middle would destroy that.
+  for (const level of MATH_LEVELS.filter((candidate) => candidate.id <= 4)) {
+    it(`level ${level.id}: both operations show up`, () => {
+      const problems = sample(level.id)
+      expect(problems.some((p) => p.ops.includes('+'))).toBe(true)
+      expect(problems.some((p) => p.ops.includes('-'))).toBe(true)
     })
   }
 })
 
-describe('level 1 — within 10', () => {
+describe('level 1 — within ten', () => {
   it('two numbers, neither above ten', () => {
     for (const p of sample(1)) {
       expect(p.terms).toHaveLength(2)
@@ -61,8 +69,64 @@ describe('level 1 — within 10', () => {
   })
 })
 
-describe('level 2 — two operations within 10', () => {
-  const problems = sample(2)
+describe('level 2 — across the ten', () => {
+  it('addition has to cross ten', () => {
+    for (const p of sample(2).filter((x) => x.ops[0] === '+')) {
+      const [left, right] = [p.terms[0]!, p.terms[1]!]
+      expect(units(left) + right).toBeGreaterThan(9)
+      expect(p.answer).toBeGreaterThan(10)
+    }
+  })
+
+  it('subtraction has to borrow', () => {
+    for (const p of sample(2).filter((x) => x.ops[0] === '-')) {
+      const [left, right] = [p.terms[0]!, p.terms[1]!]
+      expect(left).toBeGreaterThan(10)
+      expect(units(left)).toBeLessThan(right)
+    }
+  })
+
+  it('stays inside twenty', () => {
+    for (const p of sample(2)) {
+      for (const term of p.terms) expect(term).toBeLessThanOrEqual(20)
+    }
+  })
+})
+
+describe('level 3 — up to a hundred, digit by digit', () => {
+  const problems = sample(3)
+
+  it('two numbers, and the first one has tens', () => {
+    for (const p of problems) {
+      expect(p.terms).toHaveLength(2)
+      expect(p.terms[0]!).toBeGreaterThanOrEqual(10)
+      expect(p.terms[0]!).toBeLessThanOrEqual(99)
+    }
+  })
+
+  it('addition never carries', () => {
+    for (const p of problems.filter((x) => x.ops[0] === '+')) {
+      const [left, right] = [p.terms[0]!, p.terms[1]!]
+      expect(units(left) + units(right)).toBeLessThanOrEqual(9)
+      expect(tens(left) + tens(right)).toBeLessThanOrEqual(9)
+    }
+  })
+
+  it('subtraction never borrows', () => {
+    for (const p of problems.filter((x) => x.ops[0] === '-')) {
+      const [left, right] = [p.terms[0]!, p.terms[1]!]
+      expect(units(right)).toBeLessThanOrEqual(units(left))
+      expect(tens(right)).toBeLessThanOrEqual(tens(left))
+    }
+  })
+
+  it('round tens still turn up — a case of this level, not a level of their own', () => {
+    expect(problems.some((p) => p.terms.every((term) => term % 10 === 0))).toBe(true)
+  })
+})
+
+describe('level 4 — three numbers up to a hundred', () => {
+  const problems = sample(4)
 
   it('three numbers and two operations', () => {
     for (const p of problems) {
@@ -71,18 +135,18 @@ describe('level 2 — two operations within 10', () => {
     }
   })
 
-  it('every intermediate step stays within ten', () => {
+  it('every intermediate step stays within a hundred', () => {
     for (const p of problems) {
       // The child works step by step, so no single step may leave the bounds,
       // not just the final answer.
       let total = p.terms[0]!
       expect(total).toBeGreaterThanOrEqual(0)
-      expect(total).toBeLessThanOrEqual(10)
+      expect(total).toBeLessThanOrEqual(100)
 
       for (let i = 0; i < p.ops.length; i++) {
         total = p.ops[i] === '+' ? total + p.terms[i + 1]! : total - p.terms[i + 1]!
         expect(total).toBeGreaterThanOrEqual(0)
-        expect(total).toBeLessThanOrEqual(10)
+        expect(total).toBeLessThanOrEqual(100)
       }
     }
   })
@@ -93,29 +157,33 @@ describe('level 2 — two operations within 10', () => {
   })
 })
 
-describe('level 3 — across the ten', () => {
-  it('addition has to cross ten', () => {
-    for (const p of sample(3).filter((x) => x.ops[0] === '+')) {
-      const [left, right] = [p.terms[0]!, p.terms[1]!]
-      expect((left % 10) + right).toBeGreaterThan(9)
-      expect(p.answer).toBeGreaterThan(10)
+describe('level 5 — a pair that makes ten', () => {
+  const problems = sample(5)
+
+  it('three numbers, added', () => {
+    for (const p of problems) {
+      expect(p.terms).toHaveLength(3)
+      expect(p.ops).toEqual(['+', '+'])
     }
   })
 
-  it('subtraction has to borrow', () => {
-    for (const p of sample(3).filter((x) => x.ops[0] === '-')) {
-      const [left, right] = [p.terms[0]!, p.terms[1]!]
-      expect(left).toBeGreaterThan(10)
-      expect(left % 10).toBeLessThan(right)
+  it('the outer two always make ten', () => {
+    for (const p of problems) {
+      expect(p.terms[0]! + p.terms[2]!).toBe(10)
     }
   })
-})
 
-describe('level 4 — round tens', () => {
-  it('every number is a multiple of ten', () => {
-    for (const p of sample(4)) {
-      for (const term of p.terms) expect(term % 10).toBe(0)
-      expect(p.answer % 10).toBe(0)
+  it('the pair is never adjacent — otherwise there is nothing to spot', () => {
+    for (const p of problems) {
+      expect(p.terms[0]! + p.terms[1]!).not.toBe(10)
+      expect(p.terms[1]! + p.terms[2]!).not.toBe(10)
+    }
+  })
+
+  it('the odd term is a digit or a round ten', () => {
+    for (const p of problems) {
+      const other = p.terms[1]!
+      expect(other <= 9 || other % 10 === 0).toBe(true)
     }
   })
 })
@@ -137,7 +205,7 @@ describe('createArithmeticExercise', () => {
   })
 
   it('a chain carries every link in its id', () => {
-    const exercise = createArithmeticExercise(2, createRandom(5))
+    const exercise = createArithmeticExercise(4, createRandom(5))
     expect(exercise.id).toMatch(/^math:\d+[+-]\d+[+-]\d+$/)
   })
 

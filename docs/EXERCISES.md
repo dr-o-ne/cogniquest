@@ -72,13 +72,26 @@ Generators live in `src/core/math/generator.ts`, the level table in
 `levels.ts`. Problems are built straight to the rule of the level, never
 «generate and check», so a generator cannot spin and cannot leave its rule.
 
-| Level | What is generated | Answer range |
-|---|---|---|
-| 1 | ± within 10, two numbers | 0–10 |
-| 2 | three numbers, two operations, every intermediate step within 10 | 0–10 |
-| 3 | across the ten: `8+5`, `13−6` | 0–20 |
-| 4 | round tens: `30+40`, `70−20` | 0–100 |
-| 5 | anything up to 100 | 0–100 |
+| Level | What is generated | Answer range | Example |
+|---|---|---|---|
+| 1 | two numbers within ten | 0–10 | `3+4`, `9−4` |
+| 2 | two numbers, the ten **has** to be crossed | 0–20 | `8+5`, `13−6` |
+| 3 | up to a hundred, digit by digit, nothing carried | 0–100 | `45+20`, `68−14` |
+| 4 | three numbers, still one place per step | 0–100 | `35+4+20`, `88−60−2` |
+| 5 | three numbers where a pair makes ten | 0–100 | `7+8+3` |
+
+Each step adds exactly one new difficulty: size, then place value, then how
+many numbers, and finally a trick rather than a size. Level 5 is the
+olympiad-flavoured one — head-on it is three additions across the ten, but spot
+that 7 and 3 make ten and it collapses into one. The pair is deliberately kept
+apart, and no second pair is allowed to form with a neighbour.
+
+Round tens are no longer a level of their own: `30+40` is the case of level 3
+where both units happen to be zero, not a separate skill.
+
+**A gap worth knowing about:** two-digit addition *with* carrying — `47+28` —
+is generated nowhere on this ladder. Level 3 forbids carrying and level 4 keeps
+one place per step. It is the obvious next cell to fill.
 
 The answer range is not decoration: the recognition grammar is built from the
 whole of it (**T16**), so a level that widens its range widens what the child
@@ -100,9 +113,9 @@ ticked off here as they land.
 
 | Type | 1 | 2 | 3 | 4 | 5 |
 |---|:-:|:-:|:-:|:-:|:-:|
-| Addition | ✅ | ✅ | ☐ | ☐ | ☐ |
-| Subtraction | ✅ | ✅ | ☐ | ☐ | ☐ |
-| Addition + subtraction | ✅ | ✅ | ☐ | ☐ | ☐ |
+| Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Subtraction | ✅ | ✅ | ✅ | ✅ | — |
+| Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ☐ |
 | Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -117,14 +130,16 @@ ticked off here as they land.
 | Measuring | ✖ | ✖ | ✖ | ✖ | ✖ |
 | Patterns | ☐ | ☐ | ☐ | — | — |
 
-**The ticks are honest but the columns are not aligned yet.** Our five levels
-(above) are not the grid's five: crossing the ten is our level 3 and the grid's
-level 2, and two operations within ten is our level 2 and the grid's level 3.
-So «Addition ✅✅» means the game does generate those two cells — at its own
-numbering. Aligning the two is a decision still to be taken.
+Addition and subtraction now run the full ladder, and they run it together:
+one level table serves both, so redefining a level moves the pair of them at
+once. Level 5 is addition only — a subtraction in the middle would destroy the
+pair that makes ten.
 
-Two things the game has that the grid does not ask for: round tens, and
-anything up to 100. They are our levels 4 and 5.
+**Two places where our ladder is not the grid's.** The grid asks for three
+numbers at level 3; we put two-digit-without-carrying there and moved three
+numbers to level 4, so that each step introduces one difficulty rather than
+three. And carrying beyond twenty (`47+28`) is not generated at all — see the
+gap noted above.
 
 ### What each unwritten type will cost
 

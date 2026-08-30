@@ -16,8 +16,8 @@ export interface MathLevel {
 
 export const MATH_LEVELS: readonly MathLevel[] = [
   { id: 1, answerRange: { min: 0, max: 10 } },
-  { id: 2, answerRange: { min: 0, max: 10 } },
-  { id: 3, answerRange: { min: 0, max: 20 } },
+  { id: 2, answerRange: { min: 0, max: 20 } },
+  { id: 3, answerRange: { min: 0, max: 100 } },
   { id: 4, answerRange: { min: 0, max: 100 } },
   { id: 5, answerRange: { min: 0, max: 100 } },
 ]
