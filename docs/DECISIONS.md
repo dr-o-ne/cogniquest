@@ -303,31 +303,24 @@ switch costs one file. See **G5**.
 
 | ID | Decision | Status |
 |---|---|---|
-| **C1** | Math — five levels (table below). | Accepted |
-| **C2** | Reading — three alternating mechanics (table below). | Accepted |
+| **C1** | Math — five levels. | Accepted |
+| **C2** | Reading — three alternating mechanics. | Accepted |
 | **C3** | Failed tasks come back after 1 / 3 / 7 sessions. | Accepted |
 | **C4** | Three mistakes in a row → the difficulty quietly drops a step. The child does not see it. | Accepted |
 | **C5** | **«Did not catch that» is not a mistake in the problem.** | Accepted |
 
-### C1. The math levels
+### What the levels and the mechanics actually are
 
-| Level | Content | Grammar range (T16) |
-|---|---|---|
-| 1 | ± within 10 | 0–10 |
-| 2 | ± up to 20 without crossing the ten | 0–20 |
-| 3 | ± across the ten: `8+5`, `13−6` | 0–20 |
-| 4 | round tens: `30+40`, `70−20` | 0–100 |
-| 5 | anything up to 100 | 0–100 |
+In **[EXERCISES.md](EXERCISES.md)** — the catalogue of exercise types, level by
+level, plus what it takes to add a new one.
 
-### C2. The reading mechanics
+It is kept there and not here on purpose. The two used to be copies of each
+other, and copies drift: the level 2 row in this document described «± up to 20
+without crossing the ten» long after the code had settled on two operations
+within ten. This section holds the decision — five levels, three mechanics —
+and the catalogue holds what they contain.
 
-| Mechanic | What happens | Microphone |
-|---|---|---|
-| Read aloud | `МА-ШИ-НА` in large type, syllables in different colours, the child reads | needed |
-| Build the word | the teacher says a word, the syllables float about, click them in order | not needed |
-| Catch the syllable | the teacher says «ШИ», catch the right one among others | not needed |
-
-**Why three and not one.** Only one of the three needs a microphone. If
+**Why three mechanics and not one.** Only one of the three needs a microphone. If
 syllable recognition turns out weak — a short «ма» is recognised noticeably
 worse than «пять» — reading stays playable anyway.
 

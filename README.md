@@ -8,9 +8,13 @@ The interface is in Russian; the code, the comments and the docs are in English.
 
 ## State
 
-Phase 0 — the skeleton is up. No logic yet.
+Phases 0–3 are done: the learning core, voice input, and a playable battle the
+child has fought through by voice and asked to play again. Reading (phase 4) is
+next.
+
 What comes next — [docs/ROADMAP.md](docs/ROADMAP.md). Why it was done this way —
-[docs/DECISIONS.md](docs/DECISIONS.md).
+[docs/DECISIONS.md](docs/DECISIONS.md). What the game can ask a child to do, and
+how to add another kind of task — [docs/EXERCISES.md](docs/EXERCISES.md).
 
 ## Running it
 
@@ -45,7 +49,7 @@ anything resolved by path at runtime has to go through `publicUrl()` in
 ## Layout
 
 ```
-docs\        decisions and the plan
+docs\        decisions, the plan, and the catalogue of exercise types
 src\core\    pure TypeScript: the rules of the game and of the learning.
              Zero dependencies on React, the DOM or the browser.
 src\adapters\ implementations of the core ports: voice, keyboard, speech, saves
