@@ -25,14 +25,15 @@ export const TASK_KINDS: readonly TaskKind[] = ['addition', 'subtraction', 'addi
 /**
  * Which levels each kind actually has a rung on.
  *
- * Not every row of the grid reaches every level, and pretending otherwise
- * throws in the middle of a battle. Chains have nothing at level 1: one
- * operation is a plain sum, which the two rows beside them already ask.
+ * Every row reaches every level today, but rows still to be written may not —
+ * and a kind drawn at a level it does not reach throws in the middle of a
+ * battle, which is the worst place to find out. Kept as a table, and paired
+ * with the levels before a question is drawn, so that never happens.
  */
 const RUNGS: Record<TaskKind, readonly number[]> = {
   addition: MATH_LEVELS,
   subtraction: MATH_LEVELS,
-  'addition-subtraction': MATH_LEVELS.filter((level) => level > 1),
+  'addition-subtraction': MATH_LEVELS,
 }
 
 export function levelsFor(kind: TaskKind): readonly number[] {

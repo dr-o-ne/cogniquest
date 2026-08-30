@@ -12,7 +12,8 @@ import { buildProblem, toExercise, type ArithmeticProblem } from './generator'
  *
  * | Level | Numbers | Range | New |
  * |---|---|---|---|
- * | 2 | 3 | ≤ 20 | the signs are mixed — «13 − 5 + 4» |
+ * | 1 | 3 | ≤ 10 | the signs are mixed — «7 + 2 − 4» |
+ * | 2 | 3 | ≤ 20 | across the ten — «13 − 5 + 4» |
  * | 3 | 4 | ≤ 100 | longer, and bigger — «20 + 15 − 5 + 10» |
  * | 4 | 3 | ≤ 100 | brackets: the order is given — «70 − (25 + 15)» |
  * | 5 | 4 | ≤ 100 | the order has to be found — «23 + 48 − 3 + 12» |
@@ -30,13 +31,14 @@ import { buildProblem, toExercise, type ArithmeticProblem } from './generator'
  */
 export function generateChain(levelId: number, random: Random): ArithmeticProblem {
   switch (levelId) {
-    // There is no rung at level 1 on purpose. A chain of one operation is a
-    // plain sum — «9 − 6» is indistinguishable from what the subtraction row
-    // asks — so the first level of this row is served by the two rows beside
-    // it rather than duplicated here under another name. `RUNGS` in kinds.ts
-    // is what keeps an opponent from asking for it.
+    case 1:
+      return mixedChain(random, 3, 10)
+
+    // Above ten from the first number on, so the ten is crossed somewhere in
+    // the working. Without the floor this rung would keep producing level 1
+    // over again — a quarter of it did.
     case 2:
-      return mixedChain(random, 3, 20)
+      return mixedChain(random, 3, 20, 11)
 
     case 3:
       return mixedChain(random, 4, 100)
@@ -68,7 +70,12 @@ export function createChainExercise(levelId: number, random: Random): Exercise {
  * that turned out one-sided except throw it away and start again — which is
  * the «generate and check» this file is built to avoid.
  */
-function mixedChain(random: Random, termCount: number, ceiling: number): ArithmeticProblem {
+function mixedChain(
+  random: Random,
+  termCount: number,
+  ceiling: number,
+  floor = 1,
+): ArithmeticProblem {
   const opCount = termCount - 1
   const ops: MathOp[] = Array.from({ length: opCount }, () => (random() < 0.5 ? '+' : '-'))
 
@@ -78,7 +85,7 @@ function mixedChain(random: Random, termCount: number, ceiling: number): Arithme
   ops[plusAt] = '+'
   ops[takeAt] = '-'
 
-  return alongSigns(random, ops, ceiling)
+  return alongSigns(random, ops, ceiling, floor)
 }
 
 /**
@@ -95,11 +102,16 @@ function mixedChain(random: Random, termCount: number, ceiling: number): Arithme
  * with nothing left to take, which is the one way a generator built to a rule
  * can still fail to satisfy it.
  */
-function alongSigns(random: Random, ops: readonly MathOp[], ceiling: number): ArithmeticProblem {
+function alongSigns(
+  random: Random,
+  ops: readonly MathOp[],
+  ceiling: number,
+  floor = 1,
+): ArithmeticProblem {
   const takes = ops.filter((op) => op === '-').length
   const adds = ops.length - takes
 
-  let total = randomInt(random, takes + 1, ceiling - adds)
+  let total = randomInt(random, Math.max(floor, takes + 1), ceiling - adds)
   const terms: number[] = [total]
 
   for (const [i, op] of ops.entries()) {
@@ -107,16 +119,30 @@ function alongSigns(random: Random, ops: readonly MathOp[], ceiling: number): Ar
     const takesLeft = rest.filter((next) => next === '-').length
     const addsLeft = rest.length - takesLeft
 
-    const operand =
-      op === '+'
-        ? randomInt(random, 1, ceiling - total - addsLeft)
-        : randomInt(random, 1, total - 1 - takesLeft)
+    // A step that undoes the one before it — «5 + 3 − 3» — can be answered by
+    // noticing the repeat instead of by counting, so the number that would do
+    // it is kept out.
+    const undoes = i > 0 && ops[i - 1] !== op ? terms[i] : undefined
+    const room = op === '+' ? ceiling - total - addsLeft : total - 1 - takesLeft
+    const operand = drawExcept(random, room, undoes)
 
     total = op === '+' ? total + operand : total - operand
     terms.push(operand)
   }
 
   return buildProblem(terms, ops, ceiling)
+}
+
+/**
+ * A number from 1 to `most`, never the forbidden one — drawn from the shortened
+ * range and stepped over the gap, so every allowed value stays equally likely
+ * and nothing is drawn twice.
+ */
+function drawExcept(random: Random, most: number, forbidden: number | undefined): number {
+  if (forbidden === undefined || forbidden > most || most <= 1) return randomInt(random, 1, most)
+
+  const drawn = randomInt(random, 1, most - 1)
+  return drawn >= forbidden ? drawn + 1 : drawn
 }
 
 /**

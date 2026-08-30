@@ -60,20 +60,65 @@ describe('chains — rules that hold on every level', () => {
   }
 })
 
-describe('there is no level 1', () => {
-  it('the ladder starts at two operations', () => {
-    // A chain of one operation is «9 − 6», which is what the subtraction row
-    // asks — the same question wearing another row's name. The first rung of
-    // this row is served by the two beside it.
-    expect(levelsFor('addition-subtraction')).toEqual([2, 3, 4, 5])
-    expect(() => generateChain(1, createRandom(1))).toThrow(RangeError)
+describe('the row reaches every level', () => {
+  it('including the first', () => {
+    expect(levelsFor('addition-subtraction')).toEqual([1, 2, 3, 4, 5])
+    expect(taskChoices(['addition-subtraction'], [1])).toEqual([
+      { kind: 'addition-subtraction', level: 1 },
+    ])
+  })
+})
+
+describe('level 1 — three small numbers', () => {
+  const problems = sample(1)
+
+  it('three numbers, every one of them under ten', () => {
+    for (const p of problems) {
+      expect(p.terms).toHaveLength(3)
+      for (const term of p.terms) expect(term).toBeLessThan(10)
+    }
   })
 
-  it('and no opponent can ask for it', () => {
-    // The throw above is the last line of defence, not the first: an opponent
-    // that draws chains at level 1 would hit it mid-battle.
-    const choices = taskChoices(['addition-subtraction'], [1, 2])
-    expect(choices).toEqual([{ kind: 'addition-subtraction', level: 2 }])
+  it('never leaves the first ten', () => {
+    for (const p of problems) {
+      for (const total of runningTotals(p)) expect(total).toBeLessThanOrEqual(10)
+    }
+  })
+
+  it('both signs, or it is not this row at all', () => {
+    for (const p of problems) {
+      expect(p.ops).toContain('+')
+      expect(p.ops).toContain('-')
+    }
+  })
+})
+
+describe('level 2 — the same, above the ten', () => {
+  const problems = sample(2)
+
+  it('always works above ten somewhere', () => {
+    // Without this the rung kept reproducing level 1: a quarter of it did.
+    for (const p of problems) {
+      expect(Math.max(...runningTotals(p))).toBeGreaterThan(10)
+    }
+  })
+})
+
+describe('no step undoes the one before it', () => {
+  it('«5 + 3 − 3» is answerable by noticing the repeat, so it never appears', () => {
+    for (const level of levelsFor('addition-subtraction')) {
+      for (const p of sample(level)) {
+        // Only in a flat chain. Inside a bracket the signs mean something
+        // else: «94 − (18 + 18)» adds the two and takes the result away, so
+        // the repeat undoes nothing and hands the child nothing.
+        if (p.bracket) continue
+
+        for (let i = 1; i < p.terms.length - 1; i++) {
+          const undone = p.terms[i] === p.terms[i + 1] && p.ops[i - 1] !== p.ops[i]
+          expect(undone, `${p.terms.join(' ')} at level ${level}`).toBe(false)
+        }
+      }
+    }
   })
 })
 

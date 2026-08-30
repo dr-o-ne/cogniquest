@@ -10,7 +10,7 @@ it is built is a question for the code, and the decisions behind it are **C1**,
 
 Sixteen types across five levels, ticked off as they land.
 
-✅ playable · ☝ asked, but through the row above · ☐ not written ·
+✅ playable · ☐ not written ·
 ✖ needs a way of answering the game does not have ·
 — the grid does not ask for this cell
 
@@ -18,7 +18,7 @@ Sixteen types across five levels, ticked off as they land.
 |---|:-:|:-:|:-:|:-:|:-:|
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Addition + subtraction | ☝ | ✅ | ✅ | ✅ | ✅ |
+| Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -37,9 +37,10 @@ Our rungs are not always the grid's. It asks for three numbers at level 3,
 where we put two-digit-without-carrying, so that each rung introduces one
 difficulty instead of three.
 
-**The ☝ in the mixed row is not a tick.** That cell asks for one operation,
-which is `9 − 6` — what subtraction already asks. The child meets it; the mixed
-row does not produce it, and starts where it has something of its own to say.
+The mixed row starts where the other two do, but not with one operation: its
+first rung is three small numbers. «One action» would be `9 − 6`, which is what
+subtraction already asks; three numbers under ten is the first question a child
+cannot answer by choosing an operation once and counting to the end.
 
 ---
 
@@ -100,17 +101,23 @@ whether the order they are worked in is the order they are written in.
 
 | Level | Numbers | Answers | Example |
 |---|---|---|---|
-| 2 | 3 | 0–20 | `19 − 13 + 8 = 14` |
+| 1 | 3 | 0–10 | `7 + 2 − 5 = 4` |
+| 2 | 3 | 0–20 | `16 − 6 + 4 = 14` |
 | 3 | 4 | 0–100 | `90 − 13 + 18 + 3 = 98` |
 | 4 | 3 | 0–100 | `97 − (63 − 34) = 68` |
 | 5 | 4 | 0–100 | `27 + 15 − 7 + 40 = 75` |
 
-There is no level 1: one operation is a plain sum, and the rows above already
-ask those.
+Levels 1 and 2 differ the way they do in the row above: everything under ten,
+then the ten has to be crossed. Level 2 always works above ten somewhere —
+without that it kept reproducing level 1, and a quarter of it did.
 
-At levels 2 and 3 both signs always appear. The point of these rungs is that
-the child cannot settle into one operation and stay there, so a chain that came
-out all-plus would miss it entirely.
+**Both signs always appear.** The point of the row is that the child cannot
+settle into one operation and stay there, so a chain that came out all-plus
+would miss it entirely.
+
+**And no step undoes the one before it.** `5 + 3 − 3` can be answered by
+noticing the repeat instead of by counting — one in seven of the first rung
+before it was kept out.
 
 **Level 4 is brackets, and only brackets that change the answer.** `(20+5)−8`
 is 17 either way; a bracket that changes nothing teaches that brackets are
