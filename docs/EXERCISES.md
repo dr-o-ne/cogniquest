@@ -10,14 +10,15 @@ it is built is a question for the code, and the decisions behind it are **C1**,
 
 Sixteen types across five levels, ticked off as they land.
 
-✅ playable · ☐ not written · ✖ needs a way of answering the game does not have
-· — the grid does not ask for this cell
+✅ playable · ☝ asked, but through the row above · ☐ not written ·
+✖ needs a way of answering the game does not have ·
+— the grid does not ask for this cell
 
 | Type | 1 | 2 | 3 | 4 | 5 |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Addition + subtraction | ☝ | ✅ | ✅ | ✅ | ✅ |
 | Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -34,9 +35,11 @@ Sixteen types across five levels, ticked off as they land.
 
 Our rungs are not always the grid's. It asks for three numbers at level 3,
 where we put two-digit-without-carrying, so that each rung introduces one
-difficulty instead of three. And level 1 of the mixed row is served by the two
-rows above it: a chain of one operation is `9 − 6`, which is what subtraction
-already asks.
+difficulty instead of three.
+
+**The ☝ in the mixed row is not a tick.** That cell asks for one operation,
+which is `9 − 6` — what subtraction already asks. The child meets it; the mixed
+row does not produce it, and starts where it has something of its own to say.
 
 ---
 
