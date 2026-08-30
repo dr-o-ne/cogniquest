@@ -115,13 +115,17 @@ ranges per level could only have lied about one of them.
 Ids look like `math:8+5` — the expression itself. Same problem, same id, so the
 review queue recognises it next session.
 
-Second operands are never zero: «7 + 0» teaches nothing.
+**Zero is level 1's business, about one problem in fifteen each way:**
+`9 − 9 = 0`, `7 + 0 = 7`, `7 − 0 = 7`. Each is a fact of its own and a child
+who never meets them has nowhere to have learned them.
 
-An answer of zero is another matter. «9 − 9 = 0» is a fact of its own, so
-level 1 takes a number away from itself about one subtraction in fifteen —
-often enough to learn, rare enough not to become a way of answering without
-counting. It used to arrive by accident instead, at 29%. No other level does
-it: by level 2 the borrowing rules it out anyway.
+The dosage is the point. «a − a» used to arrive by accident and reached 29% of
+the level, which turns a fact into a way of answering without counting.
+`0 + 0` never appears — that is not a fact about zero, it is just nothing.
+
+No other level does any of this: from level 2 up, borrowing and carrying rule
+zero out on their own, and second operands there are never zero — `27 + 0`
+would teach nothing that `7 + 0` had not already.
 
 ---
 

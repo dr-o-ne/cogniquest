@@ -38,11 +38,14 @@ describe('generateProblem — rules that hold everywhere', () => {
         for (const p of problems) expect(p.ops).toHaveLength(p.terms.length - 1)
       })
 
-      it('no zero operands', () => {
-        for (const p of problems) {
-          for (const term of p.terms.slice(1)) expect(term).toBeGreaterThanOrEqual(1)
-        }
-      })
+      // Level 1 is the exception, and a deliberate one — see «zero» below.
+      if (level > 1) {
+        it('no zero operands', () => {
+          for (const p of problems) {
+            for (const term of p.terms.slice(1)) expect(term).toBeGreaterThanOrEqual(1)
+          }
+        })
+      }
 
       it('nothing negative', () => {
         for (const p of problems) expect(p.answer).toBeGreaterThanOrEqual(0)
@@ -57,6 +60,28 @@ describe('generateProblem — rules that hold everywhere', () => {
       expect(problems.some((p) => p.ops.includes('-'))).toBe(true)
     })
   }
+})
+
+describe('zero', () => {
+  const level1 = sample(1, 3000)
+  const share = (of: typeof level1) => of.length / level1.length
+
+  it('level 1 adds and takes away nothing now and then', () => {
+    const nothing = level1.filter((p) => p.terms[1] === 0)
+
+    expect(nothing.length).toBeGreaterThan(0)
+    // Both «7 + 0» and «7 − 0» turn up, not just one of them.
+    expect(nothing.some((p) => p.ops[0] === '+')).toBe(true)
+    expect(nothing.some((p) => p.ops[0] === '-')).toBe(true)
+  })
+
+  it('level 1 does not drown in nothing', () => {
+    expect(share(level1.filter((p) => p.terms[1] === 0))).toBeLessThan(0.15)
+  })
+
+  it('«0 + 0» is not a fact about zero and never appears', () => {
+    for (const p of level1) expect(p.terms.every((term) => term === 0)).toBe(false)
+  })
 })
 
 describe('subtraction and zero', () => {

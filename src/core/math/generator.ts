@@ -130,26 +130,44 @@ function subtractAcrossPlace(random: Random): ArithmeticProblem {
 
 /** Level 1: a + b, where a ∈ [minLeft, maxLeft], b ≥ 1, sum ≤ ceiling. */
 function add(random: Random, minLeft: number, maxLeft: number, ceiling: number): ArithmeticProblem {
+  if (random() < ZERO_CHANCE) {
+    // Adding nothing is a fact about zero. «0 + 0» is not a fact, it is just
+    // nothing, so the other term is made to carry something.
+    return problem([randomInt(random, Math.max(minLeft, 1), maxLeft), 0], ['+'], ceiling)
+  }
+
   const left = randomInt(random, minLeft, maxLeft)
   const right = randomInt(random, 1, ceiling - left)
   return problem([left, right], ['+'], ceiling)
 }
 
 /**
- * How often the first level takes a number away from itself.
+ * How often the first level puts zero into a problem — as the answer,
+ * «9 − 9», or as the thing being added and taken away, «7 + 0».
  *
- * «9 − 9 = 0» is a fact of its own and a child who never meets it has nowhere
- * to have learned it. But it used to arrive by accident rather than by design:
+ * Both are facts of their own, and a child who never meets them has nowhere to
+ * have learned them. The catch is dosage. «a − a» used to arrive by accident:
  * subtrahends were drawn from [1, a], so the odds of landing on a were 1/a,
- * which made almost a third of the level a chance to answer «zero» without
+ * and almost a third of the level became a chance to answer «zero» without
  * counting anything. Rare and deliberate beats common and accidental.
+ *
+ * Only level 1 does this. Higher up, borrowing and carrying rule zero out on
+ * their own, and by then it is not news anyway.
  */
-const ZERO_ANSWER_CHANCE = 1 / 15
+const ZERO_CHANCE = 1 / 15
 
-/** Level 1: a − b, where b ∈ [1, a−1] — or a itself, once in a while. */
+/** Level 1: a − b, where b ∈ [1, a−1] — or a itself, or nothing at all. */
 function subtract(random: Random, minLeft: number, maxLeft: number): ArithmeticProblem {
   const left = randomInt(random, Math.max(minLeft, 2), maxLeft)
-  const right = random() < ZERO_ANSWER_CHANCE ? left : randomInt(random, 1, left - 1)
+  const roll = random()
+
+  const right =
+    roll < ZERO_CHANCE
+      ? left // «9 − 9 = 0»
+      : roll < ZERO_CHANCE * 2
+        ? 0 // «7 − 0 = 7»
+        : randomInt(random, 1, left - 1)
+
   return problem([left, right], ['-'], maxLeft)
 }
 
