@@ -135,10 +135,16 @@ function add(random: Random, minLeft: number, maxLeft: number, ceiling: number):
   return problem([left, right], ['+'], ceiling)
 }
 
-/** Level 1: a − b, where b ∈ [1, a]. */
+/**
+ * Level 1: a − b, where b ∈ [1, a−1].
+ *
+ * Not [1, a]: taking a number away from itself is no subtraction to solve, and
+ * the odds of drawing it are 1/a — which made «1 − 1» certain and «a − a»
+ * nearly a third of everything the first level ever asked.
+ */
 function subtract(random: Random, minLeft: number, maxLeft: number): ArithmeticProblem {
-  const left = randomInt(random, minLeft, maxLeft)
-  const right = randomInt(random, 1, left)
+  const left = randomInt(random, Math.max(minLeft, 2), maxLeft)
+  const right = randomInt(random, 1, left - 1)
   return problem([left, right], ['-'], maxLeft)
 }
 
@@ -176,13 +182,22 @@ function addByPlace(random: Random): ArithmeticProblem {
 /** Level 3: the mirror image — every digit of the subtrahend fits under its own. */
 function subtractByPlace(random: Random): ArithmeticProblem {
   const leftTens = randomInt(random, 1, 9)
-  const leftUnits = randomInt(random, 0, 9)
-  // Same rule as above, read from the other end: no zero subtrahend.
-  const rightTens = randomInt(random, leftUnits === 0 ? 1 : 0, leftTens)
-  const rightUnits =
-    rightTens === 0 ? randomInt(random, 1, leftUnits) : randomInt(random, 0, leftUnits)
+  // A single ten with no units leaves nothing that can be taken away and still
+  // leave something behind, so in that case the units are given something.
+  const leftUnits = leftTens === 1 ? randomInt(random, 1, 9) : randomInt(random, 0, 9)
+  const left = leftTens * 10 + leftUnits
 
-  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['-'], 100)
+  // Every subtrahend that borrows nothing: some of the tens, some of the units.
+  // Zero is not a subtraction, and neither is a number taken from itself.
+  const candidates: number[] = []
+  for (let takenTens = 0; takenTens <= leftTens; takenTens++) {
+    for (let takenUnits = 0; takenUnits <= leftUnits; takenUnits++) {
+      const right = takenTens * 10 + takenUnits
+      if (right >= 1 && right < left) candidates.push(right)
+    }
+  }
+
+  return problem([left, candidates[randomInt(random, 0, candidates.length - 1)]!], ['-'], 100)
 }
 
 /**
@@ -242,7 +257,8 @@ function subtractWithGrouping(random: Random): ArithmeticProblem {
   const second = (tensTogether - firstTens) * 10 + secondUnits
 
   const taken = first + second
-  const total = randomInt(random, taken, 99)
+  // One more than what is taken, so something is always left over.
+  const total = randomInt(random, taken + 1, 99)
 
   return problem([total, first, second], ['-', '-'], 100)
 }

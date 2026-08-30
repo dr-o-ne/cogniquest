@@ -59,6 +59,20 @@ describe('generateProblem — rules that hold everywhere', () => {
   }
 })
 
+describe('subtraction always leaves something behind', () => {
+  // «a - a» used to be 29% of everything level 1 asked and 8% of level 3:
+  // subtrahends were drawn from [1, a], so hitting a exactly had odds of 1/a,
+  // and «1 - 1» was the only problem a minuend of one could produce.
+  for (const level of MATH_LEVELS) {
+    it(`level ${level}`, () => {
+      for (const p of sample(level).filter((x) => x.ops[0] === '-')) {
+        expect(p.answer).toBeGreaterThanOrEqual(1)
+        expect(p.terms[0]).not.toBe(p.terms[1])
+      }
+    })
+  }
+})
+
 describe('level 1 — within ten', () => {
   it('two numbers, neither above ten', () => {
     for (const p of sample(1)) {
