@@ -20,7 +20,7 @@ Sixteen types across five levels, ticked off as they land.
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Missing number `□+2=5` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Comparing numbers `5 □ 7` | ✅ | ✅ | — | — | — |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Increase / decrease by | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Making a number (5 = 2 + □) | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -36,6 +36,10 @@ Sixteen types across five levels, ticked off as they land.
 Our rungs are not always the grid's. It asks for three numbers at level 3,
 where we put two-digit-without-carrying, so that each rung introduces one
 difficulty instead of three.
+
+Nor does every row run the whole width. Comparing numbers stops at two rungs
+because the row itself does — the dashes there mean «nothing left to ask», not
+«not written yet».
 
 The mixed row starts where the other two do, but not with one operation: its
 first rung is three small numbers. «One action» would be `9 − 6`, which is what
@@ -154,15 +158,56 @@ ones addition already uses (**A5**, **T16**) — nothing new to check.
 
 ---
 
+## Comparing numbers
+
+| Level | What is asked | Example |
+|---|---|---|
+| 1 | two numbers within ten | `3 □ 8` |
+| 2 | two-digit numbers | `19 □ 21` |
+
+The answer is a word — больше, меньше or равно — read left to right: in
+`5 □ 7` the five is the one that is меньше.
+
+**Two rungs is the whole row.** Its difficulty is how far into a number the
+child has to look, and there are only two answers to that here: at one digit
+there is nothing to look past, at two there is. The third would be three-digit
+numbers, and the number words stop at a hundred — «сто двадцать» cannot be
+said, heard or judged. So levels 3–5 are marked «not asked» rather than «not
+written yet». Comparing whole expressions — `5+3 □ 4+4` — would climb further,
+but that is a different question and would want a row of its own.
+
+**Level 2 exists to catch one mistake.** Nine is more than one, so nineteen
+must be more than twenty-one. A problem where the units happen to agree with
+the answer — `45 □ 47` — is answered correctly by that wrong method and teaches
+the child that it works, so it never appears: here the units either point the
+other way or are identical on both sides.
+
+Both kinds in equal measure, and the second is not padding. If the units always
+pointed the other way, «whichever has the smaller units is the bigger number»
+would be right every time — the same shortcut upside down. Identical units say
+nothing at all, and nothing is what that shortcut deserves.
+
+**«Равно» is one answer in six.** All three words are named in every question,
+so one that never came up would make the offer a lie. A third would be too
+many: two numbers that are the same are the easiest of the three to see.
+
+**The first task in the game not answered with a number**, and two things
+follow from that. The child says one of three words, which is a very short list
+for recognition — short lists make the recogniser stretch any sound onto the
+nearest word — so this is the row to watch on the rig before trusting it. And
+three answers can be guessed: one time in three comes out right by luck, where
+a sum offers a hundred numbers to be wrong with. In a battle where a mistake
+costs a heart, a comparison is the cheapest question on the board.
+
+---
+
 ## What the unwritten types will cost
 
 - **Nothing new to judge** — how many more, increase/decrease, making a number,
   sequences, patterns, word problems. The answer is a number, so the existing
   judging works as it stands.
-- **A new kind of answer** — comparing numbers, answered «больше / меньше /
-  равно». Three words are a very short list for speech recognition, and
-  «больше» and «меньше» differ by one opening consonant. Measure it on the rig
-  before trusting it (**T16**).
+- **A word off a named list** — comparing numbers was the first of these, and
+  paid for the kind once. Any row answered the same way costs nothing now.
 - **A new way of answering altogether** (✖) — geometry, time, money, measuring.
   The task and the answer are both pictures: a clock face, coins, a shape to
   assemble. Nothing in the game is answered by pointing yet.
@@ -200,14 +245,18 @@ the exercise for the child.
 
 ---
 
-## Who asks what
+## Mixed, not blocked
 
-An opponent carries the types it may ask and the levels it may ask them at, and
-draws a fresh pair for every question — so one fight moves the child between
-kinds instead of letting them settle into a rhythm.
+The kind of task is drawn afresh for every question, rather than run as a block
+of one kind followed by a block of the next. A child who meets ten sums in a row
+settles into the operation and stops reading the question; a child who cannot
+tell what is coming has to read every one.
 
-The goblin is the first to ask more than plain sums: with levels 1–2 and every
-written type, its questions mix chains and missing numbers in among the sums.
-The zombie asks addition, subtraction and missing numbers. Everyone else asks
-addition and subtraction only. A type is listed opponent by opponent on purpose
-— a new one should turn up in a child's fight because someone put it there.
+From which it follows that a task must stand on its own with no run-up. That is
+why all three words are named every time a comparison is asked: there is no
+earlier question of the same kind for the child to have learnt them from.
+
+The one deliberate exception is a row that has just been written. Mixed in among
+the rest a new kind is a small share of the questions and tells you little about
+itself; a run of nothing else says plainly whether it is understood, and whether
+it is being answered or guessed. A reading to take and then move on from.

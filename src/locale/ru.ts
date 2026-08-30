@@ -14,6 +14,18 @@
 export const ru = {
   code: 'ru',
 
+  /**
+   * Softens what comes back from recognition: case, «ё», punctuation and words
+   * outside the grammar. Alphabet-specific, hence part of the pack — and shared
+   * by everything that reads an answer back, numbers and words alike.
+   */
+  normalise: (text: string): string =>
+    text
+      .toLowerCase()
+      .replace(/ё/g, 'е')
+      .replace(/[^а-я]+/g, ' ')
+      .trim(),
+
   app: {
     loadingTitle: 'Минутку…',
     loadingNote: 'Готовлю арену',
@@ -94,6 +106,14 @@ export const ru = {
      */
     bracketOpen: 'открывается скобка',
     bracketClose: 'закрывается скобка',
+    /**
+     * A comparison read out loud. The three answers are named every single
+     * time on purpose: a fight draws its kind of task afresh for each question,
+     * so a comparison turns up among sums without warning and never settles
+     * into a rhythm the child could answer from habit.
+     */
+    compare: (left: string, right: string) =>
+      `Сравни. ${left} и ${right}. Больше, меньше или равно?`,
   },
 
   /** What kind of fight a monster gives, by its level (G7). */
@@ -158,16 +178,21 @@ export const ru = {
       'девяносто',
     ],
     hundred: 'сто',
-    /**
-     * Softens what comes back from recognition: case, «ё», punctuation and
-     * words outside the grammar. Alphabet-specific, hence part of the locale.
-     */
-    normalise: (text: string): string =>
-      text
-        .toLowerCase()
-        .replace(/ё/g, 'е')
-        .replace(/[^а-я]+/g, ' ')
-        .trim(),
+  },
+
+  /**
+   * The three answers to «5 □ 7», read left to right: пять МЕНЬШЕ семи.
+   *
+   * Here for the same reason `numbers` is: these words are both what the child
+   * says into the microphone — the whole recognition grammar of a comparison
+   * (T16) — and what the teacher reads back. Language, not logic. The signs
+   * they stand for are not: `<`, `=` and `>` are the same in every language and
+   * live in the code.
+   */
+  comparison: {
+    less: 'меньше',
+    equal: 'равно',
+    greater: 'больше',
   },
 
   /**

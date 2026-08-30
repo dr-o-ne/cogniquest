@@ -578,3 +578,47 @@ img.avatar {
   border-radius: 0.15em;
   color: var(--muted);
 }
+
+/* The empty box of «5 □ 7» — the same dashed gap, with nothing to put in it
+   yet. Sized in em so it grows with the numbers. */
+.expression__box {
+  width: 0.7em;
+  height: 0.7em;
+  border: 0.07em dashed var(--muted);
+  border-radius: 0.12em;
+}
+
+.pad__choices {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pad__choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  min-width: 5rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 15%, transparent);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.pad__choice:hover {
+  border-color: #4a7de0;
+}
+
+.pad__choice-sign {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pad__choice-word {
+  font-size: 0.85rem;
+  color: var(--muted);
+}

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import type { Exercise, MathOp } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
+import { comparisonSign, comparisonWord, COMPARISONS, type Comparison } from '@/core/math'
 import { availableMonsters, PLAYER_HEARTS, type Monster } from '@/game'
 import { t } from '@/locale'
 import { MonsterAvatar } from './MonsterAvatar'
@@ -9,7 +10,7 @@ import { useBattle, type GameState } from './useBattle'
 import './BattleGame.css'
 
 export function BattleGame() {
-  const { state, setName, fight, submitNumber, toSelect, resetAll } = useBattle()
+  const { state, setName, fight, submitNumber, submitChoice, toSelect, resetAll } = useBattle()
 
   switch (state.screen) {
     case 'loading':
@@ -25,6 +26,7 @@ export function BattleGame() {
         <FightScreen
           state={state}
           onNumber={submitNumber}
+          onChoice={submitChoice}
           onLeave={toSelect}
           onRematch={() => state.monster && void fight(state.monster)}
         />
@@ -139,11 +141,13 @@ function SelectScreen({
 function FightScreen({
   state,
   onNumber,
+  onChoice,
   onLeave,
   onRematch,
 }: {
   state: GameState
   onNumber: (value: number) => void
+  onChoice: (value: Comparison) => void
   onLeave: () => void
   onRematch: () => void
 }) {
@@ -176,7 +180,9 @@ function FightScreen({
       <div className="fight__stage">
         {state.exercise && <Expression exercise={state.exercise} />}
         <MicState state={state} />
-        {state.showFallback && <NumberPad onSubmit={onNumber} />}
+        {state.showFallback && state.exercise && (
+          <Fallback exercise={state.exercise} onNumber={onNumber} onChoice={onChoice} />
+        )}
       </div>
 
       <footer className="fight__bottom">
@@ -346,9 +352,58 @@ function Expression({ exercise }: { exercise: Exercise }) {
       )
     }
 
+    case 'comparison':
+      return (
+        <div className="expression">
+          <span>{prompt.left}</span>
+          {/* An empty box rather than a «□»: drawn in CSS it is the same size
+              whatever font the machine has, and there is no glyph to go
+              missing at eight times the body text. */}
+          <span className="expression__box" />
+          <span>{prompt.right}</span>
+        </div>
+      )
+
     // Reading (C2) arrives in phase 4 with a screen of its own. Showing nothing
     // here is deliberate, not an oversight — and it is written down as a case
     // so that a genuinely new kind of prompt cannot slip through unnoticed.
+    case 'syllables':
+    case 'spoken':
+      return null
+
+    default:
+      return assertNever(prompt, 'exercise prompt')
+  }
+}
+
+/**
+ * The way in after two misses (T5), matched to what is being asked.
+ *
+ * A keypad cannot answer «5 □ 7», so the kind of prompt picks the pad. Written
+ * as an exhaustive switch for the same reason the drawing above is: a new kind
+ * of task must not quietly inherit a pad that cannot answer it.
+ */
+function Fallback({
+  exercise,
+  onNumber,
+  onChoice,
+}: {
+  exercise: Exercise
+  onNumber: (value: number) => void
+  onChoice: (value: Comparison) => void
+}) {
+  const prompt = exercise.prompt
+
+  switch (prompt.kind) {
+    // Both are answered with a number — the sum of a chain, or the operand
+    // hidden in an equation.
+    case 'arithmetic':
+    case 'equation':
+      return <NumberPad onSubmit={onNumber} />
+
+    case 'comparison':
+      return <ChoicePad onSubmit={onChoice} />
+
     case 'syllables':
     case 'spoken':
       return null
@@ -368,6 +423,28 @@ function MicState({ state }: { state: GameState }) {
   if (state.flash === 'unheard') return <p className="mic-state">{t.mic.unheard}</p>
   if (state.mic === 'listening') return <p className="mic-state mic-state--live">{t.mic.listening}</p>
   return <p className="mic-state">&nbsp;</p>
+}
+
+/**
+ * The three answers to a comparison, sign above word.
+ *
+ * The sign is there because it is what the box is waiting for: the child says
+ * «меньше», and the button shows them the mark that stands for it.
+ */
+function ChoicePad({ onSubmit }: { onSubmit: (value: Comparison) => void }) {
+  return (
+    <div className="pad">
+      <p className="pad__hint">{t.pad.hint}</p>
+      <div className="pad__choices">
+        {COMPARISONS.map((value) => (
+          <button key={value} className="pad__choice" onClick={() => onSubmit(value)}>
+            <span className="pad__choice-sign">{comparisonSign(value)}</span>
+            <span className="pad__choice-word">{comparisonWord(value)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function NumberPad({ onSubmit }: { onSubmit: (value: number) => void }) {

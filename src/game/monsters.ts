@@ -141,10 +141,10 @@ const TUNING: Record<
   'skeleton-archer': { avatar: '💀' },
   // Listed one by one rather than «all of them»: a new row of the grid should
   // not turn up in the goblin's fight because it was implemented elsewhere.
-  goblin: {
-    avatar: '👺',
-    tasks: ['addition', 'subtraction', 'addition-subtraction', 'missing-number'],
-  },
+  // A row that has just been written is asked on its own for a while: mixed in
+  // among sums it is a small share of the questions and says little about
+  // itself. This is that reading, not where the goblin settles.
+  goblin: { avatar: '👺', tasks: ['comparing-numbers'] },
   zombie: { avatar: '🧟', tasks: ['addition', 'subtraction', 'missing-number'] },
   'ancient-vampire-bat': { avatar: '🧛' },
   gorgul: { avatar: '🗿' },

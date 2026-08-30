@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AnswerAttempt, Exercise, MathOp, Verdict } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
-import { createMathExercise, evaluate, numberToWords, taskChoices } from '@/core/math'
+import {
+  compare,
+  comparisonWord,
+  createMathExercise,
+  evaluate,
+  numberToWords,
+  taskChoices,
+  type Comparison,
+} from '@/core/math'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
 import { pick, systemRandom } from '@/core/random'
 import { ExerciseSession } from '@/core/session'
@@ -105,6 +113,9 @@ function questionText(exercise: Exercise): string {
       return words.join(' ')
     }
 
+    case 'comparison':
+      return t.teacher.compare(numberToWords(prompt.left), numberToWords(prompt.right))
+
     // «Read aloud» works only if the child does the reading. Saying the word
     // first would do the exercise for them, so the teacher stays quiet.
     case 'syllables':
@@ -119,18 +130,30 @@ function questionText(exercise: Exercise): string {
   }
 }
 
-function correctAnswerOf(exercise: Exercise): number | null {
+/**
+ * The right answer in the words the teacher says it — already a phrase, not a
+ * number, because a comparison is answered with a word.
+ */
+function spokenAnswer(exercise: Exercise): string | null {
   const prompt = exercise.prompt
 
   switch (prompt.kind) {
     case 'arithmetic':
-      return evaluate(prompt.terms, prompt.ops)
+      // The bracket comes along, or the teacher reads out a different answer
+      // from the one the child was marked against: «97 − (63 − 34)» is 68, and
+      // taken left to right it is 0.
+      return numberToWords(evaluate(prompt.terms, prompt.ops, prompt.bracket))
 
     // The missing operand is the answer — nothing to compute.
-    case 'equation':
-      return prompt.terms[prompt.blank] ?? null
+    case 'equation': {
+      const missing = prompt.terms[prompt.blank]
+      return missing === undefined ? null : numberToWords(missing)
+    }
 
-    // Nothing numeric to announce: the teacher does not read the answer out.
+    case 'comparison':
+      return comparisonWord(compare(prompt.left, prompt.right))
+
+    // Nothing to announce: the teacher does not read the answer out.
     case 'syllables':
     case 'spoken':
       return null
@@ -325,10 +348,8 @@ export function useBattle() {
           patch({ flash: 'wrong', heard, battle: battle.state })
 
           if (session.position !== positionBefore && !battle.finished) {
-            const answer = correctAnswerOf(exercise)
-            if (answer !== null) {
-              await d.tts.speak(t.teacher.theAnswerIs(numberToWords(answer)), run.signal)
-            }
+            const answer = spokenAnswer(exercise)
+            if (answer !== null) await d.tts.speak(t.teacher.theAnswerIs(answer), run.signal)
           }
           await wait(battle.finished ? 400 : 700)
           continue
@@ -370,6 +391,11 @@ export function useBattle() {
     manualAnswer.current?.({ kind: 'number', value })
   }, [])
 
+  /** The other fallback (T5): three buttons, for a task with no number to type. */
+  const submitChoice = useCallback((value: Comparison) => {
+    manualAnswer.current?.({ kind: 'choice', value })
+  }, [])
+
   /** Start over: wipe the profile and ask for a name again. */
   const resetAll = useCallback(async () => {
     const d = deps.current
@@ -400,5 +426,5 @@ export function useBattle() {
     patch({ screen: 'select', monster: null, battle: null, exercise: null, mic: 'idle', flash: null })
   }, [patch])
 
-  return { state, setName, fight, submitNumber, toSelect, resetAll }
+  return { state, setName, fight, submitNumber, submitChoice, toSelect, resetAll }
 }

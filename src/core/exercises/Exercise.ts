@@ -39,6 +39,11 @@ export type ExercisePrompt =
       readonly result: number
       readonly blank: number
     }
+  /**
+   * «5 □ 7» — two numbers with the sign missing between them. The child names
+   * the sign, so this is the first prompt whose answer is not a number.
+   */
+  | { readonly kind: 'comparison'; readonly left: number; readonly right: number }
   /** «МА-ШИ-НА» in large type, one colour per syllable */
   | { readonly kind: 'syllables'; readonly syllables: readonly string[] }
   /** The teacher says it out loud; nothing appears on screen */

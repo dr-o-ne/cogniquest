@@ -1,6 +1,21 @@
 export { ArithmeticAnswer } from './ArithmeticAnswer'
 export { createChainExercise, generateChain } from './chains'
 export {
+  compare,
+  ComparisonAnswer,
+  comparisonSign,
+  comparisonWord,
+  COMPARISONS,
+  parseComparison,
+  type Comparison,
+} from './ComparisonAnswer'
+export {
+  COMPARISON_LEVELS,
+  createComparisonExercise,
+  generateComparison,
+  type ComparisonProblem,
+} from './comparison'
+export {
   createEquationExercise,
   describeEquation,
   generateEquation,

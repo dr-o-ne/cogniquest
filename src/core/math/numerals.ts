@@ -10,7 +10,8 @@
  */
 import { t } from '@/locale'
 
-const { units: UNITS, teens: TEENS, tens: TENS, hundred: HUNDRED, normalise } = t.numbers
+const { units: UNITS, teens: TEENS, tens: TENS, hundred: HUNDRED } = t.numbers
+const { normalise } = t
 
 export const MIN_NUMBER = 0
 export const MAX_NUMBER = 100

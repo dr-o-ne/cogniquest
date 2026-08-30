@@ -2,6 +2,7 @@ import type { Exercise } from '../exercises'
 import { assertNever } from '../exhaustive'
 import type { Random } from '../random'
 import { createChainExercise } from './chains'
+import { COMPARISON_LEVELS, createComparisonExercise } from './comparison'
 import { createEquationExercise } from './equations'
 import { generateProblem, toExercise } from './generator'
 import { MATH_LEVELS } from './levels'
@@ -14,11 +15,16 @@ import { MATH_LEVELS } from './levels'
  * covering three of these and telling a reader nothing, and an opponent that
  * asks only subtraction has no way to say so through a grouping.
  *
- * The rows still to be written — comparing, sequences — join this union as they
- * land, and every switch over it stops compiling until it says what to do with
- * them.
+ * The rows still to be written — sequences, «how many more», word problems —
+ * join this union as they land, and every switch over it stops compiling until
+ * it says what to do with them.
  */
-export type TaskKind = 'addition' | 'subtraction' | 'addition-subtraction' | 'missing-number'
+export type TaskKind =
+  | 'addition'
+  | 'subtraction'
+  | 'addition-subtraction'
+  | 'missing-number'
+  | 'comparing-numbers'
 
 /** Every kind that exists today, for defaults and for tests. */
 export const TASK_KINDS: readonly TaskKind[] = [
@@ -26,15 +32,17 @@ export const TASK_KINDS: readonly TaskKind[] = [
   'subtraction',
   'addition-subtraction',
   'missing-number',
+  'comparing-numbers',
 ]
 
 /**
  * Which levels each kind actually has a rung on.
  *
- * Every row reaches every level today, but rows still to be written may not —
- * and a kind drawn at a level it does not reach throws in the middle of a
- * battle, which is the worst place to find out. Kept as a table, and paired
- * with the levels before a question is drawn, so that never happens.
+ * Not every row reaches every level — comparing numbers stops at two, because
+ * that is where the row itself stops (see comparison.ts) — and a kind drawn at
+ * a level it does not reach throws in the middle of a battle, which is the
+ * worst place to find out. Kept as a table, and paired with the levels before a
+ * question is drawn, so that never happens.
  */
 const RUNGS: Record<TaskKind, readonly number[]> = {
   addition: MATH_LEVELS,
@@ -43,6 +51,7 @@ const RUNGS: Record<TaskKind, readonly number[]> = {
   // Rides the addition/subtraction ladder — a base problem for the level with
   // one operand hidden — so it reaches every rung they do.
   'missing-number': MATH_LEVELS,
+  'comparing-numbers': COMPARISON_LEVELS,
 }
 
 export function levelsFor(kind: TaskKind): readonly number[] {
@@ -79,6 +88,9 @@ export function createMathExercise(kind: TaskKind, levelId: number, random: Rand
 
     case 'missing-number':
       return createEquationExercise(levelId, random)
+
+    case 'comparing-numbers':
+      return createComparisonExercise(levelId, random)
 
     default:
       return assertNever(kind, 'kind of task')
