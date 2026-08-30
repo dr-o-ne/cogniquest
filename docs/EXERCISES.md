@@ -122,7 +122,7 @@ ticked off here as they land.
 |---|:-:|:-:|:-:|:-:|:-:|
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ☐ |
+| Addition + subtraction | ✅ | ✅ | ☐ | ☐ | ☐ |
 | Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -141,6 +141,12 @@ Addition and subtraction now run the full ladder, and they run it together:
 one level table serves both, so redefining a level moves the pair of them at
 once. That includes level 5, where the trick simply reads backwards —
 `7 + 8 + 3` finds a pair that makes ten, `50 − 7 − 3` takes one away.
+
+The mixed row is ticked only twice, and the ticks sit on other rungs than the
+grid puts them: one operation is our level 1, two operations our level 4.
+Three operations exist nowhere — every chain is built from three numbers, so
+two is the most it can produce — and brackets and conditions have never been
+represented at all.
 
 **Two places where our ladder is not the grid's.** The grid asks for three
 numbers at level 3; we put two-digit-without-carrying there and moved three
