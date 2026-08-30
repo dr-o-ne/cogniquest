@@ -91,6 +91,82 @@ Second operands are never zero: «7 + 0» teaches nothing.
 
 ---
 
+## The grades 1–2 grid
+
+The target: sixteen types across five levels. Types are added one at a time and
+ticked off here as they land.
+
+✅ playable · ☐ not written · ✖ outside the current answer model
+
+| Type | 1 | 2 | 3 | 4 | 5 |
+|---|:-:|:-:|:-:|:-:|:-:|
+| Addition | ✅ | ✅ | ☐ | ☐ | ☐ |
+| Subtraction | ✅ | ✅ | ☐ | ☐ | ☐ |
+| Addition + subtraction | ✅ | ✅ | ☐ | ☐ | ☐ |
+| Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
+| «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Increase / decrease by | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Making a number (5 = 2 + □) | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Number sequences | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Word problems | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Logic | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Geometry | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Telling the time | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Money | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Measuring | ✖ | ✖ | ✖ | ✖ | ✖ |
+| Patterns | ☐ | ☐ | ☐ | — | — |
+
+**The ticks are honest but the columns are not aligned yet.** Our five levels
+(above) are not the grid's five: crossing the ten is our level 3 and the grid's
+level 2, and two operations within ten is our level 2 and the grid's level 3.
+So «Addition ✅✅» means the game does generate those two cells — at its own
+numbering. Aligning the two is a decision still to be taken.
+
+Two things the game has that the grid does not ask for: round tens, and
+anything up to 100. They are our levels 4 and 5.
+
+### What each unwritten type will cost
+
+**Nothing new to judge** — the answer is a number, so `ArithmeticAnswer` and the
+existing grammar work unchanged. Only a generator, and sometimes a new prompt:
+missing number, how many more, increase/decrease, making a number, number
+sequences, patterns, and word problems (spoken by the teacher, since the child
+reads syllables).
+
+**One new judge** — comparing numbers. The answer is «больше / меньше / равно»,
+a grammar of three phrases. Worth measuring on the rig before trusting it:
+**T16** warns that a short list makes Vosk hear it everywhere, and those two
+words differ by a single opening consonant.
+
+**A new way of answering altogether** (marked ✖) — geometry, time, money,
+measuring. Both the prompt and the answer are pictures: a clock face, coins, a
+shape to assemble. `choice` and `sequence` attempts already exist in the model
+and **A3** already says non-voice input answers the session directly, but there
+is no graphic prompt and no tapping anywhere in the UI yet.
+
+### Level 5 is meant to be olympiad-ish
+
+Which is fine — difficulty lives in the prompt, and a task whose answer is one
+number goes through the existing judge however hard it is to work out.
+
+What does not fit is a task with no answer as an object: «prove without
+computing», «find a strategy». `check(attempt): Verdict` will never accept a
+proof. Those are rescued by rewording, not by code — «is the sum odd or even»
+is a two-phrase grammar, «how many ways are there» is a number.
+
+Two limits to remember when that column is built:
+
+- number words stop at 100 (`MIN_NUMBER`/`MAX_NUMBER`), and `numberToWords`
+  throws beyond it — an olympiad answer of «сто двадцать» would break grammar
+  generation before the child ever heard the task;
+- **the battle works against olympiad tasks.** A mistake costs a heart
+  (**G6**, **P10**) and three in a row quietly ease the difficulty (**C4**).
+  A child who reaches for something hard would be punished for it and then
+  steered back down. Level 5 wants to live outside the battle.
+
+---
+
 ## Reading — planned, not written
 
 `src/core/reading/` is empty. Three mechanics are decided (**C2**), and only
