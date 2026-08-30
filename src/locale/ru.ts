@@ -69,7 +69,14 @@ export const ru = {
   /** Spoken by the teacher through speech synthesis (T12). */
   teacher: {
     label: 'Учитель',
+    /** After a wrong answer — the child was heard, the answer was not right. */
     tryAgain: 'Попробуй ещё разок',
+    /**
+     * After a miss (C5). Deliberately different from the line above: the
+     * microphone is at fault here, and the teacher says so. Same words in the
+     * same tone would tell the child they got it wrong when they did not.
+     */
+    didNotCatch: 'Ой, я не расслышал. Скажи ещё разок',
     theAnswerIs: (words: string) => `Правильно ${words}`,
     plus: 'плюс',
     minus: 'минус',

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { AnswerAttempt, Exercise } from '@/core/exercises'
+import type { AnswerAttempt, Exercise, Verdict } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
 import { createArithmeticExercise, evaluate, numberToWords } from '@/core/math'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
@@ -209,6 +209,7 @@ export function useBattle() {
       session.start()
 
       let lastPosition = -1
+      let lastVerdict: Verdict | null = null
 
       while (!battle.finished && !session.finished && !run.signal.aborted) {
         const exercise = session.current
@@ -220,8 +221,18 @@ export function useBattle() {
         patch({ exercise, flash: null, heard: null })
         if (isNewTask) patch({ showFallback: false })
 
+        // Repeating the task sounds different depending on why we are back on
+        // it. C5 says a miss is the equipment's fault, not the child's — and
+        // that has to be audible, not just written on screen. The same line for
+        // both tells a child who was never heard that they got it wrong.
+        const line = isNewTask
+          ? questionText(exercise)
+          : lastVerdict === 'unrecognised'
+            ? t.teacher.didNotCatch
+            : t.teacher.tryAgain
+
         patch({ mic: 'speaking' })
-        await d.tts.speak(isNewTask ? questionText(exercise) : t.teacher.tryAgain, run.signal)
+        await d.tts.speak(line, run.signal)
         if (run.signal.aborted) return
 
         patch({ mic: 'listening' })
@@ -246,6 +257,7 @@ export function useBattle() {
         const positionBefore = session.position
         const result = session.submit(attempt)
         difficulty.onVerdict(result.verdict)
+        lastVerdict = result.verdict
 
         const heard = attempt.kind === 'text' ? attempt.value : null
 
