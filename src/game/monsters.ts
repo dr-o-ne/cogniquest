@@ -106,6 +106,7 @@ const IMAGES: Record<string, string> = {
   'fire-spider': '/monsters/spider-fire.webp',
   'sea-devil': '/monsters/sea-devil.webp',
   pirate: '/monsters/pirate.webp',
+  'ghost-pirate': '/monsters/ghost-pirate.webp',
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -127,6 +128,7 @@ const TUNING: Record<string, { hearts?: number; levels?: number[]; avatar?: stri
   'fire-spider': { avatar: '🕷' },
   'sea-devil': { avatar: '🦑' },
   pirate: { avatar: '🏴‍☠️' },
+  'ghost-pirate': { avatar: '👻' },
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -258,6 +260,10 @@ const ROSTER: readonly Row[] = [
   ['ice-ball', 1, 5, 10, 40, 2, 2, 10, '10–15'],
   ['sea-devil', 1, 12, 6, 4, 7, 3, 10, '1–3'],
   ['pirate', 2, 25, 8, 4, 5, 3, 25, '3–5'],
+  // Stats unknown — not in the table we were given. Level 3 is a judgement,
+  // not a reading: it puts him a step above the ordinary pirate, which is what
+  // a ghost version of anything ought to be. Fill in the row to correct it.
+  ['ghost-pirate', 3],
 
   // Lizards
   ['lizardman', 1, 15, 7, 1, 7, 3, 6, '1–2'],

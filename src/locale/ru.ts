@@ -265,6 +265,7 @@ export const ru = {
     'ice-ball': 'Ледяной шар',
     'sea-devil': 'Морской дьявол',
     pirate: 'Пират',
+    'ghost-pirate': 'Пират-призрак',
 
     // Lizards
     lizardman: 'Ящер',
