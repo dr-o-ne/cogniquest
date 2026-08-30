@@ -12,7 +12,7 @@ that has to be found out in the first week, not in the second month.
 | 0 | The skeleton | **done** |
 | 1 | The voice spike | **done** — risk retired |
 | 2 | The math core | **done** — 101 tests |
-| 3 | The first playable mini-game | **assembled**, waiting on the child |
+| 3 | The first playable mini-game | **done** — the child asked for more |
 | 4 | Reading by syllables | |
 | 5 | The teacher | |
 | 6 | Gamification | |
@@ -105,11 +105,18 @@ will later plug into. So the seam is real, not merely drawn.
 - [x] sounds synthesised by an oscillator, no files
 - [x] the «3 of 8» bar, a result screen with stars
 - [x] progress survives restarts
-- [ ] **check on the child**
-- [ ] tune the pause timings against live play
+- [x] **checked on the child** (2026-08-30)
+- [x] pause timings — left as they are; live play gave no reason to touch them
 
 **Done when:** the child gets through a session of eight problems by voice from
 beginning to end **and asks for more**.
+
+**Met, and then some.** The wording predates the battle format (G6), so read
+«session» as «battle»: the child fought one through by voice, asked for another
+— and then asked for new characters. That last part is the stronger signal of
+the two. Wanting another go means the game works; wanting more characters means
+the world of it is worth being in, which is what phase 6 was supposed to build
+and apparently does not have to build from nothing.
 
 Everything after this is scaffolding on top of a working game.
 

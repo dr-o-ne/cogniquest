@@ -3,7 +3,7 @@
 A learning game for a child: math and reading by syllables, answered by voice.
 
 **Last updated:** 2026-08-30
-**State:** phase 3 assembled, waiting on the child
+**State:** phase 3 closed on the child; reading (phase 4) is next
 **What comes next:** [ROADMAP.md](ROADMAP.md)
 
 ---
@@ -443,4 +443,5 @@ either.
 | 2026-08-29 | **Phase 3 assembled:** a playable math screen with voice input, the teacher's narration, the fallback input and a stand-in character. **A3** clarified (the port is for an input you ask; the keyboard answers directly). Waiting on the child. |
 | 2026-08-29 | **The format changed to a battle (G6, G7).** P6 replaced by **P10**: a battle can be lost, progress cannot. Added `src/game/` (the monster config plus `Battle`), the battle screen, opponent selection, the child's name. `ExerciseSession` learned sessions of unknown length. 115 tests. |
 | 2026-08-30 | **Renamed to CogniQuest** (briefly Smart Quest along the way). The save prefix went `smartkid:` → `cogniquest:` without migration — the progress under the old name was deliberately let go. |
+| 2026-08-30 | **Phase 3 closed on the child.** A battle fought through by voice start to finish, then a request for another, then a request for new characters. P9 (answering out loud) survives contact with its only user, and the timings needed no tuning. The ask for characters is a finding in its own right: pull the **G3** conversation forward and treat the roster as content worth extending, not decoration. |
 | 2026-08-30 | **Localisation.** Everything the child sees or hears moved into `src/locale/ru.ts`; the code, comments, tests and both documents are now English, and the decision IDs moved from Cyrillic to Latin (П→P, Т→T, А→A, К→C, Г→G, О→O). Monster ids became English slugs with names looked up from the text pack. 137 tests. |
