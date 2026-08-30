@@ -559,3 +559,9 @@ img.avatar {
   opacity: 0.4;
   cursor: default;
 }
+
+/* Brackets sit tight against their numbers — a gap would read as another term */
+.expression__bracket {
+  margin: 0 -0.45rem;
+  color: var(--muted);
+}

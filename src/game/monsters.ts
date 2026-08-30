@@ -13,6 +13,7 @@
  * (src/locale), keyed by the same id.
  */
 import { publicUrl } from '@/assets'
+import type { TaskKind } from '@/core/math'
 import { t } from '@/locale'
 
 export interface UnitStats {
@@ -30,6 +31,17 @@ export interface Monster {
   readonly id: string
   /** Localised display name, from `t.monsters`. */
   readonly name: string
+  /**
+   * Which kinds of task this fight draws from — a pool, like `levels`, with
+   * one drawn afresh for every question. A row of the grid per name; an
+   * opponent listing three asks all three, turn about.
+   *
+   * Addition and subtraction unless TUNING says otherwise. That default is
+   * also where the coin flip between plus and minus lives now: it used to be
+   * hidden inside the generator, and there is no reason for two mechanisms
+   * choosing what to ask.
+   */
+  readonly tasks: readonly TaskKind[]
   /** A picture from public/monsters/. No picture, and the unit stays hidden. */
   readonly image?: string
   /** An emoji for when the picture fails to load. */
@@ -118,7 +130,10 @@ const IMAGES: Record<string, string> = {
 // can be pulled apart by character: one tough, another quick and nasty.
 // ─────────────────────────────────────────────────────────────────────────
 
-const TUNING: Record<string, { hearts?: number; levels?: number[]; avatar?: string }> = {
+const TUNING: Record<
+  string,
+  { hearts?: number; levels?: number[]; avatar?: string; tasks?: TaskKind[] }
+> = {
   // The fairy has no stats, so her hearts are set by hand
   'forest-fairy': { hearts: 8, avatar: '🧚' },
   peasant: { avatar: '🧑‍🌾' },
@@ -330,6 +345,7 @@ function build(row: Row): Monster {
     // Falling back to the id keeps a missing translation visible instead of
     // blank. A test makes sure it never actually comes to that.
     name: t.monsters[id] ?? id,
+    tasks: tuned.tasks ?? ['addition', 'subtraction'],
     // Written as a root path in IMAGES, resolved against wherever the app is
     // actually served from — see src/assets.ts.
     ...(image !== undefined ? { image: publicUrl(image) } : {}),

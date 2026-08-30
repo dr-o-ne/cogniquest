@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AnswerAttempt, Exercise, MathOp, Verdict } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
-import { createArithmeticExercise, evaluate, numberToWords } from '@/core/math'
+import { createMathExercise, evaluate, numberToWords } from '@/core/math'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
 import { pick, systemRandom } from '@/core/random'
 import { ExerciseSession } from '@/core/session'
@@ -77,10 +77,19 @@ function questionText(exercise: Exercise): string {
 
   switch (prompt.kind) {
     case 'arithmetic':
-      return prompt.terms.reduce((text, term, i) => {
-        if (i === 0) return numberToWords(term)
-        return `${text} ${spoken(prompt.ops[i - 1]!)} ${numberToWords(term)}`
-      }, '')
+      return prompt.terms
+        .reduce<string[]>((said, term, i) => {
+          if (i > 0) said.push(spoken(prompt.ops[i - 1]!))
+          // The bracket is only visible on screen, so it has to be audible too
+          // — otherwise the child hears a chain and is marked wrong for
+          // working it out the way they heard it.
+          if (prompt.bracket?.from === i) said.push(t.teacher.bracketOpen)
+          said.push(numberToWords(term))
+          if (prompt.bracket?.to === i) said.push(t.teacher.bracketClose)
+
+          return said
+        }, [])
+        .join(' ')
 
     // «Read aloud» works only if the child does the reading. Saying the word
     // first would do the exercise for them, so the teacher stays quiet.
@@ -207,8 +216,16 @@ export function useBattle() {
         level: Math.max(...monster.levels),
         // No length given: the battle runs until somebody wins.
         nextExercise: () => {
+          // Both the level and the kind of task are drawn afresh each time, so
+          // an opponent listing more than one keeps the child moving between
+          // them rather than settling into a rhythm.
           const affordable = monster.levels.filter((level) => level <= difficulty.current)
-          return createArithmeticExercise(pick(systemRandom, affordable), systemRandom)
+
+          return createMathExercise(
+            pick(systemRandom, monster.tasks),
+            pick(systemRandom, affordable),
+            systemRandom,
+          )
         },
         observers: [d.profile, battle],
       })

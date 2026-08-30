@@ -315,7 +315,9 @@ function Expression({ exercise }: { exercise: Exercise }) {
           {prompt.terms.map((term, i) => (
             <Fragment key={i}>
               {i > 0 && <span className="expression__op">{sign(prompt.ops[i - 1]!)}</span>}
+              {prompt.bracket?.from === i && <span className="expression__bracket">(</span>}
               <span>{term}</span>
+              {prompt.bracket?.to === i && <span className="expression__bracket">)</span>}
             </Fragment>
           ))}
         </div>

@@ -3,10 +3,17 @@ import { assertNever } from '../exhaustive'
 import { randomInt, type Random } from '../random'
 import { ArithmeticAnswer } from './ArithmeticAnswer'
 
+/** One bracketed run of terms, worked out before the rest of the chain. */
+export interface Bracket {
+  readonly from: number
+  readonly to: number
+}
+
 export interface ArithmeticProblem {
   readonly terms: readonly number[]
   readonly ops: readonly MathOp[]
   readonly answer: number
+  readonly bracket?: Bracket
   /**
    * The highest number the child might plausibly say here, right or wrong.
    * The recognition grammar spans zero to this (T16), and it travels with the
@@ -34,13 +41,34 @@ export interface ArithmeticProblem {
  * Both are programming errors rather than anything a child can cause, so the
  * place to notice them is here, loudly, at the seam they come through.
  */
-export function evaluate(terms: readonly number[], ops: readonly MathOp[]): number {
+export function evaluate(
+  terms: readonly number[],
+  ops: readonly MathOp[],
+  bracket?: Bracket,
+): number {
   if (terms.length !== ops.length + 1) {
     throw new RangeError(
       `A chain has one operation fewer than it has numbers, but got ${terms.length} numbers and ${ops.length} operations`,
     )
   }
 
+  if (!bracket) return leftToRight(terms, ops)
+
+  const { from, to } = bracket
+  if (from < 0 || to <= from || to >= terms.length) {
+    throw new RangeError(`A bracket over ${from}..${to} does not fit ${terms.length} numbers`)
+  }
+
+  // What is inside is worked out first, then stands in the chain as one number.
+  const inside = leftToRight(terms.slice(from, to + 1), ops.slice(from, to))
+
+  return leftToRight(
+    [...terms.slice(0, from), inside, ...terms.slice(to + 1)],
+    [...ops.slice(0, from), ...ops.slice(to)],
+  )
+}
+
+function leftToRight(terms: readonly number[], ops: readonly MathOp[]): number {
   let total = terms[0]!
   for (let i = 0; i < ops.length; i++) {
     const term = terms[i + 1]!
@@ -82,8 +110,12 @@ export function evaluate(terms: readonly number[], ops: readonly MathOp[]): numb
  * value (2 to 3), how many terms (3 to 4), and finally a trick rather than a
  * size (4 to 5).
  */
-export function generateProblem(levelId: number, random: Random): ArithmeticProblem {
-  const plus = random() < 0.5
+export function generateProblem(
+  levelId: number,
+  random: Random,
+  operation: MathOp,
+): ArithmeticProblem {
+  const plus = operation === '+'
 
   switch (levelId) {
     case 1:
@@ -106,26 +138,22 @@ export function generateProblem(levelId: number, random: Random): ArithmeticProb
   }
 }
 
-export function createArithmeticExercise(levelId: number, random: Random): Exercise {
-  const problem = generateProblem(levelId, random)
-
-  return {
-    // Identical problems get an identical id — the review queue rests on
-    // exactly that (C3).
-    id: `math:${describe(problem)}`,
-    subject: 'math',
-    level: levelId,
-    prompt: { kind: 'arithmetic', terms: problem.terms, ops: problem.ops },
-    answer: new ArithmeticAnswer(problem.answer, problem.heardUpTo),
-  }
-}
-
-/** «8-3+2» — for the id and for debugging. */
+/**
+ * «8-3+2», and «20-(5+3)» when there is a bracket — for the id and for
+ * debugging.
+ *
+ * The bracket has to appear here. «20-(5+3)» and «20-5+3» are different
+ * problems with different answers, and an id that could not tell them apart
+ * would have the review queue (C3) treat one as the other.
+ */
 export function describe(problem: ArithmeticProblem): string {
-  return problem.terms.reduce(
-    (text, term, i) => (i === 0 ? `${term}` : `${text}${problem.ops[i - 1]}${term}`),
-    '',
-  )
+  return problem.terms.reduce((text, term, i) => {
+    const open = problem.bracket?.from === i ? '(' : ''
+    const close = problem.bracket?.to === i ? ')' : ''
+    const operation = i === 0 ? '' : problem.ops[i - 1]
+
+    return `${text}${operation}${open}${term}${close}`
+  }, '')
 }
 
 /**
@@ -133,12 +161,43 @@ export function describe(problem: ArithmeticProblem): string {
  * answers within reach of it are just as much part of the grammar as the right
  * one — a list of one word would be heard everywhere (T16).
  */
-function problem(
+export function buildProblem(
   terms: readonly number[],
   ops: readonly MathOp[],
   ceiling: number,
+  bracket?: Bracket,
 ): ArithmeticProblem {
-  return { terms, ops, answer: evaluate(terms, ops), heardUpTo: ceiling }
+  return {
+    terms,
+    ops,
+    answer: evaluate(terms, ops, bracket),
+    heardUpTo: ceiling,
+    ...(bracket ? { bracket } : {}),
+  }
+}
+
+/**
+ * Wraps a problem as an exercise. Shared by every generator that produces
+ * arithmetic, whichever ladder it belongs to.
+ *
+ * The id carries no note of which generator made it, on purpose: the same
+ * expression is the same task to a child, so the review queue (C3) should
+ * treat «8+7» from one ladder and «8+7» from another as one thing to come
+ * back to.
+ */
+export function toExercise(problem: ArithmeticProblem, levelId: number): Exercise {
+  return {
+    id: `math:${describe(problem)}`,
+    subject: 'math',
+    level: levelId,
+    prompt: {
+      kind: 'arithmetic',
+      terms: problem.terms,
+      ops: problem.ops,
+      ...(problem.bracket ? { bracket: problem.bracket } : {}),
+    },
+    answer: new ArithmeticAnswer(problem.answer, problem.heardUpTo),
+  }
 }
 
 /**
@@ -162,7 +221,7 @@ function addAcrossPlace(random: Random): ArithmeticProblem {
   const leftTens = randomInt(random, 1, 8)
   const rightTens = randomInt(random, 0, 8 - leftTens)
 
-  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['+'], 100)
+  return buildProblem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['+'], 100)
 }
 
 /**
@@ -184,7 +243,7 @@ function subtractAcrossPlace(random: Random): ArithmeticProblem {
   const leftTens = randomInt(random, 2, 9)
   const rightTens = randomInt(random, 0, leftTens - 1)
 
-  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['-'], 100)
+  return buildProblem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['-'], 100)
 }
 
 /** Level 1: a + b, where a ∈ [minLeft, maxLeft], b ≥ 1, sum ≤ ceiling. */
@@ -192,12 +251,12 @@ function add(random: Random, minLeft: number, maxLeft: number, ceiling: number):
   if (random() < ZERO_CHANCE) {
     // Adding nothing is a fact about zero. «0 + 0» is not a fact, it is just
     // nothing, so the other term is made to carry something.
-    return problem([randomInt(random, Math.max(minLeft, 1), maxLeft), 0], ['+'], ceiling)
+    return buildProblem([randomInt(random, Math.max(minLeft, 1), maxLeft), 0], ['+'], ceiling)
   }
 
   const left = randomInt(random, minLeft, maxLeft)
   const right = randomInt(random, 1, ceiling - left)
-  return problem([left, right], ['+'], ceiling)
+  return buildProblem([left, right], ['+'], ceiling)
 }
 
 /**
@@ -227,14 +286,14 @@ function subtract(random: Random, minLeft: number, maxLeft: number): ArithmeticP
         ? 0 // «7 − 0 = 7»
         : randomInt(random, 1, left - 1)
 
-  return problem([left, right], ['-'], maxLeft)
+  return buildProblem([left, right], ['-'], maxLeft)
 }
 
 /** Level 2: the sum has to cross the ten — 8 + 5. */
 function addWithCarry(random: Random): ArithmeticProblem {
   const left = randomInt(random, 2, 9)
   const right = randomInt(random, 11 - left, 9)
-  return problem([left, right], ['+'], 20)
+  return buildProblem([left, right], ['+'], 20)
 }
 
 /**
@@ -252,7 +311,7 @@ function subtractWithBorrow(random: Random): ArithmeticProblem {
   const leftUnits = randomInt(random, 1, 8)
   const right = randomInt(random, leftUnits + 1, 9)
 
-  return problem([10 + leftUnits, right], ['-'], 20)
+  return buildProblem([10 + leftUnits, right], ['-'], 20)
 }
 
 /**
@@ -269,7 +328,7 @@ function addByPlace(random: Random): ArithmeticProblem {
   // The second operand must not come out as zero, so with no units it needs tens.
   const rightTens = randomInt(random, rightUnits === 0 ? 1 : 0, 9 - leftTens)
 
-  return problem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['+'], 100)
+  return buildProblem([leftTens * 10 + leftUnits, rightTens * 10 + rightUnits], ['+'], 100)
 }
 
 /** Level 3: the mirror image — every digit of the subtrahend fits under its own. */
@@ -290,7 +349,7 @@ function subtractByPlace(random: Random): ArithmeticProblem {
     }
   }
 
-  return problem([left, candidates[randomInt(random, 0, candidates.length - 1)]!], ['-'], 100)
+  return buildProblem([left, candidates[randomInt(random, 0, candidates.length - 1)]!], ['-'], 100)
 }
 
 /**
@@ -340,7 +399,7 @@ function addWithGrouping(random: Random): ArithmeticProblem {
   // The pair straddles the odd term; side by side there would be nothing to spot.
   const terms = random() < 0.5 ? [left, other, right] : [right, other, left]
 
-  return problem(terms, ['+', '+'], 100)
+  return buildProblem(terms, ['+', '+'], 100)
 }
 
 /**
@@ -366,5 +425,5 @@ function subtractWithGrouping(random: Random): ArithmeticProblem {
   // One more than what is taken, so something is always left over.
   const total = randomInt(random, taken + 1, 99)
 
-  return problem([total, first, second], ['-', '-'], 100)
+  return buildProblem([total, first, second], ['-', '-'], 100)
 }

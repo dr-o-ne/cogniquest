@@ -31,6 +31,7 @@ function feed(battle: Battle, verdict: AnswerResult['verdict'], times: number) {
 
 const dummy: Monster = {
   id: 'test',
+  tasks: ['addition', 'subtraction'],
   name: 'Test',
   hearts: 3,
   levels: [1],
@@ -126,6 +127,14 @@ describe('the monster config', () => {
     for (const monster of MONSTERS) {
       expect(t.monsters[monster.id], `no name for ${monster.id}`).toBeDefined()
       expect(monster.name).not.toBe(monster.id)
+    }
+  })
+
+  it('every unit draws from at least one kind of task', () => {
+    // An empty pool would have `pick` throw in the middle of a battle rather
+    // than here, and only for whichever opponent was misconfigured.
+    for (const monster of MONSTERS) {
+      expect(monster.tasks.length).toBeGreaterThan(0)
     }
   })
 

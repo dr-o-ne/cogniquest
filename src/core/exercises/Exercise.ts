@@ -11,7 +11,19 @@ export type ExercisePrompt =
    * there are numbers. An ordinary two-number problem is a special case of
    * this, which is why nothing anywhere branches for it.
    */
-  | { readonly kind: 'arithmetic'; readonly terms: readonly number[]; readonly ops: readonly MathOp[] }
+  | {
+      readonly kind: 'arithmetic'
+      readonly terms: readonly number[]
+      readonly ops: readonly MathOp[]
+      /**
+       * One bracketed run of terms, evaluated before the rest — `20 − (5 + 3)`
+       * is `from: 1, to: 2`. Absent means a plain left-to-right chain.
+       *
+       * One span is enough for what a second-year is asked to do, and a single
+       * optional field keeps every existing prompt valid as it stands.
+       */
+      readonly bracket?: { readonly from: number; readonly to: number }
+    }
   /** «МА-ШИ-НА» in large type, one colour per syllable */
   | { readonly kind: 'syllables'; readonly syllables: readonly string[] }
   /** The teacher says it out loud; nothing appears on screen */

@@ -141,7 +141,7 @@ ticked off here as they land.
 |---|:-:|:-:|:-:|:-:|:-:|
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Addition + subtraction | ✅ | ☐ | ☐ | ☐ | ☐ |
+| Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -161,19 +161,11 @@ one level table serves both, so redefining a level moves the pair of them at
 once. That includes level 5, where the trick simply reads backwards —
 `7 + 8 + 3` finds a pair that makes ten, `50 − 7 − 3` takes one away.
 
-**The mixed row is down to one tick, and that is a real loss.** Chains that mix
-a plus and a minus — `73 − 3 + 10` — used to come out of level 4, and level 4
-is now two-digit carrying. Level 5 has two operations but never two different
-ones: the pair that makes ten only works with matching signs.
-
-That is the right place to lose them. «Addition + subtraction» is its own row
-in the grid, wanting two, three and four operations of its own, and riding
-along inside the addition ladder was never going to deliver that. It needs
-generators of its own when its turn comes.
-
-**Where our ladder is not the grid's.** The grid asks for three numbers at
-level 3; we put two-digit without carrying there, carrying at 4, and three
-numbers at 5 — so that each rung introduces one difficulty instead of three.
+**Where the addition ladder is not the grid's.** The grid asks for three
+numbers at level 3; we put two-digit without carrying there, carrying at 4, and
+three numbers at 5 — so that each rung introduces one difficulty instead of
+three. Chains of two, three and four numbers live in their own row below, which
+is where the grid puts them anyway.
 
 ### What each unwritten type will cost
 
@@ -213,6 +205,70 @@ Two limits to remember when that column is built:
   (**G6**, **P10**) and three in a row quietly ease the difficulty (**C4**).
   A child who reaches for something hard would be punished for it and then
   steered back down. Level 5 wants to live outside the battle.
+
+---
+
+## Chains — addition and subtraction together
+
+`src/core/math/chains.ts`. A ladder of its own, because its difficulty runs
+along a different axis: not the size of the numbers but how many operations
+have to be held at once, and whether the order they are worked in is the order
+they are written in.
+
+| Level | Numbers | Range | Example |
+|---|---|---|---|
+| 1 | 2 | 0–20 | `13 − 5 = 8` |
+| 2 | 3 | 0–20 | `19 − 13 + 8 = 14` |
+| 3 | 4 | 0–100 | `90 − 13 + 18 + 3 = 98` |
+| 4 | 3 | 0–100 | `97 − (63 − 34) = 68` |
+| 5 | 4 | 0–100 | `27 + 15 − 7 + 40 = 75` |
+
+At levels 2 and 3 both signs are **guaranteed**, not merely likely: the point
+is that the child cannot settle into one operation and stay there, and left to
+chance a quarter of three-term chains come out all-plus. The signs are chosen
+first and the numbers fitted to them.
+
+**Level 4 is brackets, and only brackets that change the answer.** `(20 + 5) −
+8` comes to 17 whether the bracket is there or not, and a bracket that changes
+nothing teaches that brackets are decoration. So the bracket always sits at the
+end behind a minus, where it matters. The numbers stay two-digit: four levels
+have trained the child to work left to right, and unlearning that on numbers
+under twenty would be a rung down.
+
+**Level 5 is the same insight one step further.** Level 4 hands the child the
+order to work in; here nobody does, and they have to find one — `27 + 15 − 7 +
+40` is three operations across the place head-on, or a round 20 and two easy
+additions once the 27 and the 7 are seen together.
+
+A bracket reaches both the screen and the teacher's voice, and the exercise id
+carries it too: `math:20-(5+3)` and `math:20-5+3` are different problems with
+different answers, and an id that could not tell them apart would have the
+review queue (**C3**) treat one as the other.
+
+### Which opponent asks which
+
+A **kind of task is a row of this grid**, named after it — `addition`,
+`subtraction`, `addition-subtraction`, and the rows still to be written as they
+land. There is no grouping above them: a word like «arithmetic» would cover
+three rows and tell a reader nothing, and an opponent that should only ever ask
+subtraction would have no way to say so.
+
+`Monster.tasks` is a **pool**, exactly like `levels`: a kind is drawn afresh for
+every question, so an opponent listing three asks all three, turn about.
+
+```ts
+const TUNING = {
+  goblin: { tasks: ['addition', 'subtraction', 'addition-subtraction'] },
+}
+```
+
+The default is `['addition', 'subtraction']`, and that is also where the coin
+flip between plus and minus now lives. It used to be hidden inside the
+generator, which meant two mechanisms deciding what to ask; picking a kind from
+the pool is the only one left.
+
+Nothing draws chains yet: the ladder is written and tested, but today's battles
+are unchanged until an opponent opts in.
 
 ---
 

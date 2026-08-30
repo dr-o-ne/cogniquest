@@ -80,6 +80,12 @@ export const ru = {
     theAnswerIs: (words: string) => `Правильно ${words}`,
     plus: 'плюс',
     minus: 'минус',
+    /**
+     * Read around a bracket. The child hears the grouping rather than seeing
+     * it, so the words have to be unmistakable — school dictation form.
+     */
+    bracketOpen: 'открывается скобка',
+    bracketClose: 'закрывается скобка',
   },
 
   /** What kind of fight a monster gives, by its level (G7). */

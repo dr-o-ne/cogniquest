@@ -2,18 +2,20 @@ import { describe, expect, it } from 'vitest'
 import type { MathOp } from '../exercises'
 import { createRandom } from '../random'
 import {
-  createArithmeticExercise,
   evaluate,
   generateProblem,
   type ArithmeticProblem,
 } from './generator'
+import { createMathExercise } from './kinds'
 import { MATH_LEVELS } from './levels'
 import { numberToWords } from './numerals'
 
 /** Many seeds are run through: the rule of the level must hold on every one. */
 function sample(levelId: number, count = 400): ArithmeticProblem[] {
   const random = createRandom(levelId * 1000 + 7)
-  return Array.from({ length: count }, () => generateProblem(levelId, random))
+  return Array.from({ length: count }, () =>
+    generateProblem(levelId, random, random() < 0.5 ? '+' : '-'),
+  )
 }
 
 const units = (n: number) => n % 10
@@ -315,21 +317,21 @@ describe('evaluate', () => {
   })
 })
 
-describe('createArithmeticExercise', () => {
+describe('createMathExercise', () => {
   it('identical problems get an identical id — C3 rests on this', () => {
-    const a = createArithmeticExercise(1, () => 0.0)
-    const b = createArithmeticExercise(1, () => 0.0)
+    const a = createMathExercise('addition', 1, () => 0.0)
+    const b = createMathExercise('addition', 1, () => 0.0)
     expect(a.id).toBe(b.id)
     expect(a.id).toMatch(/^math:\d+[+-]\d+$/)
   })
 
   it('a chain carries every link in its id', () => {
-    const exercise = createArithmeticExercise(5, createRandom(5))
+    const exercise = createMathExercise('addition', 5, createRandom(5))
     expect(exercise.id).toMatch(/^math:\d+[+-]\d+[+-]\d+$/)
   })
 
   it('assembles the whole exercise', () => {
-    const exercise = createArithmeticExercise(3, createRandom(42))
+    const exercise = createMathExercise('addition', 3, createRandom(42))
     expect(exercise.subject).toBe('math')
     expect(exercise.level).toBe(3)
     expect(exercise.prompt.kind).toBe('arithmetic')
@@ -339,7 +341,7 @@ describe('createArithmeticExercise', () => {
     const random = createRandom(11)
     for (const level of MATH_LEVELS) {
       for (let i = 0; i < 50; i++) {
-        const exercise = createArithmeticExercise(level, random)
+        const exercise = createMathExercise('addition', level, random)
         const prompt = exercise.prompt
         if (prompt.kind !== 'arithmetic') throw new Error('expected an arithmetic prompt')
 
@@ -367,6 +369,6 @@ describe('createArithmeticExercise', () => {
   })
 
   it('rejects a level that does not exist', () => {
-    expect(() => createArithmeticExercise(99, createRandom(1))).toThrow(RangeError)
+    expect(() => createMathExercise('addition', 99, createRandom(1))).toThrow(RangeError)
   })
 })
