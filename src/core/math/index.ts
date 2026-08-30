@@ -1,5 +1,11 @@
 export { ArithmeticAnswer } from './ArithmeticAnswer'
 export { createChainExercise, generateChain } from './chains'
+export {
+  createEquationExercise,
+  describeEquation,
+  generateEquation,
+  type Equation,
+} from './equations'
 export { createMathExercise, levelsFor, TASK_KINDS, taskChoices, type TaskKind } from './kinds'
 export {
   describe,

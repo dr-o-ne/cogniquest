@@ -324,6 +324,28 @@ function Expression({ exercise }: { exercise: Exercise }) {
       )
     }
 
+    case 'equation': {
+      // «47 + □ + 3 = 69» is five slots wide — set smaller, like a long chain.
+      const wide = prompt.terms.length > 2
+
+      return (
+        <div className={wide ? 'expression expression--long' : 'expression'}>
+          {prompt.terms.map((term, i) => (
+            <Fragment key={i}>
+              {i > 0 && <span className="expression__op">{sign(prompt.ops[i - 1]!)}</span>}
+              {i === prompt.blank ? (
+                <span className="expression__blank">?</span>
+              ) : (
+                <span>{term}</span>
+              )}
+            </Fragment>
+          ))}
+          <span className="expression__op">=</span>
+          <span>{prompt.result}</span>
+        </div>
+      )
+    }
+
     // Reading (C2) arrives in phase 4 with a screen of its own. Showing nothing
     // here is deliberate, not an oversight — and it is written down as a case
     // so that a genuinely new kind of prompt cannot slip through unnoticed.

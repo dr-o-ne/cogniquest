@@ -80,6 +80,14 @@ export const ru = {
     theAnswerIs: (words: string) => `Правильно ${words}`,
     plus: 'плюс',
     minus: 'минус',
+    /** Reads the equals sign of a «□ + 2 = 5» task out loud. */
+    equals: 'равно',
+    /**
+     * Stands in for the missing number when the teacher reads a «□ + 2 = 5»
+     * task: «какое число плюс два равно пять». Nominative, like every numeral
+     * in the pack — the child hears the shape, not a grammar lesson.
+     */
+    whatNumber: 'какое число',
     /**
      * Read around a bracket. The child hears the grouping rather than seeing
      * it, so the words have to be unmistakable — school dictation form.

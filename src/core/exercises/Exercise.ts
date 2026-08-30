@@ -24,6 +24,21 @@ export type ExercisePrompt =
        */
       readonly bracket?: { readonly from: number; readonly to: number }
     }
+  /**
+   * An equation with one operand missing — «□ + 2 = 5», or «47 + □ + 3 = 69»
+   * at the level where a base sum has three terms. The child names the hidden
+   * number. `terms`/`ops` are the left-hand side exactly as for `arithmetic`;
+   * `result` is the right-hand side; `blank` is the index in `terms` of the
+   * operand that is not shown. The blank is never the result — that would just
+   * be addition with an equals sign.
+   */
+  | {
+      readonly kind: 'equation'
+      readonly terms: readonly number[]
+      readonly ops: readonly MathOp[]
+      readonly result: number
+      readonly blank: number
+    }
   /** «МА-ШИ-НА» in large type, one colour per syllable */
   | { readonly kind: 'syllables'; readonly syllables: readonly string[] }
   /** The teacher says it out loud; nothing appears on screen */

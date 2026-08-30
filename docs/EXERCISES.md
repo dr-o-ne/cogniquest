@@ -19,7 +19,7 @@ Sixteen types across five levels, ticked off as they land.
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Missing number `□+2=5` | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Missing number `□+2=5` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Comparing numbers `5 □ 7` | ☐ | ☐ | ☐ | ☐ | ☐ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Increase / decrease by | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -129,11 +129,36 @@ order to work in; here nobody does, and they have to find one.
 
 ---
 
+## Missing number
+
+Not a ladder of its own — a known sum shown backwards. A base problem is drawn
+from the addition/subtraction ladder for the level and one operand is covered
+up, so the rungs are exactly the ones above: within ten, across the ten, two
+digits without carrying, with carrying, and the grouping trick (where the base
+has three terms, so the equation does too).
+
+| Level | What is asked | Answers | Example |
+|---|---|---|---|
+| 1 | one operand hidden, within ten | 0–10 | `□+2=5`, `9−□=4` |
+| 2 | …with the ten crossed | 0–20 | `□+5=13`, `13−□=6` |
+| 3 | …two-digit, nothing carried | 0–100 | `45+□=65`, `□−14=54` |
+| 4 | …the units overflow | 0–100 | `□+32=51`, `70−□=44` |
+| 5 | one of three terms hidden | 0–100 | `47+□+3=69`, `83−□−3=53` |
+
+The blank falls on any operand but never on the result: `2+3=□` is plain
+addition with an equals sign drawn in, and that row is already played. `□+2=5`
+and `2+□=5` are different tasks, and the review queue (**C3**) keeps them apart.
+
+The answer is one number, so the judging and the recognition grammar are the
+ones addition already uses (**A5**, **T16**) — nothing new to check.
+
+---
+
 ## What the unwritten types will cost
 
-- **Nothing new to judge** — missing number, how many more, increase/decrease,
-  making a number, sequences, patterns, word problems. The answer is a number,
-  so the existing judging works as it stands.
+- **Nothing new to judge** — how many more, increase/decrease, making a number,
+  sequences, patterns, word problems. The answer is a number, so the existing
+  judging works as it stands.
 - **A new kind of answer** — comparing numbers, answered «больше / меньше /
   равно». Three words are a very short list for speech recognition, and
   «больше» and «меньше» differ by one opening consonant. Measure it on the rig
@@ -181,8 +206,8 @@ An opponent carries the types it may ask and the levels it may ask them at, and
 draws a fresh pair for every question — so one fight moves the child between
 kinds instead of letting them settle into a rhythm.
 
-The goblin is the first to ask more than plain sums: with levels 1–2 and all
-three written types, about a fifth of its questions are chains. Everyone else
-asks addition and subtraction only. A type is listed opponent by opponent on
-purpose — a new one should turn up in a child's fight because someone put it
-there.
+The goblin is the first to ask more than plain sums: with levels 1–2 and every
+written type, its questions mix chains and missing numbers in among the sums.
+The zombie asks addition, subtraction and missing numbers. Everyone else asks
+addition and subtraction only. A type is listed opponent by opponent on purpose
+— a new one should turn up in a child's fight because someone put it there.

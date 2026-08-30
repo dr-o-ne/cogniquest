@@ -565,3 +565,16 @@ img.avatar {
   margin: 0 -0.45rem;
   color: var(--muted);
 }
+
+/* The gap in a «□ + 2 = 5» task: a box the size of a digit, so the equation
+   keeps its shape and the child can see exactly where the missing number goes */
+.expression__blank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.9em;
+  padding: 0 0.1em;
+  border: 0.09em dashed var(--muted);
+  border-radius: 0.15em;
+  color: var(--muted);
+}

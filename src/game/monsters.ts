@@ -141,8 +141,11 @@ const TUNING: Record<
   'skeleton-archer': { avatar: '💀' },
   // Listed one by one rather than «all of them»: a new row of the grid should
   // not turn up in the goblin's fight because it was implemented elsewhere.
-  goblin: { avatar: '👺', tasks: ['addition', 'subtraction', 'addition-subtraction'] },
-  zombie: { avatar: '🧟' },
+  goblin: {
+    avatar: '👺',
+    tasks: ['addition', 'subtraction', 'addition-subtraction', 'missing-number'],
+  },
+  zombie: { avatar: '🧟', tasks: ['addition', 'subtraction', 'missing-number'] },
   'ancient-vampire-bat': { avatar: '🧛' },
   gorgul: { avatar: '🗿' },
   gobot: { avatar: '🦎' },

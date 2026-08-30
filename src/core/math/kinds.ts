@@ -2,6 +2,7 @@ import type { Exercise } from '../exercises'
 import { assertNever } from '../exhaustive'
 import type { Random } from '../random'
 import { createChainExercise } from './chains'
+import { createEquationExercise } from './equations'
 import { generateProblem, toExercise } from './generator'
 import { MATH_LEVELS } from './levels'
 
@@ -13,14 +14,19 @@ import { MATH_LEVELS } from './levels'
  * covering three of these and telling a reader nothing, and an opponent that
  * asks only subtraction has no way to say so through a grouping.
  *
- * The rows still to be written — missing number, comparing, sequences — join
- * this union as they land, and every switch over it stops compiling until it
- * says what to do with them.
+ * The rows still to be written — comparing, sequences — join this union as they
+ * land, and every switch over it stops compiling until it says what to do with
+ * them.
  */
-export type TaskKind = 'addition' | 'subtraction' | 'addition-subtraction'
+export type TaskKind = 'addition' | 'subtraction' | 'addition-subtraction' | 'missing-number'
 
 /** Every kind that exists today, for defaults and for tests. */
-export const TASK_KINDS: readonly TaskKind[] = ['addition', 'subtraction', 'addition-subtraction']
+export const TASK_KINDS: readonly TaskKind[] = [
+  'addition',
+  'subtraction',
+  'addition-subtraction',
+  'missing-number',
+]
 
 /**
  * Which levels each kind actually has a rung on.
@@ -34,6 +40,9 @@ const RUNGS: Record<TaskKind, readonly number[]> = {
   addition: MATH_LEVELS,
   subtraction: MATH_LEVELS,
   'addition-subtraction': MATH_LEVELS,
+  // Rides the addition/subtraction ladder — a base problem for the level with
+  // one operand hidden — so it reaches every rung they do.
+  'missing-number': MATH_LEVELS,
 }
 
 export function levelsFor(kind: TaskKind): readonly number[] {
@@ -67,6 +76,9 @@ export function createMathExercise(kind: TaskKind, levelId: number, random: Rand
 
     case 'addition-subtraction':
       return createChainExercise(levelId, random)
+
+    case 'missing-number':
+      return createEquationExercise(levelId, random)
 
     default:
       return assertNever(kind, 'kind of task')

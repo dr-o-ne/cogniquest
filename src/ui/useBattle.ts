@@ -91,6 +91,20 @@ function questionText(exercise: Exercise): string {
         }, [])
         .join(' ')
 
+    // «какое число плюс два равно пять». The blank is spoken, not skipped —
+    // a silence where the unknown is would leave the child guessing at the
+    // shape of the question.
+    case 'equation': {
+      const words = prompt.terms.reduce<string[]>((said, term, i) => {
+        if (i > 0) said.push(spoken(prompt.ops[i - 1]!))
+        said.push(i === prompt.blank ? t.teacher.whatNumber : numberToWords(term))
+        return said
+      }, [])
+      words.push(t.teacher.equals, numberToWords(prompt.result))
+
+      return words.join(' ')
+    }
+
     // «Read aloud» works only if the child does the reading. Saying the word
     // first would do the exercise for them, so the teacher stays quiet.
     case 'syllables':
@@ -111,6 +125,10 @@ function correctAnswerOf(exercise: Exercise): number | null {
   switch (prompt.kind) {
     case 'arithmetic':
       return evaluate(prompt.terms, prompt.ops)
+
+    // The missing operand is the answer — nothing to compute.
+    case 'equation':
+      return prompt.terms[prompt.blank] ?? null
 
     // Nothing numeric to announce: the teacher does not read the answer out.
     case 'syllables':
