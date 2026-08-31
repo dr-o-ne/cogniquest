@@ -36,9 +36,10 @@ interface Boundary {
 }
 
 /**
- * A layer absent from the table — `ui`, and the entry points at the root of
- * `src` — is deliberately unconstrained: it sits on top and is allowed to know
- * about everything underneath.
+ * Every layer that has a boundary. A layer missing from here must be named in
+ * `UNCONSTRAINED` instead — «the scan knows every layer» below fails otherwise,
+ * so a new folder under `src` cannot arrive without a decision being made about
+ * it in this file.
  */
 const BOUNDARIES: Record<string, Boundary> = {
   // The point of the whole arrangement: arithmetic, sessions and progression
@@ -59,6 +60,29 @@ const BOUNDARIES: Record<string, Boundary> = {
   // project, and why `game` cannot join it either.
   assets: { layers: ['assets'], packages: [] },
 }
+
+/**
+ * Layers with no boundary, each one a deliberate choice rather than an omission.
+ *
+ * `layerOf` names a file sitting directly under `src` after itself, so the
+ * entry points appear here alongside the one real folder.
+ *
+ * The point of listing them is that the list is exhaustive. Left implicit — a
+ * lookup that shrugs at a name it does not know — `src/database/` could arrive
+ * tomorrow importing React, the UI and `node:fs`, and every assertion below
+ * would pass it, because a layer nobody declared is a layer nobody checks.
+ */
+const UNCONSTRAINED = new Set([
+  // The top of the stack: it is allowed to know everything underneath.
+  'ui',
+  // Entry points. They exist to wire the layers together, which means reaching
+  // into all of them.
+  'App',
+  'main',
+  // This file. It walks the source tree, so it needs `node:fs` — and a test
+  // that had to obey its own boundary could not check anything.
+  'architecture',
+])
 
 /**
  * The runner is allowed everywhere, and only the runner.
@@ -91,10 +115,16 @@ function walk(dir: string): string[] {
   })
 }
 
-/** The layer a file belongs to: its first segment under `src`. */
+/**
+ * The layer a file belongs to: its first segment under `src`.
+ *
+ * A file sitting directly at the root is named after itself, extension and
+ * `.test` alike stripped — so `assets.ts` and a future `assets.test.ts` are one
+ * layer answering to one boundary, not two.
+ */
 function layerOf(file: string): string {
   const [head = ''] = relative(SRC, file).split(sep)
-  return head.replace(/\.tsx?$/, '')
+  return head.replace(/(\.test)?\.tsx?$/, '')
 }
 
 /** Resolve the way the bundler does — a file, or the folder's barrel. */
@@ -136,8 +166,21 @@ describe('the architecture holds', () => {
     expect(MODULES.flatMap((module) => module.references).length).toBeGreaterThan(50)
   })
 
+  // The assertions further down skip a layer they have no boundary for, which
+  // would quietly wave through any folder nobody has declared. This is what
+  // makes that skip safe: a layer is either constrained or explicitly exempt,
+  // and there is no third option.
+  it('the scan knows every layer it found', () => {
+    const undeclared = [...new Set(MODULES.map(({ layer }) => layer))]
+      .filter((layer) => !BOUNDARIES[layer] && !UNCONSTRAINED.has(layer))
+      .map((layer) => `${layer} has no declared status — add a boundary, or exempt it on purpose`)
+
+    expect(undeclared).toEqual([])
+  })
+
   it('no layer reaches past what it is allowed to know about', () => {
     const leaks = MODULES.flatMap(({ file, layer, references }) => {
+      // Safe only because of «the scan knows every layer it found» above.
       const boundary = BOUNDARIES[layer]
       if (!boundary) return []
 
