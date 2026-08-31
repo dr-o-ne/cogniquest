@@ -113,6 +113,7 @@ const IMAGES: Record<string, string> = {
   swordsman: '/monsters/swordsman.webp',
   skeleton: '/monsters/skeleton.webp',
   'skeleton-archer': '/monsters/skeleton-archer.webp',
+  archer: '/monsters/archer.webp',
   goblin: '/monsters/goblin.webp',
   imp: '/monsters/imp.webp',
   zombie: '/monsters/zombie.webp',
@@ -150,6 +151,7 @@ const TUNING: Record<
   // itself. This is that reading, not where the goblin settles.
   goblin: { avatar: '👺', tasks: ['comparing-numbers'] },
   zombie: { avatar: '🧟', tasks: ['addition', 'subtraction', 'missing-number'] },
+  archer: { avatar: '🏹' },
   imp: { avatar: '👿' },
   'ancient-vampire-bat': { avatar: '🧛' },
   gorgul: { avatar: '🗿' },
