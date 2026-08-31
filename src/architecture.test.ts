@@ -11,9 +11,11 @@ import { describe, expect, it } from 'vitest'
  * once, and by hand means once — the import that breaks it lands months from
  * now, in a hurry, and nobody re-reads a changelog before committing.
  *
- * So the boundary is read off the files themselves on every run. This is the
- * whole architecture: if it leaks, the core stops being portable and every
- * decision hung off A1 quietly stops being true.
+ * This file owns the import half: which module may reach for which. The other
+ * half — no DOM API — belongs to `tsconfig.core.json`, which typechecks the
+ * core against `lib: ES2022` with no DOM at all. That is deliberate. A list of
+ * banned globals here would only ever catch the names somebody thought to write
+ * down, and `lib` is the same list kept exhaustive by the compiler.
  *
  * The table below is the boundary. Widening it is allowed — that is what a
  * decision record is for — but it has to be done here, on purpose, in a diff
@@ -31,8 +33,6 @@ interface Boundary {
    * literally, which is the only way that claim survives contact with a hurry.
    */
   readonly packages: readonly string[]
-  /** Must this layer run outside a browser? */
-  readonly nodePure: boolean
 }
 
 /**
@@ -46,21 +46,18 @@ const BOUNDARIES: Record<string, Boundary> = {
   //
   // `locale` is the single deliberate exception, and a narrow one: number words
   // come from the text pack, which is pure data. DECISIONS.md spells this out.
-  core: { layers: ['core', 'locale'], packages: [], nodePure: true },
-  locale: { layers: ['locale'], packages: [], nodePure: true },
+  core: { layers: ['core', 'locale'], packages: [] },
+  locale: { layers: ['locale'], packages: [] },
   // The battle is a SessionObserver and nothing else. Let React in here and G1
   // stops being a seam and becomes a screen.
-  game: { layers: ['core', 'game', 'locale', 'assets'], packages: [], nodePure: true },
+  game: { layers: ['core', 'game', 'locale', 'assets'], packages: [] },
   // Adapters are exactly where the browser is allowed to live — that is their
   // job — but they talk down to the core, never up to the UI.
-  adapters: {
-    layers: ['core', 'adapters', 'locale', 'assets'],
-    packages: ['vosk-browser'],
-    nodePure: false,
-  },
+  adapters: { layers: ['core', 'adapters', 'locale', 'assets'], packages: ['vosk-browser'] },
   // Vite rewrites `import.meta.env` at build time, so this one is bundler-bound
-  // rather than browser-bound.
-  assets: { layers: ['assets'], packages: [], nodePure: false },
+  // rather than browser-bound — which is why it stays out of the DOM-free
+  // project, and why `game` cannot join it either.
+  assets: { layers: ['assets'], packages: [] },
 }
 
 /**
@@ -71,23 +68,6 @@ const BOUNDARIES: Record<string, Boundary> = {
  * as the core would have, and is far easier to miss in review.
  */
 const ALWAYS_ALLOWED = ['vitest']
-
-/**
- * Globals that exist only in a browser.
- *
- * The half of the stress test the import graph cannot see: `document.title`
- * needs no import at all to break `npm test`.
- */
-const BROWSER_GLOBALS = [
-  'window',
-  'document',
-  'navigator',
-  'localStorage',
-  'sessionStorage',
-  'AudioContext',
-  'SpeechSynthesisUtterance',
-  'HTMLElement',
-]
 
 interface Reference {
   readonly specifier: string
@@ -100,8 +80,6 @@ interface Reference {
 interface Module {
   readonly file: string
   readonly layer: string
-  /** Source with comments stripped, so prose about `window` is not a finding. */
-  readonly code: string
   readonly references: readonly Reference[]
 }
 
@@ -125,10 +103,6 @@ function resolveModule(path: string): string | null {
   return candidates.find((c) => existsSync(c) && statSync(c).isFile()) ?? null
 }
 
-function withoutComments(source: string): string {
-  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
-}
-
 /** Every module a file pulls in — static, `import type` and dynamic alike. */
 function referencesOf(file: string, source: string): Reference[] {
   return [...source.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g)].map(([, raw]) => {
@@ -145,15 +119,11 @@ function referencesOf(file: string, source: string): Reference[] {
   })
 }
 
-const MODULES: readonly Module[] = walk(SRC).map((file) => {
-  const source = readFileSync(file, 'utf8')
-  return {
-    file,
-    layer: layerOf(file),
-    code: withoutComments(source),
-    references: referencesOf(file, source),
-  }
-})
+const MODULES: readonly Module[] = walk(SRC).map((file) => ({
+  file,
+  layer: layerOf(file),
+  references: referencesOf(file, readFileSync(file, 'utf8')),
+}))
 
 const show = (file: string) => relative(SRC, file).replaceAll(sep, '/')
 
@@ -194,19 +164,9 @@ describe('the architecture holds', () => {
     expect(leaks).toEqual([])
   })
 
-  it('the layers that must run without a browser do', () => {
-    const leaks = MODULES.filter(({ layer }) => BOUNDARIES[layer]?.nodePure).flatMap(({ file, code }) =>
-      BROWSER_GLOBALS.filter((global) => new RegExp(`\\b${global}\\b`).test(code)).map(
-        (global) => `${show(file)} touches ${global}`,
-      ),
-    )
-
-    expect(leaks).toEqual([])
-  })
-
   // Not a layering rule, but the same graph answers it, and a cycle is how a
   // clean boundary rots quietly: two modules that need each other are one
-  // module wearing two names.
+  // module wearing two names. Barrels are how they arrive, and there are many.
   it('no module depends on itself, however long the way round', () => {
     const edges = new Map(
       MODULES.map(({ file, references }) => [

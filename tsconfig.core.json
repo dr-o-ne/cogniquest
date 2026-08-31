@@ -1,0 +1,26 @@
+{
+  // A1, the half an import graph cannot see: `src/core` must not touch a DOM
+  // API. Rather than keep a list of banned globals somewhere and hope it stays
+  // complete, the core is typechecked against a `lib` that simply has no DOM in
+  // it — so `document`, `matchMedia`, `HTMLCanvasElement` and everything else
+  // are «cannot find name», exhaustively, without anyone maintaining a list.
+  //
+  // `src/locale` rides along: the core takes number words from the text pack,
+  // which is the one exception DECISIONS.md grants, and it has to be DOM-free
+  // for the exception to be harmless.
+  //
+  // `src/game` cannot join, though it is browser-free in spirit: it reaches
+  // `src/assets`, which lives on Vite's `import.meta.env`, and typing that
+  // pulls `vite/client` — which brings the whole DOM back with it.
+  //
+  // Node's own globals stay reachable: vitest's types carry a hard
+  // `/// <reference types="node" />`, which no `types` setting can suppress.
+  // That is the honest boundary, and it is the one A1 actually claims — the
+  // core runs in node without a browser.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["src/core", "src/locale"]
+}

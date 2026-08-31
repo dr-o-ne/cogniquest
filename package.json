@@ -6,11 +6,11 @@
   "description": "A learning game: math and syllable reading, answered by voice",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.core.json",
     "fetch-model": "node scripts/fetch-model.mjs"
   },
   "dependencies": {
