@@ -34,12 +34,12 @@ export interface Monster {
   /**
    * Which kinds of task this fight draws from — a pool, like `levels`, with
    * one drawn afresh for every question. A row of the grid per name; an
-   * opponent listing three asks all three, turn about.
+   * opponent listing four asks all four, turn about.
    *
-   * Addition and subtraction unless TUNING says otherwise. That default is
-   * also where the coin flip between plus and minus lives now: it used to be
-   * hidden inside the generator, and there is no reason for two mechanisms
-   * choosing what to ask.
+   * `DEFAULT_TASKS` unless TUNING says otherwise. A kind whose rungs miss this
+   * opponent's levels is simply never drawn (`taskChoices` pairs kind with
+   * level), so comparing-numbers rides along in every pool but only surfaces
+   * for opponents that reach levels 1–2.
    */
   readonly tasks: readonly TaskKind[]
   /** A picture from public/monsters/. No picture, and the unit stays hidden. */
@@ -136,6 +136,19 @@ const IMAGES: Record<string, string> = {
 // can be pulled apart by character: one tough, another quick and nasty.
 // ─────────────────────────────────────────────────────────────────────────
 
+/**
+ * What every opponent asks unless TUNING overrides it: the four number-answer
+ * rows of the grid. Chains (`addition-subtraction`) are left out of the default
+ * — they need a two-digit-carrying head for level 4, so they belong to
+ * opponents chosen for it, not to a peasant.
+ */
+const DEFAULT_TASKS: readonly TaskKind[] = [
+  'addition',
+  'subtraction',
+  'missing-number',
+  'comparing-numbers',
+]
+
 const TUNING: Record<
   string,
   { hearts?: number; levels?: number[]; avatar?: string; tasks?: TaskKind[] }
@@ -147,13 +160,12 @@ const TUNING: Record<
   swordsman: { avatar: '⚔️' },
   skeleton: { avatar: '💀' },
   'skeleton-archer': { avatar: '💀' },
-  // Listed one by one rather than «all of them»: a new row of the grid should
-  // not turn up in the goblin's fight because it was implemented elsewhere.
-  // A row that has just been written is asked on its own for a while: mixed in
-  // among sums it is a small share of the questions and says little about
-  // itself. This is that reading, not where the goblin settles.
-  goblin: { avatar: '👺', tasks: ['comparing-numbers'] },
-  zombie: { avatar: '🧟', tasks: ['addition', 'subtraction', 'missing-number'] },
+  // The one opponent that also asks chains — hence the whole list spelled out.
+  goblin: {
+    avatar: '👺',
+    tasks: [...DEFAULT_TASKS, 'addition-subtraction'],
+  },
+  zombie: { avatar: '🧟' },
   archer: { avatar: '🏹' },
   priest: { avatar: '✝️' },
   imp: { avatar: '👿' },
@@ -362,7 +374,7 @@ function build(row: Row): Monster {
     // Falling back to the id keeps a missing translation visible instead of
     // blank. A test makes sure it never actually comes to that.
     name: t.monsters[id] ?? id,
-    tasks: tuned.tasks ?? ['addition', 'subtraction'],
+    tasks: tuned.tasks ?? DEFAULT_TASKS,
     // Written as a root path in IMAGES, resolved against wherever the app is
     // actually served from — see src/assets.ts.
     ...(image !== undefined ? { image: publicUrl(image) } : {}),

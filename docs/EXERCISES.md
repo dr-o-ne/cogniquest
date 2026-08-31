@@ -256,7 +256,10 @@ From which it follows that a task must stand on its own with no run-up. That is
 why all three words are named every time a comparison is asked: there is no
 earlier question of the same kind for the child to have learnt them from.
 
-The one deliberate exception is a row that has just been written. Mixed in among
-the rest a new kind is a small share of the questions and tells you little about
-itself; a run of nothing else says plainly whether it is understood, and whether
-it is being answered or guessed. A reading to take and then move on from.
+A new row is sometimes given a fight of its own for a while — a run of nothing
+else says plainly whether it is understood or merely guessed. Missing number and
+comparing numbers have had that reading and now ride in every opponent's pool
+(`DEFAULT_TASKS` in `src/game/monsters.ts`). Comparing only has rungs at levels
+1–2, so it surfaces for the easier opponents and is quietly absent higher up.
+Chains stay opt-in — they need a two-digit-carrying head — and today the goblin
+is the only one that asks them.
