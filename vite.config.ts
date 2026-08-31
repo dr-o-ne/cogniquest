@@ -16,6 +16,6 @@ export default defineConfig({
   test: {
     // The core (src/core) does not depend on a browser — tests run in node, fast.
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 })
