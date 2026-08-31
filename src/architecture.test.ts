@@ -93,13 +93,24 @@ const UNCONSTRAINED = new Set([
  */
 const ALWAYS_ALLOWED = ['vitest']
 
-interface Reference {
-  readonly specifier: string
-  /** The layer it lands in, or null when it points at a package. */
-  readonly layer: string | null
-  /** The file it resolves to, for the cycle check. */
-  readonly file: string | null
-}
+/**
+ * An import, split into the two kinds that behave differently.
+ *
+ * Flat, with a nullable layer and a nullable file, `null` meant two unrelated
+ * things at once: «this is a package, there is nothing local to point at» and
+ * «this is local and the resolver could not follow it». As a union the second
+ * cannot hide inside the first — a local reference always has a layer, and a
+ * missing file is a finding rather than a shrug.
+ */
+type Reference =
+  | { readonly kind: 'package'; readonly specifier: string }
+  | {
+      readonly kind: 'local'
+      readonly specifier: string
+      readonly layer: string
+      /** Where it lands, for the cycle check. Null means the resolver failed. */
+      readonly file: string | null
+    }
 
 interface Module {
   readonly file: string
@@ -144,8 +155,8 @@ function referencesOf(file: string, source: string): Reference[] {
         : null
 
     return path === null
-      ? { specifier, layer: null, file: null }
-      : { specifier, layer: layerOf(path), file: resolveModule(path) }
+      ? { kind: 'package' as const, specifier }
+      : { kind: 'local' as const, specifier, layer: layerOf(path), file: resolveModule(path) }
   })
 }
 
@@ -184,9 +195,11 @@ describe('the architecture holds', () => {
       const boundary = BOUNDARIES[layer]
       if (!boundary) return []
 
-      return references
-        .filter((ref) => ref.layer !== null && !boundary.layers.includes(ref.layer))
-        .map((ref) => `${show(file)} → '${ref.specifier}' reaches into ${ref.layer}`)
+      return references.flatMap((ref) =>
+        ref.kind === 'local' && !boundary.layers.includes(ref.layer)
+          ? [`${show(file)} → '${ref.specifier}' reaches into ${ref.layer}`]
+          : [],
+      )
     })
 
     expect(leaks).toEqual([])
@@ -199,12 +212,30 @@ describe('the architecture holds', () => {
 
       const allowed = [...ALWAYS_ALLOWED, ...boundary.packages]
       return references
-        .filter((ref) => ref.layer === null)
+        .filter((ref) => ref.kind === 'package')
         .filter((ref) => !allowed.some((n) => ref.specifier === n || ref.specifier.startsWith(`${n}/`)))
         .map((ref) => `${show(file)} → '${ref.specifier}' is not on ${layer}'s list`)
     })
 
     expect(leaks).toEqual([])
+  })
+
+  // Not about the codebase's imports — `tsc` already refuses to compile one it
+  // cannot find. This is about the resolver twenty lines up: a form of import
+  // TypeScript follows and `resolveModule` does not would land here as a local
+  // reference pointing at nothing, and the cycle check below would quietly drop
+  // that edge. A cycle would then exist and go unreported, which is worse than
+  // a red test — so an unresolved local import is a finding in its own right.
+  it('every local import resolves to a file', () => {
+    const unresolved = MODULES.flatMap(({ file, references }) =>
+      references.flatMap((ref) =>
+        ref.kind === 'local' && ref.file === null
+          ? [`${show(file)} → '${ref.specifier}' resolves to nothing`]
+          : [],
+      ),
+    )
+
+    expect(unresolved).toEqual([])
   })
 
   // Not a layering rule, but the same graph answers it, and a cycle is how a
@@ -214,7 +245,7 @@ describe('the architecture holds', () => {
     const edges = new Map(
       MODULES.map(({ file, references }) => [
         file,
-        references.flatMap((ref) => (ref.file === null ? [] : [ref.file])),
+        references.flatMap((ref) => (ref.kind === 'local' && ref.file !== null ? [ref.file] : [])),
       ]),
     )
 
