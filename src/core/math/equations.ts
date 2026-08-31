@@ -1,27 +1,35 @@
 import type { Exercise, MathOp } from '../exercises'
 import { randomInt, type Random } from '../random'
 import { ArithmeticAnswer } from './ArithmeticAnswer'
-import { generateProblem } from './generator'
+import { buildProblem, generateProblem, type ArithmeticProblem } from './generator'
 
 /**
  * Missing number — the «□ + 2 = 5» row of the grid (see docs/EXERCISES.md).
  *
  * A known sum run backwards: the child is shown `terms … = result` with one of
- * the operands hidden and names it. The backwards step is the whole of the new
- * skill, so the arithmetic underneath is not new — a base problem is drawn from
- * the ordinary addition/subtraction generator for the level and one operand is
- * then covered up. Levels 1–5 therefore mean exactly what they mean there:
- * size, across the ten, two digits without carrying, with carrying, and the
- * grouping trick (which is where a base problem has three terms, so the
- * equation does too — `□ + 19 + 3 = 69`).
+ * the operands hidden and names it. Reading a sum backwards is the whole of the
+ * skill, so the ladder is about the size of the arithmetic, nothing cleverer:
+ *
+ * | Level | The sum behind the blank | Heard |
+ * |---|---|---|
+ * | 1 | within five            — `□ + 2 = 5`      | 0–10 |
+ * | 2 | within ten             — `4 + □ = 9`      | 0–10 |
+ * | 3 | across the ten         — `□ + 5 = 13`     | 0–20 |
+ * | 4 | two-digit, carry or no — `45 + □ = 68`, `□ + 27 = 61` | 0–100 |
+ * | 5 | three terms, a pair makes a round one — `47 + □ + 3 = 69` | 0–100 |
+ *
+ * Levels 1 and 2 are their own small generators. Level 3 is the ordinary
+ * across-the-ten problem, level 4 flips a coin between two-digit-without-carry
+ * and two-digit-with-carry so both are met, and level 5 is the grouping problem
+ * unchanged — three terms, so the equation has three too.
  *
  * The blank never falls on the result: `□ + 2 = 5` asks the child to think
  * backwards, `2 + 3 = □` is plain addition with an equals sign drawn in, and
  * that row is already played.
  *
- * The answer is a single number, so `ArithmeticAnswer` and its recognition
- * grammar carry over untouched (A5, T16) — this file adds a generator and a
- * prompt shape, nothing more.
+ * Every operand is at least one — no `7 + □ = 7`. The answer is a single
+ * number, so `ArithmeticAnswer` and its recognition grammar carry over
+ * untouched (A5, T16).
  */
 export interface Equation {
   /** Every operand, in written order. One of them is the unknown. */
@@ -34,25 +42,59 @@ export interface Equation {
   readonly blank: number
   /** The number the child has to name: `terms[blank]`. */
   readonly answer: number
-  /**
-   * The grammar ceiling, taken straight from the base problem so that a missing
-   * number at a given level is heard against the same range as a plain sum at
-   * that level (T16).
-   */
+  /** The grammar ceiling — the range the child is heard against (T16). */
   readonly heardUpTo: number
+}
+
+/** Level 1 and 2: `a + b` or `a − b` with everything at or below `ceiling`. */
+function withinReach(random: Random, op: MathOp, ceiling: number): ArithmeticProblem {
+  if (op === '+') {
+    const a = randomInt(random, 1, ceiling - 1)
+    const b = randomInt(random, 1, ceiling - a)
+    return buildProblem([a, b], ['+'], ceiling)
+  }
+
+  const a = randomInt(random, 2, ceiling)
+  const b = randomInt(random, 1, a - 1)
+  return buildProblem([a, b], ['-'], ceiling)
+}
+
+/** The sum a level hides a term of. */
+function baseProblem(levelId: number, random: Random, op: MathOp): ArithmeticProblem {
+  switch (levelId) {
+    // Answers only reach five, but the grammar is the same 0–10 as level 2 —
+    // a short list makes Vosk hear its one word everywhere (T16).
+    case 1:
+      return { ...withinReach(random, op, 5), heardUpTo: 10 }
+
+    case 2:
+      return withinReach(random, op, 10)
+
+    // Across the ten — the ordinary level-2 arithmetic, which never makes a
+    // zero operand.
+    case 3:
+      return generateProblem(2, random, op)
+
+    // Two-digit, half the time with a carry and half without, so the child
+    // meets both behind the blank.
+    case 4:
+      return generateProblem(random() < 0.5 ? 3 : 4, random, op)
+
+    // The grouping problem, unchanged: three terms, and the equation keeps all
+    // three.
+    case 5:
+      return generateProblem(5, random, op)
+
+    default:
+      throw new RangeError(`No missing-number generator for level ${levelId}`)
+  }
 }
 
 export function generateEquation(levelId: number, random: Random): Equation {
   const operation: MathOp = random() < 0.5 ? '+' : '-'
-
-  // The base is an ordinary problem for this level — `terms … = answer`. Levels
-  // 1–4 give two terms, level 5 gives three, and the equation inherits that.
-  const base = generateProblem(levelId, random, operation)
+  const base = baseProblem(levelId, random, operation)
   const blank = randomInt(random, 0, base.terms.length - 1)
 
-  // Level 1 lets a zero operand through on purpose — `7 + □ = 7`, `□ − 9 = 0` —
-  // because `± 0` is one of the facts that level teaches. Higher up the
-  // arithmetic generators rule zero out themselves.
   return {
     terms: base.terms,
     ops: base.ops,

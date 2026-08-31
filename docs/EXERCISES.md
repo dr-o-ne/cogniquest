@@ -135,23 +135,27 @@ order to work in; here nobody does, and they have to find one.
 
 ## Missing number
 
-Not a ladder of its own — a known sum shown backwards. A base problem is drawn
-from the addition/subtraction ladder for the level and one operand is covered
-up, so the rungs are exactly the ones above: within ten, across the ten, two
-digits without carrying, with carrying, and the grouping trick (where the base
-has three terms, so the equation does too).
+A known sum shown backwards: `terms … = result` with one operand covered up,
+and the child names it. Reading a sum backwards is the whole skill, so the
+ladder is about the size of the arithmetic behind the blank, nothing cleverer.
 
-| Level | What is asked | Answers | Example |
+| Level | The sum behind the blank | Heard | Example |
 |---|---|---|---|
-| 1 | one operand hidden, within ten | 0–10 | `□+2=5`, `9−□=4` |
-| 2 | …with the ten crossed | 0–20 | `□+5=13`, `13−□=6` |
-| 3 | …two-digit, nothing carried | 0–100 | `45+□=65`, `□−14=54` |
-| 4 | …the units overflow | 0–100 | `□+32=51`, `70−□=44` |
-| 5 | one of three terms hidden | 0–100 | `47+□+3=69`, `83−□−3=53` |
+| 1 | within five | 0–10 | `□+2=5`, `4−□=3` |
+| 2 | within ten | 0–10 | `4+□=9`, `9−□=3` |
+| 3 | across the ten | 0–20 | `□+6=13`, `12−□=4` |
+| 4 | two-digit, carry or no | 0–100 | `56+□=94`, `□+15=82` |
+| 5 | three terms, a pair makes a round one | 0–100 | `47+□+3=69`, `83−□−3=53` |
+
+Levels 1 and 2 are their own small generators; level 3 is the ordinary
+across-the-ten problem; level 4 flips a coin between two-digit-without-carry and
+two-digit-with-carry so both are met; level 5 is the grouping problem
+unchanged — three terms, so the equation has three too.
 
 The blank falls on any operand but never on the result: `2+3=□` is plain
 addition with an equals sign drawn in, and that row is already played. `□+2=5`
 and `2+□=5` are different tasks, and the review queue (**C3**) keeps them apart.
+Every operand is at least one — no `7+□=7`.
 
 The answer is one number, so the judging and the recognition grammar are the
 ones addition already uses (**A5**, **T16**) — nothing new to check.

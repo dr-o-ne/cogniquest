@@ -50,20 +50,35 @@ describe('missing number — rules that hold on every level', () => {
     })
   }
 
-  // Zero as an operand is level 1's business (`7 + □ = 7`), and only level 1's.
-  it('no zero operand above level 1', () => {
-    for (const level of [2, 3, 4, 5]) {
+  it('never a zero operand, on any level', () => {
+    for (const level of MATH_LEVELS) {
       for (const eq of sample(level)) {
-        expect(eq.terms[0]).toBeGreaterThanOrEqual(1)
-        expect(eq.terms[1]).toBeGreaterThanOrEqual(1)
+        for (const term of eq.terms) expect(term).toBeGreaterThanOrEqual(1)
       }
     }
   })
 
-  it('the heard range comes from the level, same as a plain sum', () => {
+  it('the grammar ceiling widens by rung', () => {
     expect(sample(1)[0]!.heardUpTo).toBe(10)
-    expect(sample(2)[0]!.heardUpTo).toBe(20)
-    for (const level of [3, 4, 5]) expect(sample(level)[0]!.heardUpTo).toBe(100)
+    expect(sample(2)[0]!.heardUpTo).toBe(10)
+    expect(sample(3)[0]!.heardUpTo).toBe(20)
+    for (const level of [4, 5]) expect(sample(level)[0]!.heardUpTo).toBe(100)
+  })
+
+  it('the sum behind the blank grows by rung', () => {
+    // Level 1 stays within five, level 2 within ten.
+    for (const eq of sample(1)) for (const n of [...eq.terms, eq.result]) expect(n).toBeLessThanOrEqual(5)
+    for (const eq of sample(2)) for (const n of [...eq.terms, eq.result]) expect(n).toBeLessThanOrEqual(10)
+    // Level 3 crosses the ten: the plain reading of the two shown-or-hidden
+    // operands is a teen answer, never single digits both.
+    for (const eq of sample(3)) {
+      expect(eq.terms).toHaveLength(2)
+      expect(Math.max(...eq.terms, eq.result)).toBeGreaterThan(10)
+    }
+    // Level 4 is two-digit.
+    for (const eq of sample(4)) expect(Math.max(...eq.terms, eq.result)).toBeGreaterThanOrEqual(10)
+    // Level 5 keeps all three terms.
+    for (const eq of sample(5)) expect(eq.terms).toHaveLength(3)
   })
 })
 
