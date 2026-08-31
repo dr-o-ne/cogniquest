@@ -128,7 +128,6 @@ function SelectScreen({
             <span className="card__hearts" style={{ fontSize: `${heartSize(monster.hearts)}rem` }}>
               {'❤'.repeat(monster.hearts)}
             </span>
-            <span className="card__hint">{monster.hint}</span>
           </button>
           )
         })}

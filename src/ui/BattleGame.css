@@ -135,10 +135,12 @@
   font-size: 2.6rem;
 }
 
+/* A fifth larger than it was: the card lost its line of text, and the picture
+   is what the child actually picks by. */
 .avatar--card {
-  width: 4.5rem;
-  height: 4.5rem;
-  font-size: 3.5rem;
+  width: 5.4rem;
+  height: 5.4rem;
+  font-size: 4.2rem;
 }
 
 .avatar--popup {
@@ -166,11 +168,6 @@ img.avatar {
   /* Twenty hearts will not fit one line — wrap them, but keep them centred */
   overflow-wrap: anywhere;
   text-align: center;
-}
-
-.card__hint {
-  font-size: 0.75rem;
-  color: var(--muted);
 }
 
 /* Beaten: struck through diagonally, but still playable */

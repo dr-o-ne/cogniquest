@@ -50,7 +50,6 @@ export interface Monster {
   readonly hearts: number
   /** Which math levels (C1) the tasks are drawn from. */
   readonly levels: readonly number[]
-  readonly hint: string
   readonly color: string
   /** King's Bounty stats. Not used by the game yet. */
   readonly stats?: UnitStats
@@ -428,7 +427,6 @@ function build(row: Row): Monster {
     ...(tuned.avatar !== undefined ? { avatar: tuned.avatar } : {}),
     hearts: tuned.hearts ?? base.hearts,
     levels: tuned.levels ?? base.levels,
-    hint: t.battleHints[level] ?? '',
     color: base.color,
     ...(hasStats
       ? { stats: { level, leadership, attack, defense, initiative, speed, health, damage } }

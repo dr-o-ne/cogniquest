@@ -35,7 +35,6 @@ const dummy: Monster = {
   name: 'Test',
   hearts: 3,
   levels: [1],
-  hint: '',
   color: '#000',
 }
 
@@ -138,12 +137,6 @@ describe('the monster config', () => {
     for (const monster of MONSTERS) {
       const choices = taskChoices(monster.tasks, monster.levels)
       expect(choices.length, `nothing to ask for ${monster.id}`).toBeGreaterThan(0)
-    }
-  })
-
-  it('every unit carries a battle hint', () => {
-    for (const monster of MONSTERS) {
-      expect(monster.hint.length).toBeGreaterThan(0)
     }
   })
 

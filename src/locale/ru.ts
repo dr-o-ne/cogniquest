@@ -116,15 +116,6 @@ export const ru = {
       `Сравни. ${left} и ${right}. Больше, меньше или равно?`,
   },
 
-  /** What kind of fight a monster gives, by its level (G7). */
-  battleHints: {
-    1: 'Совсем просто, короткий бой',
-    2: 'Простые примеры',
-    3: 'Примеры посложнее',
-    4: 'Трудные примеры',
-    5: 'Босс: самые трудные',
-  } as Record<number, string>,
-
   /**
    * Math levels (C1). Debug and the parent screen, never shown to the child.
    *
