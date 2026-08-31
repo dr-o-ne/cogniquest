@@ -126,7 +126,9 @@ const IMAGES: Record<string, string> = {
   'sea-devil': '/monsters/sea-devil.webp',
   pirate: '/monsters/pirate.webp',
   'ghost-pirate': '/monsters/ghost-pirate.webp',
-  archdemon: '/monsters/archdemon.webp',
+  // Off the selection screen for now — he is wanted, but not yet within reach.
+  // Uncomment when level 5 sums stop being a wall.
+  // archdemon: '/monsters/archdemon.webp',
 }
 
 // ─────────────────────────────────────────────────────────────────────────
