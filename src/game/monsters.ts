@@ -8,9 +8,9 @@
  *   TUNING  — hand corrections to hearts and difficulty where the maths is off
  *
  * To add an opponent: drop a picture into public/monsters/ and add a line to
- * IMAGES. Nothing else is needed — hearts are computed from the unit's health,
- * task difficulty from its level. The display name comes from the text pack
- * (src/locale), keyed by the same id.
+ * IMAGES. Nothing else is needed — both the length of the battle and the
+ * difficulty of its tasks come from the unit's level. The display name comes
+ * from the text pack (src/locale), keyed by the same id.
  */
 import { publicUrl } from '@/assets'
 import type { TaskKind } from '@/core/math'
@@ -59,16 +59,24 @@ export interface Monster {
 /**
  * How many hearts the child has. One is lost per wrong answer.
  *
- * It grows along with monster hearts: the longer the battle, the more chances
- * to collect mistakes simply along the way. Leave it at five and a long battle
- * turns not into «longer» but into «harder».
+ * Set against the longest battle rather than the average one: twenty tasks are
+ * twenty chances to collect a mistake simply along the way, and at five hearts
+ * a long battle would turn not into «longer» but into «harder».
  */
 export const PLAYER_HEARTS = 6
 
 // ─────────────────────────────────────────────────────────────────────────
-// How a unit's stats turn into a battle
+// How a unit's level turns into a battle
 //
-// Hearts come from HEALTH, task difficulty from LEVEL.
+// Both dials come from LEVEL: how many tasks the battle runs to, and which
+// math rungs they are drawn from. HEALTH no longer enters into it. It used to
+// set the hearts on a log scale, which balanced the wrong thing — health is a
+// King's Bounty number tuned for King's Bounty fights, and it made the hardest
+// opponent the longest one as well, thirty-five tasks for an ancient ent.
+//
+// The two dials now run in opposite directions, on purpose. Easy tasks are
+// quick and want repeating, so a level 1 battle is twenty of them; two-digit
+// carrying is slow and expensive to hold, so a level 5 battle is ten.
 //
 // Math levels (C1, see docs/MATH.md):
 //   1 — ± within five                    4 — two-digit, nothing carried
@@ -80,29 +88,31 @@ export const PLAYER_HEARTS = 6
 // between them, and it is the one place that has to be re-cut when it does.
 // ─────────────────────────────────────────────────────────────────────────
 
-export const HEARTS_MIN = 5
-export const HEARTS_MAX = 35
+/**
+ * What a unit's level is worth: how many tasks its battle runs to, which math
+ * rungs (C1) they are drawn from, and the colour of its card.
+ *
+ * Hearts fall as the rungs rise. Twenty bonds within five is a warm-up a child
+ * can hold; twenty two-digit carries is an evening's work.
+ */
+const BY_LEVEL: Record<number, { hearts: number; levels: number[]; color: string }> = {
+  1: { hearts: 20, levels: [1], color: '#7cb342' },
+  2: { hearts: 18, levels: [1, 2], color: '#4aa3a0' },
+  3: { hearts: 16, levels: [2, 3], color: '#4a7de0' },
+  4: { hearts: 12, levels: [3, 4], color: '#a0417a' },
+  5: { hearts: 10, levels: [4, 5], color: '#c0392b' },
+}
 
 /**
- * Hearts from a unit's health — logarithmically, not proportionally.
+ * How long the shortest and longest battles are — read off the table rather
+ * than written down beside it, so a re-tuned rung cannot leave them behind.
  *
- * Health in the table runs from 6 for a peasant to 1400 for an ancient ent.
- * Straight proportion would mean a battle of fifteen hundred problems, so the
- * scale is compressed: 6 health → 5 hearts, 1000 → about 30.
+ * Worth having because TUNING may still set hearts by hand, and a slip there
+ * is how a battle of forty questions would arrive.
  */
-function heartsFromHealth(health: number): number {
-  const scaled = Math.round(11.25 * Math.log10(health) - 3.75)
-  return Math.min(HEARTS_MAX, Math.max(HEARTS_MIN, scaled))
-}
-
-const BY_LEVEL: Record<number, { hearts: number; levels: number[]; color: string }> = {
-  // hearts here is the fallback for units that have no stats
-  1: { hearts: 6, levels: [1], color: '#7cb342' },
-  2: { hearts: 10, levels: [1, 2], color: '#4aa3a0' },
-  3: { hearts: 15, levels: [2, 3], color: '#4a7de0' },
-  4: { hearts: 20, levels: [3, 4], color: '#a0417a' },
-  5: { hearts: 30, levels: [4, 5], color: '#c0392b' },
-}
+const HEARTS_PER_LEVEL = Object.values(BY_LEVEL).map((battle) => battle.hearts)
+export const HEARTS_MIN = Math.min(...HEARTS_PER_LEVEL)
+export const HEARTS_MAX = Math.max(...HEARTS_PER_LEVEL)
 
 // ─────────────────────────────────────────────────────────────────────────
 // IMAGES — who takes part in the game
@@ -176,8 +186,9 @@ const TUNING: Record<
   string,
   { hearts?: number; levels?: number[]; avatar?: string; tasks?: TaskKind[] }
 > = {
-  // The fairy has no stats, so her hearts are set by hand
-  'forest-fairy': { hearts: 8, avatar: '🧚' },
+  // Her hearts used to be set by hand, because she has no stats to work them
+  // out from. The level answers that now, so the correction is gone.
+  'forest-fairy': { avatar: '🧚' },
   peasant: { avatar: '🧑‍🌾' },
   robber: { avatar: '🦹' },
   swordsman: { avatar: '⚔️' },
@@ -415,7 +426,7 @@ function build(row: Row): Monster {
     // actually served from — see src/assets.ts.
     ...(image !== undefined ? { image: publicUrl(image) } : {}),
     ...(tuned.avatar !== undefined ? { avatar: tuned.avatar } : {}),
-    hearts: tuned.hearts ?? (health !== undefined ? heartsFromHealth(health) : base.hearts),
+    hearts: tuned.hearts ?? base.hearts,
     levels: tuned.levels ?? base.levels,
     hint: t.battleHints[level] ?? '',
     color: base.color,
@@ -430,7 +441,8 @@ export const MONSTERS: readonly Monster[] = ROSTER.map(build)
 
 /**
  * Who is shown on the selection screen: only units that have a picture.
- * Ordered from short battles to long ones, so the ladder reads at a glance.
+ * Ordered from the easiest tasks to the hardest, so the ladder reads at a
+ * glance — which is also, now, from the longest battle to the shortest.
  */
 export function availableMonsters(): readonly Monster[] {
   return MONSTERS.filter((monster) => monster.image !== undefined).sort(

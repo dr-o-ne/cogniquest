@@ -419,13 +419,13 @@ Encoded in the types: `AnswerAttempt` has a separate `unrecognised` variant, and
 |---|---|---|
 | **G1** | Self-sufficient mini-games first; gamification is hung on top later (through **A4**). | Accepted |
 | **G6** | The format is a **Mortal Kombat style battle**: hearts on both sides, fought to a win, a result window. | Accepted |
-| **G7** | A monster is balanced with two dials: **how many hearts** (length of the battle) and **which levels the tasks come from** (difficulty). | Accepted |
+| **G7** | A monster's battle comes from its **level**: how many tasks it runs to, and which math rungs they are drawn from. The harder the tasks, the shorter the battle. | Accepted |
 | **G2** | The setting: wizard against a little monster / space / something else. | **Open** — phase 6 |
 | **G3** | The cast of teacher characters. | **Open** — the child may pick them |
 | **G4** | A timer on answers: speed bonus / hard limit / no clock. | **Deferred** — taken off the critical path by **A7** |
 | **G5** | The teacher: 3D through AI, or 2D through Rive. | **Open** — phase 5, behind abstraction **A10** |
 
-**G6 — how it works.** Top left, the child's name and 5 hearts; on the right,
+**G6 — how it works.** Top left, the child's name and 6 hearts; on the right,
 the monster and its hearts. A correct answer takes a heart off the monster, a
 mistake off the child. The battle runs until somebody runs out. The result comes
 up in a popup.
@@ -447,14 +447,31 @@ wants a home outside the battle; deciding where is phase 6 work. Recorded here
 rather than in the exercise catalogue, because it is a fact about the format and
 not about the mathematics.
 
-**G7 — why two dials and not one «difficulty».** They produce different
-characters out of one and the same set of problems:
+**G7 — why the two dials turn together, and in opposite directions.** Length
+and difficulty are still two different things, but they are no longer set
+independently: both are read off the unit's level.
 
-| Monster | Hearts | Levels (C1) | What it plays like |
+| Unit level | Tasks | Levels (C1) | What it plays like |
 |---|---|---|---|
-| Goblin 👺 | 10 | 1 | quick and simple — a warm-up |
-| Zombie 🧟 | 20 | 1–2 | easy but long: trains stamina |
-| Vampire 🧛 | 10 | 3–4 | short but bitey |
+| 1 | 20 | 1 | long and easy — the bonds within five, drilled |
+| 2 | 18 | 1–2 | the same, up to ten |
+| 3 | 16 | 2–3 | the ten, crossed and counted whole |
+| 4 | 12 | 3–4 | two-digit, and it starts to cost |
+| 5 | 10 | 4–5 | short and heavy — carrying |
+
+Hearts used to come from the unit's **health** on a log scale, and that is where
+«two independent dials» came from: a tough unit made a long battle. It balanced
+the wrong thing. Health is a King's Bounty number tuned for King's Bounty
+fights, and it made the hardest opponent the longest one as well — thirty-five
+two-digit carries for an ancient ent, against six sums within five for a
+peasant, which is exactly backwards.
+
+Easy tasks are quick and the point of them is repetition, so the easy rungs are
+the long ones. Two-digit carrying is slow and expensive to hold, so the hard
+rungs are short. A child meets roughly the same number of minutes either way.
+
+`TUNING` remains the way to pull one unit away from its level — hearts
+included — and nothing uses it for hearts today.
 
 The config is `src/game/monsters.ts`, pure data with no logic. A new opponent is
 one row in the array plus a name in the text pack.
@@ -533,3 +550,4 @@ either.
 | 2026-08-31 | **`EXERCISES.md` became [MATH.md](MATH.md), methodology and math only.** The reading section went out with the placeholder types, and so did everything that was not methodology: recognition and grammar notes, the microphone column, which opponent draws which row, `DEFAULT_TASKS`, the cost of a mistake in a battle. A catalogue of what a child is asked should read the same whether the game around it is a battle, a map or nothing at all. The one idea worth keeping — that a format punishing mistakes pulls against olympiad tasks — moved to **G6**, where facts about the format belong. **C2** gets a document of its own when it is designed, beside this one rather than inside it. |
 | 2026-08-31 | **Every row but addition parked, to be put back one at a time.** Subtraction, chains, missing number and comparing numbers are commented out of `TaskKind` and out of `DEFAULT_TASKS` — four places each, listed above the union — while the game is cut back to one thing that can be watched working. Their generators, rules and tests are untouched and stay green; only the task table forgets them. The grid in [MATH.md](MATH.md) gained a ⏸ for exactly this state, which is neither «playable» nor «not written». |
 | 2026-08-31 | **The ladder re-cut around two-digit work, and declared open upwards (C1).** The rungs are now: the bonds within five, up to ten without crossing it, the ten itself (crossed to twenty, or counted in whole tens to a hundred), two-digit without carrying, two-digit with. Carrying is the skill grades 1–2 are built towards, so it is the top rung rather than a middle one, and the olympiad trick that used to sit above it moves to the rungs beyond five — it still has a home at level 5 of the chains row. Two rules made explicit by the re-cut: a rung must not be able to draw the rung below it (level 2 always reaches past five; level 4 never draws `30+40`), and the answer range travels with the problem rather than the level number — level 3 asks two shapes with two ceilings. Missing number gives up the ladder it was granted a day ago and rides this one rung for rung; a second ladder was a second thing to keep in step, and it fell out of step at the first re-cut. **Zero stays on level 1**, at one problem in twenty rather than one in fifteen: `4+0`, `4−0` and `4−4` are three facts with nowhere else small enough to meet them, so the rung's own «numbers from one to five» is set aside for them rather than widened. The price is paid by the missing-number row, which rides the rung: about one of its level 1 questions in twenty can be read off instead of worked out (`4−□=0`). Catalogue: [MATH.md](MATH.md). |
+| 2026-09-01 | **A battle's length comes from the level, not from King's Bounty health (G7).** Twenty tasks at level 1, then 18, 16, 12, 10 — the easy rungs are the long ones, because easy tasks are quick and want repeating, and the hard rungs are short, because two-digit carrying is slow. Health set the hearts before, on a log scale, which made the hardest opponent the longest one as well: thirty-five carries for an ancient ent against six small sums for a peasant. `heartsFromHealth` is gone with it, and `HEARTS_MIN`/`HEARTS_MAX` are now read off the table rather than written down beside it. The fairy loses her hand-set hearts — the reason for them was that she has no stats, and stats no longer decide. Health stays in the roster as reference data, and stays out of the battle. |

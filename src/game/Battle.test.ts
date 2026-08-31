@@ -161,12 +161,13 @@ describe('the monster config', () => {
     })
   })
 
-  it('the stronger the unit, the harder the tasks', () => {
+  it('the stronger the unit, the harder the tasks — and the shorter the battle', () => {
     const peasant = monsterById('peasant')
     const dragon = monsterById('black-dragon')
 
     expect(Math.max(...dragon.levels)).toBeGreaterThan(Math.max(...peasant.levels))
-    expect(dragon.hearts).toBeGreaterThan(peasant.hearts)
+    // The other way round the hardest opponent would also be the longest.
+    expect(dragon.hearts).toBeLessThan(peasant.hearts)
   })
 
   describe('only units with a picture are shown', () => {
@@ -190,36 +191,46 @@ describe('the monster config', () => {
     })
   })
 
-  describe('hearts are computed from health', () => {
-    it('more health, more hearts', () => {
-      const withStats = MONSTERS.filter((monster) => monster.stats !== undefined)
-      const byHealth = [...withStats].sort((a, b) => a.stats!.health - b.stats!.health)
-
-      for (let i = 1; i < byHealth.length; i++) {
-        expect(byHealth[i]!.hearts).toBeGreaterThanOrEqual(byHealth[i - 1]!.hearts)
-      }
+  describe('hearts come from the level', () => {
+    it('the table, rung by rung', () => {
+      expect(monsterById('peasant').hearts).toBe(20) // unit level 1
+      expect(monsterById('goblin').hearts).toBe(18) // 2
+      expect(monsterById('gorgul').hearts).toBe(16) // 3
+      expect(monsterById('paladin').hearts).toBe(12) // 4
+      expect(monsterById('black-dragon').hearts).toBe(10) // 5
     })
 
-    it('a zombie outlasts a goblin — just like in the table', () => {
+    it('two units of a level get the same battle, whatever their health', () => {
       const zombie = monsterById('zombie')
       const goblin = monsterById('goblin')
 
+      // The zombie used to outlast the goblin by four tasks for having more
+      // health. Health is King's Bounty balance, not a child's practice.
       expect(zombie.stats!.health).toBeGreaterThan(goblin.stats!.health)
-      expect(zombie.hearts).toBeGreaterThan(goblin.hearts)
+      expect(zombie.hearts).toBe(goblin.hearts)
     })
 
-    it('even the beefiest stay playable', () => {
+    it('the harder the tasks, the shorter the battle', () => {
+      const shown = availableMonsters()
+      for (let i = 1; i < shown.length; i++) {
+        // The list runs easiest first, so hearts may only fall along it.
+        expect(shown[i]!.hearts).toBeLessThanOrEqual(shown[i - 1]!.hearts)
+      }
+    })
+
+    it('every battle stays inside the table', () => {
+      // TUNING can still set hearts by hand; nothing may wander off the scale.
       for (const monster of MONSTERS) {
         expect(monster.hearts).toBeGreaterThanOrEqual(HEARTS_MIN)
         expect(monster.hearts).toBeLessThanOrEqual(HEARTS_MAX)
       }
     })
 
-    it('a hand correction overrides the computation', () => {
-      // The fairy has no stats, so her hearts come from TUNING.
+    it('a unit with no stats still gets a battle from its level', () => {
       const fairy = monsterById('forest-fairy')
+
       expect(fairy.stats).toBeUndefined()
-      expect(fairy.hearts).toBe(8)
+      expect(fairy.hearts).toBe(20)
     })
   })
 
