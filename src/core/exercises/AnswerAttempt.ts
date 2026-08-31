@@ -6,7 +6,6 @@ export type AnswerAttempt =
   | { readonly kind: 'number'; readonly value: number }
   | { readonly kind: 'text'; readonly value: string }
   | { readonly kind: 'choice'; readonly value: string }
-  | { readonly kind: 'sequence'; readonly value: readonly string[] }
   /**
    * Recognition did not manage: silence, noise, a word outside the grammar.
    * THE KEY POINT: this is not the child's mistake (C5). It costs no star,

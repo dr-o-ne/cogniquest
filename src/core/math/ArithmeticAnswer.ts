@@ -41,7 +41,7 @@ export class ArithmeticAnswer implements AnswerSpec, VoiceAnswerable {
         return 'unrecognised'
 
       default:
-        // A picked option or a syllable sequence is not our business.
+        // A picked option is not our business.
         return 'unrecognised'
     }
   }

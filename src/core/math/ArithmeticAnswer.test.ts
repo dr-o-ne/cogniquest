@@ -42,8 +42,7 @@ describe('ArithmeticAnswer', () => {
   })
 
   it('answer kinds that are not ours do not count as mistakes', () => {
-    expect(answer.check({ kind: 'choice', value: 'МА' })).toBe('unrecognised')
-    expect(answer.check({ kind: 'sequence', value: ['МА', 'ША'] })).toBe('unrecognised')
+    expect(answer.check({ kind: 'choice', value: 'больше' })).toBe('unrecognised')
   })
 
   describe('grammar (A5, T16)', () => {

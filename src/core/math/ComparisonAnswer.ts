@@ -96,7 +96,7 @@ export class ComparisonAnswer implements AnswerSpec, VoiceAnswerable {
         return 'unrecognised'
 
       default:
-        // A number or a syllable sequence is not our business.
+        // A number is not our business.
         return 'unrecognised'
     }
   }

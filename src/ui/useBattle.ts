@@ -116,15 +116,6 @@ function questionText(exercise: Exercise): string {
     case 'comparison':
       return t.teacher.compare(numberToWords(prompt.left), numberToWords(prompt.right))
 
-    // «Read aloud» works only if the child does the reading. Saying the word
-    // first would do the exercise for them, so the teacher stays quiet.
-    case 'syllables':
-      return ''
-
-    // This prompt is nothing but speech — it never appears on screen.
-    case 'spoken':
-      return prompt.text
-
     default:
       return assertNever(prompt, 'exercise prompt')
   }
@@ -152,11 +143,6 @@ function spokenAnswer(exercise: Exercise): string | null {
 
     case 'comparison':
       return comparisonWord(compare(prompt.left, prompt.right))
-
-    // Nothing to announce: the teacher does not read the answer out.
-    case 'syllables':
-    case 'spoken':
-      return null
 
     default:
       return assertNever(prompt, 'exercise prompt')

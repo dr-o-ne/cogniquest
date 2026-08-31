@@ -1,6 +1,11 @@
 import type { AnswerSpec } from './AnswerSpec'
 
-export type Subject = 'math' | 'reading'
+/**
+ * Math is the only subject for now. Reading gets built on its own terms rather
+ * than as a second member squeezed into what math happens to need — so it is
+ * absent here until it exists, not pencilled in.
+ */
+export type Subject = 'math'
 
 export type MathOp = '+' | '-'
 
@@ -44,16 +49,13 @@ export type ExercisePrompt =
    * the sign, so this is the first prompt whose answer is not a number.
    */
   | { readonly kind: 'comparison'; readonly left: number; readonly right: number }
-  /** «МА-ШИ-НА» in large type, one colour per syllable */
-  | { readonly kind: 'syllables'; readonly syllables: readonly string[] }
-  /** The teacher says it out loud; nothing appears on screen */
-  | { readonly kind: 'spoken'; readonly text: string }
 
 /**
- * One exercise type for both subjects (A2).
+ * One exercise type per subject, and every layer above written against it (A2).
  *
  * Because of it the session engine, progress, mistake review and the whole of
- * gamification are written once and work for math and for reading alike.
+ * gamification know only `Exercise` — none of them names a kind of prompt, so a
+ * subject arriving later adds prompts here and changes nothing above.
  */
 export interface Exercise {
   readonly id: string

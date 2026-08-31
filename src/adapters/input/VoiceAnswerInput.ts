@@ -5,7 +5,7 @@ import type { AnswerInput, SpeechRecognizer } from '@/core/ports'
  * Answering by voice (P9) — the primary way to answer.
  *
  * It takes the grammar from the exercise itself (A5), so it knows nothing of
- * arithmetic or of syllables: reading will work through it unchanged.
+ * arithmetic: a new kind of answer works through it unchanged.
  */
 export class VoiceAnswerInput implements AnswerInput {
   readonly id = 'voice'

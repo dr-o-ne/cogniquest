@@ -364,13 +364,6 @@ function Expression({ exercise }: { exercise: Exercise }) {
         </div>
       )
 
-    // Reading (C2) arrives in phase 4 with a screen of its own. Showing nothing
-    // here is deliberate, not an oversight — and it is written down as a case
-    // so that a genuinely new kind of prompt cannot slip through unnoticed.
-    case 'syllables':
-    case 'spoken':
-      return null
-
     default:
       return assertNever(prompt, 'exercise prompt')
   }
@@ -403,10 +396,6 @@ function Fallback({
 
     case 'comparison':
       return <ChoicePad onSubmit={onChoice} />
-
-    case 'syllables':
-    case 'spoken':
-      return null
 
     default:
       return assertNever(prompt, 'exercise prompt')

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Exercise } from '../exercises'
 import { ArithmeticAnswer } from '../math/ArithmeticAnswer'
-import { LAST_LEVEL } from '../math/levels'
 import type { AnswerResult, SessionResult } from '../session/SessionObserver'
 import { Profile, PROFILE_VERSION } from './Profile'
 
@@ -29,9 +28,8 @@ const sessionResult: SessionResult = {
 }
 
 describe('Profile', () => {
-  it('a new profile starts at the first level with an empty tally', () => {
+  it('a new profile starts with an empty tally', () => {
     const profile = new Profile()
-    expect(profile.levelFor('math')).toBe(1)
     expect(profile.sessionIndex).toBe(0)
     expect(profile.stars).toBe(0)
     expect(profile.review.size).toBe(0)
@@ -122,22 +120,10 @@ describe('Profile', () => {
     })
   })
 
-  it('promotion runs into the ceiling', () => {
-    const profile = new Profile()
-    for (let i = 0; i < 20; i++) profile.promote('math')
-    expect(profile.levelFor('math')).toBe(LAST_LEVEL)
-  })
-
-  it('reading has one level for now — the rest arrive in phase 4', () => {
-    const profile = new Profile()
-    expect(profile.promote('reading')).toBe(1)
-  })
-
   describe('saving', () => {
     it('survives a write and a read', () => {
       const profile = new Profile()
       profile.name = 'Тимофей'
-      profile.promote('math')
       profile.recordVictory('goblin')
       profile.onAnswerAccepted(answer('math:8+5', 'wrong', 3))
       profile.onSessionFinished(sessionResult)
@@ -145,7 +131,6 @@ describe('Profile', () => {
       const restored = Profile.fromJSON(JSON.parse(JSON.stringify(profile.toJSON())))
 
       expect(restored.name).toBe('Тимофей')
-      expect(restored.levelFor('math')).toBe(2)
       expect(restored.sessionIndex).toBe(1)
       expect(restored.stars).toBe(3)
       expect(restored.defeated).toEqual({ goblin: 1 })

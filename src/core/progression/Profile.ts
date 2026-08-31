@@ -1,22 +1,13 @@
-import type { Subject } from '../exercises'
-import { FIRST_LEVEL, LAST_LEVEL } from '../math/levels'
 import type { AnswerResult, SessionObserver, SessionResult } from '../session/SessionObserver'
 import { ReviewQueue, type ReviewItem } from './ReviewQueue'
 
 export const PROFILE_VERSION = 1
-
-/**
- * The ceiling per subject. Reading gets its levels in phase 4 — for now it has
- * one, and saying so is more honest than pretending otherwise.
- */
-const MAX_LEVEL: Record<Subject, number> = { math: LAST_LEVEL, reading: 1 }
 
 export interface ProfileData {
   version: number
   name: string
   /** How many sessions there have been. Review intervals count off it (C3). */
   sessionIndex: number
-  levels: Record<Subject, number>
   review: ReviewItem[]
   /** monster id → how many times it has been beaten. */
   defeated: Record<string, number>
@@ -31,7 +22,6 @@ function defaults(): ProfileData {
     version: PROFILE_VERSION,
     name: '',
     sessionIndex: 0,
-    levels: { math: FIRST_LEVEL, reading: FIRST_LEVEL },
     review: [],
     defeated: {},
     stars: 0,
@@ -126,17 +116,6 @@ export class Profile implements SessionObserver {
 
   recordVictory(monsterId: string): void {
     this.data.defeated[monsterId] = (this.data.defeated[monsterId] ?? 0) + 1
-  }
-
-  levelFor(subject: Subject): number {
-    return this.data.levels[subject]
-  }
-
-  /** Moving up a level is the map's call, not the difficulty adjustment's (C4). */
-  promote(subject: Subject): number {
-    const next = Math.min(this.data.levels[subject] + 1, MAX_LEVEL[subject])
-    this.data.levels[subject] = next
-    return next
   }
 
   // --- SessionObserver ---

@@ -14,8 +14,8 @@ export interface SessionConfig {
    */
   readonly taskCount?: number
   /**
-   * Where tasks come from. Math and reading plug in their own generators —
-   * the session knows nothing about the subject at all (A2).
+   * Where tasks come from. A subject plugs in its own generator — the session
+   * knows nothing about the subject at all (A2).
    */
   readonly nextExercise: () => Exercise
   readonly observers?: readonly SessionObserver[]

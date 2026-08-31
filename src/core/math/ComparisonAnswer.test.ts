@@ -84,6 +84,5 @@ describe('ComparisonAnswer', () => {
 
   it('an answer of another kind is not ours to judge', () => {
     expect(spec.check({ kind: 'number', value: 5 })).toBe('unrecognised')
-    expect(spec.check({ kind: 'sequence', value: ['ма', 'ши'] })).toBe('unrecognised')
   })
 })
