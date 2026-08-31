@@ -13,8 +13,8 @@ child has fought through by voice and asked to play again. Reading (phase 4) is
 next.
 
 What comes next — [docs/ROADMAP.md](docs/ROADMAP.md). Why it was done this way —
-[docs/DECISIONS.md](docs/DECISIONS.md). What the game can ask a child to do, and
-how to add another kind of task — [docs/EXERCISES.md](docs/EXERCISES.md).
+[docs/DECISIONS.md](docs/DECISIONS.md). What the child is asked in math, level by
+level — [docs/MATH.md](docs/MATH.md), methodology only, no code and no game.
 
 ## Running it
 
@@ -29,9 +29,9 @@ Then:
 ```powershell
 npm install
 npm run dev        # development, opens localhost
-npm test           # core tests
-npm run typecheck  # type checking
-npm run build      # build
+npm test           # all tests, the architecture one included
+npm run typecheck  # types, plus the core checked with no DOM available
+npm run build      # typecheck, then build
 ```
 
 ## Deployment
@@ -49,21 +49,33 @@ anything resolved by path at runtime has to go through `publicUrl()` in
 ## Layout
 
 ```
-docs\        decisions, the plan, and the catalogue of exercise types
-src\core\    pure TypeScript: the rules of the game and of the learning.
-             Zero dependencies on React, the DOM or the browser.
-src\adapters\ implementations of the core ports: voice, keyboard, speech, saves
-src\locale\  the text pack: every word the child sees or hears
-src\ui\      React components
-src\theme\   presentation as data: characters, colours, lines
-electron\    the .exe wrapper (phase 7)
-public\models\ the speech recognition model — not kept in git, see below
+docs\           decisions, the plan, and the math ladder
+src\core\       pure TypeScript: the rules of the game and of the learning.
+                Zero dependencies on React, the DOM or the browser.
+src\adapters\   implementations of the core ports: voice, speech, saves, sounds
+src\game\       the battle and the roster of opponents
+src\locale\     the text pack: every word the child sees or hears
+src\ui\         React components
+scripts\        fetching the speech model
+public\models\  the speech recognition model — not kept in git, see below
+public\monsters\ opponent pictures
 ```
+
+Planned and not created yet: `src\theme\` (phase 5/6), `src\core\reading\`
+(phase 4), `electron\` (phase 7). See **A9** in
+[docs/DECISIONS.md](docs/DECISIONS.md).
 
 The main rule: **`src/core` knows nothing of the outside world.** It declares
 ports (`src/core/ports`) and the outer layer supplies adapters. That is what
 makes the logic testable without a browser, and lets speech recognition or
 storage be swapped without touching the rules of the game.
+
+The rule is enforced, not merely stated. `src/architecture.test.ts` reads the
+import graph off the files on every run — which layer may reach for which, which
+packages a layer is allowed at all, and no cycles — and `tsconfig.core.json`
+typechecks the core against a `lib` with no DOM in it, so a browser global is a
+compile error rather than something a reviewer has to spot. Both run in
+`npm test` / `npm run typecheck`, and CI runs both before it deploys.
 
 ## Language
 

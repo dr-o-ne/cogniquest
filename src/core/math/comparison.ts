@@ -3,7 +3,7 @@ import { randomInt, type Random } from '../random'
 import { compare, ComparisonAnswer, type Comparison } from './ComparisonAnswer'
 
 /**
- * Comparing numbers — the «5 □ 7» row of the grid (see docs/EXERCISES.md).
+ * Comparing numbers — the «5 □ 7» row of the grid (see docs/MATH.md).
  *
  * | Level | What is asked | New |
  * |---|---|---|

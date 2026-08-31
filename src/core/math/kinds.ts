@@ -9,7 +9,7 @@ import { MATH_LEVELS } from './levels'
 
 /**
  * A kind of task, named for the row of the grid it comes from
- * (see docs/EXERCISES.md).
+ * (see docs/MATH.md).
  *
  * One name per row and no groupings above them: «arithmetic» would be a word
  * covering three of these and telling a reader nothing, and an opponent that

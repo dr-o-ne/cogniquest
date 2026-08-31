@@ -1,8 +1,13 @@
-# Exercise types
+# Math — what the child is asked
 
-What the child is asked, and by what rules. The methodology only — how any of
-it is built is a question for the code, and the decisions behind it are **C1**,
-**C2** and **A2** in [DECISIONS.md](DECISIONS.md).
+**Methodology only, and math only.** What a task may be and by what rules it is
+built — level by level, row by row. Nothing here is about how it is implemented,
+how the answer reaches the game, or what the game wraps around it: those live in
+[DECISIONS.md](DECISIONS.md), and the decision this file elaborates is **C1**
+(five levels).
+
+Another subject would get a document of its own beside this one, on its own
+terms. It is not written into this one.
 
 ---
 
@@ -60,10 +65,11 @@ trick level are as big as on the level under it. This is not only tidiness:
 when a child struggles the game quietly steps the difficulty down (**C4**), and
 if the top rung were the lighter one, stepping down would hand them harder work.
 
-**The answer is said out loud, so it has to be sayable** (**P9**). One number,
-or one of a few words. That rules out proofs and strategies as answers — but
-not as tasks: «prove the sum is even» becomes «is the sum odd or even», «find
-all the ways» becomes «how many ways are there».
+**The answer has to be one number, or one of a few named words** (**P9**). That
+rules out proofs and strategies as answers — but not as tasks: «prove the sum is
+even» becomes «is the sum odd or even», «find all the ways» becomes «how many
+ways are there». A task whose answer will not fit that shape has to be rephrased
+until it does, or it does not belong on the ladder.
 
 **No task can be answered without doing it.** Taking a number from itself,
 adding nothing, a bracket that changes no answer, three tiny numbers dressed up
@@ -157,8 +163,8 @@ addition with an equals sign drawn in, and that row is already played. `□+2=5`
 and `2+□=5` are different tasks, and the review queue (**C3**) keeps them apart.
 Every operand is at least one — no `7+□=7`.
 
-The answer is one number, so the judging and the recognition grammar are the
-ones addition already uses (**A5**, **T16**) — nothing new to check.
+The answer is one number, so this row asks nothing of the game that addition
+did not already ask.
 
 ---
 
@@ -175,8 +181,8 @@ The answer is a word — больше, меньше or равно — read left 
 **Two rungs is the whole row.** Its difficulty is how far into a number the
 child has to look, and there are only two answers to that here: at one digit
 there is nothing to look past, at two there is. The third would be three-digit
-numbers, and the number words stop at a hundred — «сто двадцать» cannot be
-said, heard or judged. So levels 3–5 are marked «not asked» rather than «not
+numbers, and the number words stop at a hundred — «сто двадцать» is outside the
+vocabulary the game has. So levels 3–5 are marked «not asked» rather than «not
 written yet». Comparing whole expressions — `5+3 □ 4+4` — would climb further,
 but that is a different question and would want a row of its own.
 
@@ -195,26 +201,28 @@ nothing at all, and nothing is what that shortcut deserves.
 so one that never came up would make the offer a lie. A third would be too
 many: two numbers that are the same are the easiest of the three to see.
 
-**The first task in the game not answered with a number**, and two things
-follow from that. The child says one of three words, which is a very short list
-for recognition — short lists make the recogniser stretch any sound onto the
-nearest word — so this is the row to watch on the rig before trusting it. And
-three answers can be guessed: one time in three comes out right by luck, where
-a sum offers a hundred numbers to be wrong with. In a battle where a mistake
-costs a heart, a comparison is the cheapest question on the board.
+**The first row not answered with a number**, and one thing follows from that
+which no other row has to worry about: **three answers can be guessed.** One
+time in three comes out right by luck, where a sum offers a hundred numbers to
+be wrong with. A correct answer here is weaker evidence of understanding than a
+correct answer anywhere else, and a run of them is worth less than it looks.
 
 ---
 
-## What the unwritten types will cost
+## What the unwritten rows would ask for
 
-- **Nothing new to judge** — how many more, increase/decrease, making a number,
-  sequences, patterns, word problems. The answer is a number, so the existing
-  judging works as it stands.
-- **A word off a named list** — comparing numbers was the first of these, and
-  paid for the kind once. Any row answered the same way costs nothing now.
-- **A new way of answering altogether** (✖) — geometry, time, money, measuring.
-  The task and the answer are both pictures: a clock face, coins, a shape to
-  assemble. Nothing in the game is answered by pointing yet.
+Sorted by the shape of their answer, because that is what decides whether a row
+is merely unwritten or out of reach.
+
+- **A number** — how many more, increase/decrease, making a number, sequences,
+  patterns, word problems. The same answer shape every row above already uses,
+  so these are unwritten and nothing more.
+- **A word off a named list** — comparing numbers was the first of these. Any
+  row answered the same way asks for nothing new.
+- **Something pointed at rather than said** (✖) — geometry, telling the time,
+  money, measuring. The task and the answer are both pictures: a clock face,
+  coins, a shape to assemble. These do not fit the answer shape above at all,
+  which is why the grid marks them ✖ rather than ☐.
 
 ### The level 5 column
 
@@ -222,30 +230,12 @@ Olympiad-ish by intent, and that fits: the difficulty lives in the question,
 and a question whose answer is one number is judged like any other however hard
 it is to work out.
 
-Two limits to remember when that column is built:
+One limit to remember when that column is built: number words stop at a hundred,
+so an answer of «сто двадцать» is out of reach until the vocabulary grows.
 
-- number words stop at a hundred, so an answer of «сто двадцать» is out of
-  reach until the vocabulary grows;
-- **the battle works against olympiad tasks.** A mistake costs a heart (**G6**,
-  **P10**) and three in a row quietly ease the difficulty (**C4**), so a child
-  reaching for something hard is punished and then steered back down. That
-  column wants to live outside the battle.
-
----
-
-## Reading — planned, not written
-
-Three mechanics are decided (**C2**), and only one needs a microphone —
-deliberately, in case short syllables recognise badly.
-
-| Mechanic | What happens | Microphone |
-|---|---|---|
-| Read aloud | `МА-ШИ-НА` in large type, the child reads it | needed |
-| Build the word | the teacher says a word, the syllables are tapped in order | no |
-| Catch the syllable | the teacher says «ШИ», it is picked out among others | no |
-
-The teacher stays silent on «read aloud» on purpose: saying the word would do
-the exercise for the child.
+There is a second, and it is not a methodological one — a format that costs the
+child something for a mistake pulls against tasks meant to be reached for. It is
+recorded where it belongs, under **G6** in [DECISIONS.md](DECISIONS.md).
 
 ---
 
@@ -260,10 +250,11 @@ From which it follows that a task must stand on its own with no run-up. That is
 why all three words are named every time a comparison is asked: there is no
 earlier question of the same kind for the child to have learnt them from.
 
-A new row is sometimes given a fight of its own for a while — a run of nothing
-else says plainly whether it is understood or merely guessed. Missing number and
-comparing numbers have had that reading and now ride in every opponent's pool
-(`DEFAULT_TASKS` in `src/game/monsters.ts`). Comparing only has rungs at levels
-1–2, so it surfaces for the easier opponents and is quietly absent higher up.
-Chains stay opt-in — they need a two-digit-carrying head — and today the goblin
-is the only one that asks them.
+A new row earns its place in the mix, though. Given on its own for a while
+first, a run of nothing else says plainly whether it is understood or merely
+guessed; only then does it join the draw. Which rows are mixed together in
+practice is a question for the game, not for the methodology.
+
+A row is drawn only at a level it actually has. Comparing numbers has two rungs,
+so above level 2 it is simply not asked — not a gap to fill later, but the end
+of that row.

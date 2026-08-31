@@ -2,8 +2,9 @@
 
 A learning game for a child: math and reading by syllables, answered by voice.
 
-**Last updated:** 2026-08-30
-**State:** phase 3 closed on the child; reading (phase 4) is next
+**Last updated:** 2026-08-31
+**State:** phase 3 closed on the child; reading (phase 4) is next, and the
+ground for it is now clear rather than half-guessed
 **What comes next:** [ROADMAP.md](ROADMAP.md)
 
 ---
@@ -165,24 +166,64 @@ know nothing about the battle, or the theme, or React.
 from an adapter anywhere in `src/core`, and the core tests pass in node without
 a browser. The day that stops being true, the architecture has leaked.
 
+It used to be checked by hand, which means checked once. It is now two things
+that run on every build:
+
+- **`src/architecture.test.ts`** owns the import half. A table of layers says
+  which may reach for which, and packages are an **allow-list** — `core` reads
+  «zero dependencies» literally, so a stray `lodash` or `node:fs` fails as
+  loudly as React would. A layer nobody has declared fails too, rather than
+  being waved through. It also refuses import cycles, and checks that its own
+  resolver still resolves — a resolver with a gap would hollow out the cycle
+  check while staying green.
+- **`tsconfig.core.json`** owns the DOM half, by typechecking `src/core` against
+  `lib: ES2022` with no DOM in it. `document`, `matchMedia`,
+  `HTMLCanvasElement` — everything browser-only is «cannot find name», kept
+  complete by the compiler instead of by a list somebody has to maintain.
+
+Two limits worth knowing. `src/game` cannot join the DOM-free project even
+though it is browser-free in spirit: it reaches `src/assets`, which needs Vite's
+`import.meta.env`, and typing that pulls `vite/client` and the whole DOM with
+it. And node's own globals stay reachable, because vitest's types carry a hard
+`/// <reference types="node" />` that no `types` setting suppresses — which is
+what this invariant claims anyway: the core runs in node without a browser.
+
 Text is the single deliberate exception, and a narrow one: `core/math/numerals`
 takes number words from `src/locale`. The text pack is pure data with
 no React and no DOM, so the invariant above is untouched.
 
-### A2. `Exercise` — one task type for both subjects — **Accepted**
+### A2. `Exercise` — one task type for every subject — **Accepted**
 
 `src/core/exercises/Exercise.ts`
 
+What exists today, all of it math:
+
 | Task | Prompt | Answer |
 |---|---|---|
-| arithmetic | `2 + 3` | the number `5` |
+| arithmetic | `2 + 3`, `20 − (5 + 3)` | the number `5` |
+| equation | `□ + 2 = 5` | the missing number |
+| comparison | `5 □ 7` | one of three words |
+
+What reading will add when it is built — a plan, not a type that exists:
+
+| Task | Prompt | Answer |
+|---|---|---|
 | read aloud | `["МА","ШИ","НА"]` | the spoken word |
 | build the word | 🔊 «машина» | a sequence of syllables |
 | catch the syllable | 🔊 «ШИ» | a pick among options |
 
-**Why.** Math and reading produce the same type. Which means the session
-engine, progress, mistake review and all of gamification are written once and
-work for both.
+**Why.** Every subject produces the same type. Which means the session engine,
+progress, mistake review and all of gamification are written once and work for
+whatever comes next.
+
+**The placeholder shapes were taken out on 2026-08-31.** `ExercisePrompt` used
+to carry `syllables` and `spoken` variants, `AnswerAttempt` a `sequence` one,
+and `Subject` a `reading` member — none of them reachable, all of them forcing
+four exhaustive switches to say something about a subject nobody had designed.
+Guessing the shape of reading a phase early only guarantees the design has to
+fit what math happened to need. The seam itself is untouched: nothing above
+`Exercise` names a kind of prompt, so reading adds variants here and changes no
+layer above.
 
 ### A3. `AnswerInput` — the way to answer plugs in independently — **Accepted**
 
@@ -230,8 +271,14 @@ rivals, so accuracy is close to perfect.
 
 ### A6. The theme is data, not code — **Accepted**
 
-`src/theme` — the description of a set: characters, opponents, colours, sounds,
-lines.
+`src/theme` when it exists — the description of a set: characters, opponents,
+colours, sounds, lines. The folder is phase 5/6 work and is not created yet; the
+empty placeholder that stood in for it was removed on 2026-08-31, since a folder
+holding nothing documents nothing this file does not say better.
+
+What already works this way is `src/game/monsters.ts` — pure data, no logic, one
+row per opponent — and `src/locale/ru.ts`. So the decision is not merely drawn:
+half of it is load-bearing already.
 
 **Why.** Changing the setting = a new theme file plus an asset folder, with no
 code edits. Which is what lets **G2** stay open for months without technical
@@ -254,29 +301,42 @@ one class.
 d:\_Projects\Game\
 ├─ docs\
 │  ├─ DECISIONS.md         ← this file: what was decided, and why
-│  └─ ROADMAP.md           ← what we are doing, and in what order
+│  ├─ ROADMAP.md           ← what we are doing, and in what order
+│  └─ MATH.md              ← the math ladder: methodology, no code
 ├─ public\
-│  └─ models\              the Vosk model (not in git, fetched separately)
-├─ electron\               the .exe wrapper, filled in during phase 7
+│  ├─ models\              the Vosk model (not in git, fetched separately)
+│  └─ monsters\            opponent pictures
+├─ scripts\
+│  └─ fetch-model.mjs      downloads and repacks the Vosk model
 ├─ src\
 │  ├─ core\                PURE TypeScript, zero dependencies
 │  │  ├─ exercises\        Exercise, AnswerSpec, AnswerAttempt
 │  │  ├─ session\          the session engine, SessionObserver
-│  │  ├─ progression\      profile, mastery, mistake review
+│  │  ├─ progression\      profile, mistake review, difficulty
 │  │  ├─ math\             problem generators, 5 levels
-│  │  ├─ reading\          syllables, words, splitting
 │  │  └─ ports\            interfaces to the outside world
 │  ├─ adapters\            implementations of the ports
-│  │  ├─ input\            voice, keyboard
+│  │  ├─ input\            voice
 │  │  ├─ speech\           vosk-browser, speech synthesis
-│  │  └─ storage\          saves
+│  │  ├─ storage\          saves
+│  │  └─ audio\            sounds from an oscillator, no files
+│  ├─ game\                the battle and the roster (G6, G7)
 │  ├─ locale\              the text pack: everything the child sees or hears
 │  ├─ ui\                  React components
-│  ├─ theme\               presentation sets
+│  ├─ assets.ts            resolves public\ paths against the served base
+│  ├─ architecture.test.ts A1 enforced — see the stress test under A1
 │  ├─ App.tsx
 │  └─ main.tsx
+├─ tsconfig.json
+├─ tsconfig.core.json      the core typechecked with no DOM (A1)
 └─ index.html
 ```
+
+Folders the plan calls for and the tree does not have yet: `src\theme\`
+(**A6**, phase 5/6), `src\core\reading\` (phase 4), `electron\` (**T14**, phase
+7). They stood as empty placeholders until 2026-08-31 and were removed — an
+empty folder documents nothing this file does not say better, and a `.gitkeep`
+in a folder that has since filled up is just litter.
 
 **Why this way.** A hexagonal layout: the core declares **ports** (what it needs
 from the world) and the outer layer supplies **adapters** (how it is done). The
@@ -309,16 +369,23 @@ switch costs one file. See **G5**.
 | **C4** | Three mistakes in a row → the difficulty quietly drops a step. The child does not see it. | Accepted |
 | **C5** | **«Did not catch that» is not a mistake in the problem.** | Accepted |
 
-### What the levels and the mechanics actually are
+### What the levels actually are
 
-In **[EXERCISES.md](EXERCISES.md)** — the catalogue of exercise types, level by
-level, plus what it takes to add a new one.
+**C1** is elaborated in **[MATH.md](MATH.md)** — the math ladder, level by level
+and row by row. Methodology only: what a task may be and by what rules, with
+nothing about how it is implemented, how the answer reaches the game, or what
+the game wraps around it. Renamed from `EXERCISES.md` on 2026-08-31, when the
+last of the other three leaked back into it.
 
 It is kept there and not here on purpose. The two used to be copies of each
 other, and copies drift: the level 2 row in this document described «± up to 20
 without crossing the ten» long after the code had settled on two operations
-within ten. This section holds the decision — five levels, three mechanics —
-and the catalogue holds what they contain.
+within ten. This section holds the decision — five levels — and the catalogue
+holds what they contain.
+
+**C2** has no such document. It gets one on its own terms when it is designed,
+beside `MATH.md` rather than inside it — the same reason the placeholder types
+came out of the code (see **A2**).
 
 **Why three mechanics and not one.** Only one of the three needs a microphone. If
 syllable recognition turns out weak — a short «ма» is recognised noticeably
@@ -361,6 +428,15 @@ Exactly what the **A4** seam was conceived for.
 Because the length of a battle is not known in advance, `ExerciseSession`
 learned to work without `taskCount`: the session runs until stopped from
 outside.
+
+**The battle works against olympiad tasks, and level 5 is olympiad-flavoured.**
+A mistake costs a heart (**P10**), and three in a row quietly ease the
+difficulty (**C4**) — so a child who reaches for something hard is punished for
+reaching and then steered back down. Both mechanics are right for drilling
+fluency and wrong for a question meant to be puzzled over. That column probably
+wants a home outside the battle; deciding where is phase 6 work. Recorded here
+rather than in the exercise catalogue, because it is a fact about the format and
+not about the mathematics.
 
 **G7 — why two dials and not one «difficulty».** They produce different
 characters out of one and the same set of problems:
@@ -437,9 +513,12 @@ either.
 | 2026-08-29 | **The format changed to a battle (G6, G7).** P6 replaced by **P10**: a battle can be lost, progress cannot. Added `src/game/` (the monster config plus `Battle`), the battle screen, opponent selection, the child's name. `ExerciseSession` learned sessions of unknown length. 115 tests. |
 | 2026-08-30 | **Renamed to CogniQuest** (briefly Smart Quest along the way). The save prefix went `smartkid:` → `cogniquest:` without migration — the progress under the old name was deliberately let go. |
 | 2026-08-30 | **Carrying across the place became level 4.** It was generated nowhere: level 3 forbade it and the old level 4 kept one place per step, so the central skill of the second year had fallen through the ladder. Plain three-number chains gave up the rung for it and now live at level 5, where the pair that makes ten earns them. Mixed plus-and-minus chains are lost with them: they belong to their own row of the grid and need generators of their own. |
-| 2026-08-30 | **The math ladder rebuilt to the grades 1-2 grid.** Levels are now: within ten, across the ten, up to a hundred without carrying, three numbers, and a pair that makes ten. Each step adds exactly one difficulty. Round tens stop being a level of their own; subtraction moves with addition because they share one table; level 5 is the first olympiad-flavoured step, where the work is in spotting the pair rather than in the size of the numbers. Catalogue: [EXERCISES.md](EXERCISES.md). |
+| 2026-08-30 | **The math ladder rebuilt to the grades 1-2 grid.** Levels are now: within ten, across the ten, up to a hundred without carrying, three numbers, and a pair that makes ten. Each step adds exactly one difficulty. Round tens stop being a level of their own; subtraction moves with addition because they share one table; level 5 is the first olympiad-flavoured step, where the work is in spotting the pair rather than in the size of the numbers. Catalogue: [MATH.md](MATH.md). |
 | 2026-08-30 | **Phase 3 closed on the child.** A battle fought through by voice start to finish, then a request for another, then a request for new characters. P9 (answering out loud) survives contact with its only user, and the timings needed no tuning. The ask for characters is a finding in its own right: pull the **G3** conversation forward and treat the roster as content worth extending, not decoration. |
 | 2026-08-30 | **Localisation.** Everything the child sees or hears moved into `src/locale/ru.ts`; the code, comments, tests and both documents are now English, and the decision IDs moved from Cyrillic to Latin (П→P, Т→T, А→A, К→C, Г→G, О→O). Monster ids became English slugs with names looked up from the text pack. 137 tests. |
-| 2026-08-30 | **Missing number added** — the fourth row of the grid. A base sum for the level with one operand hidden (`□+2=5`), so it rides the addition/subtraction ladder rather than defining its own. New `equation` prompt shape, `missing-number` task kind, wired to the goblin and the zombie. The answer is a number, so the judge and grammar are unchanged. Catalogue: [EXERCISES.md](EXERCISES.md). |
-| 2026-08-31 | **Comparing numbers — the first answer that is not a number.** Two rungs and no more: at one digit there is nothing to look past, at two there is, and a third would need number words above a hundred, which **T16** does not have. The child names one of three words; **A5** carried it without a change, since the exercise was already handing out its own grammar. The fallback input (**T5**) now picks its pad from the kind of prompt — a keypad cannot answer `5 □ 7`. Two facts to watch: three words is a very short recognition list, and three answers can be guessed one time in three. Catalogue: [EXERCISES.md](EXERCISES.md). |
+| 2026-08-30 | **Missing number added** — the fourth row of the grid. A base sum for the level with one operand hidden (`□+2=5`), so it rides the addition/subtraction ladder rather than defining its own. New `equation` prompt shape, `missing-number` task kind, wired to the goblin and the zombie. The answer is a number, so the judge and grammar are unchanged. Catalogue: [MATH.md](MATH.md). |
+| 2026-08-31 | **Comparing numbers — the first answer that is not a number.** Two rungs and no more: at one digit there is nothing to look past, at two there is, and a third would need number words above a hundred, which **T16** does not have. The child names one of three words; **A5** carried it without a change, since the exercise was already handing out its own grammar. The fallback input (**T5**) now picks its pad from the kind of prompt — a keypad cannot answer `5 □ 7`. Two facts to watch: three words is a very short recognition list, and three answers can be guessed one time in three. Catalogue: [MATH.md](MATH.md). |
 | 2026-08-31 | **Missing number and comparing numbers go into every opponent's default pool** (`DEFAULT_TASKS`); comparing only has rungs at levels 1–2, so it is quietly absent for the harder opponents. **Missing number given its own ladder** rather than riding the sums: within five, within ten, across the ten, two-digit (carry or not, by a coin flip), then the grouping problem unchanged at level 5. Zero operands dropped — no `7+□=7`. |
+| 2026-08-31 | **A1 stopped being a promise and became a test.** `src/architecture.test.ts` reads the layer boundary off the files on every run; `tsconfig.core.json` typechecks the core against a `lib` with no DOM, so the list of forbidden globals is the compiler's and not a handwritten one. Three holes were found and closed while building it, all the same mistake — default-allow: packages were a ban-list, browser globals were a ban-list, and an undeclared layer was waved through entirely. The last of the three came from outside review. See the stress test under **A1**. |
+| 2026-08-31 | **The reading placeholders taken out.** `ExercisePrompt` lost its `syllables` and `spoken` variants, `AnswerAttempt` its `sequence` one, `Subject` its `reading` member, and four exhaustive switches lost the branches that existed only to say «nothing to show here». `Profile` lost the per-subject level ladder with them — `levels`, `levelFor`, `promote` had no production callers at all, since a battle draws its level from `monster.levels`. Reading will be designed on its own terms in phase 4; a shape guessed a phase early only has to fit what math happened to need. `PROFILE_VERSION` deliberately **not** bumped: `fromJSON` hands back an empty profile on a version it does not know, so a bump would have wiped the child's progress to tidy a key nothing reads. Knock-on: `LAST_LEVEL` now has no callers. |
+| 2026-08-31 | **`EXERCISES.md` became [MATH.md](MATH.md), methodology and math only.** The reading section went out with the placeholder types, and so did everything that was not methodology: recognition and grammar notes, the microphone column, which opponent draws which row, `DEFAULT_TASKS`, the cost of a mistake in a battle. A catalogue of what a child is asked should read the same whether the game around it is a battle, a map or nothing at all. The one idea worth keeping — that a format punishing mistakes pulls against olympiad tasks — moved to **G6**, where facts about the format belong. **C2** gets a document of its own when it is designed, beside this one rather than inside it. |

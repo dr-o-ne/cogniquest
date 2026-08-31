@@ -4,7 +4,7 @@ import { ArithmeticAnswer } from './ArithmeticAnswer'
 import { buildProblem, generateProblem, type ArithmeticProblem } from './generator'
 
 /**
- * Missing number — the «□ + 2 = 5» row of the grid (see docs/EXERCISES.md).
+ * Missing number — the «□ + 2 = 5» row of the grid (see docs/MATH.md).
  *
  * A known sum run backwards: the child is shown `terms … = result` with one of
  * the operands hidden and names it. Reading a sum backwards is the whole of the

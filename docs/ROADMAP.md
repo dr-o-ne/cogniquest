@@ -80,12 +80,21 @@ be rewritten.
 - [x] the 1 / 3 / 7 review queue (**C3**) — `ReviewQueue`
 - [x] the quiet difficulty adjustment (**C4**) — `DifficultyAdapter`
 - [x] reproducible randomness for tests — `core/random.ts`
-- [x] `Profile` — level per subject, session counter, stars, the review queue saved
+- [x] `Profile` — session counter, stars, the review queue saved
 - [x] storage adapters: browser and in-memory
 - [x] 101 tests, boundaries included: crossing the ten, borrowing in subtraction, round tens
 
 **Done when:** `npm test` is green and there are zero imports of React or the
-DOM in `src/core` (**A1**). Verified by grep, not by eye.
+DOM in `src/core` (**A1**).
+
+Originally verified by grep — which is to say verified once, on the day somebody
+remembered to run it. Since 2026-08-31 it is `src/architecture.test.ts` plus
+`tsconfig.core.json`, both of which run on every build. Details under **A1** in
+[DECISIONS.md](DECISIONS.md).
+
+`Profile` carried a level per subject until 2026-08-31. It went out with the
+reading placeholders: nothing in the game ever read it, since a battle takes its
+level from `monster.levels` and adjusts inside that pool (**C4**).
 
 A useful side effect: **A4** got tested for real — `Profile` subscribes to a
 session as an ordinary `SessionObserver`, through the very seam gamification
@@ -137,6 +146,18 @@ Everything after this is scaffolding on top of a working game.
 **Done when:** both mini-games run on one session engine, and adding the second
 required no edits in `core/session`. If it did — **A2** leaked and needs
 fixing.
+
+**Starting from a clean sheet, on purpose.** Until 2026-08-31 the codebase
+carried guesses at this phase: `syllables` and `spoken` prompt shapes, a
+`sequence` answer, a `reading` subject, a level ladder per subject. None was
+reachable, and all of it forced four exhaustive switches to keep saying
+«nothing to show here». They were removed, so reading gets designed on its own
+terms rather than inheriting whatever fitted math.
+
+Which sharpens the «done when» above rather than weakening it. Adding a prompt
+variant to `Exercise.ts` and a folder under `core/` should still cost nothing
+anywhere else — and now nothing above `Exercise` names a kind of prompt, so
+there is no half-written scaffolding to hide a leak in.
 
 ---
 
