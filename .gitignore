@@ -8,9 +8,9 @@ release/
 .vite/
 coverage/
 
-# Speech recognition models — downloaded separately, see README
-public/models/*
-!public/models/.gitkeep
+# Speech recognition models — downloaded separately, see README.
+# The folder is created by scripts/fetch-model.mjs, so nothing anchors it here.
+public/models/
 
 # Local settings and secrets
 *.local
