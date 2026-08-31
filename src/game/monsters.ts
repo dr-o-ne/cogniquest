@@ -38,8 +38,8 @@ export interface Monster {
    *
    * `DEFAULT_TASKS` unless TUNING says otherwise. A kind whose rungs miss this
    * opponent's levels is simply never drawn (`taskChoices` pairs kind with
-   * level), so comparing-numbers rides along in every pool but only surfaces
-   * for opponents that reach levels 1–2.
+   * level), so a short row like comparing-numbers can ride along in every pool
+   * and still only surface for opponents that reach levels 1–2.
    */
   readonly tasks: readonly TaskKind[]
   /** A picture from public/monsters/. No picture, and the unit stays hidden. */
@@ -70,10 +70,14 @@ export const PLAYER_HEARTS = 6
 //
 // Hearts come from HEALTH, task difficulty from LEVEL.
 //
-// Math levels (C1, see docs/DECISIONS.md):
-//   1 — ± within 10              4 — round tens
-//   2 — two steps within 10      5 — anything up to 100
-//   3 — ± across the ten
+// Math levels (C1, see docs/MATH.md):
+//   1 — ± within five                    4 — two-digit, nothing carried
+//   2 — ± up to ten, the ten not crossed  5 — two-digit, the units overflow
+//   3 — across the ten, and whole tens to a hundred
+//
+// A unit's own level is a King's Bounty number and runs 1–5; the math ladder
+// is a different list that will grow past five. BY_LEVEL below is the join
+// between them, and it is the one place that has to be re-cut when it does.
 // ─────────────────────────────────────────────────────────────────────────
 
 export const HEARTS_MIN = 5
@@ -151,16 +155,21 @@ const IMAGES: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * What every opponent asks unless TUNING overrides it: the four number-answer
- * rows of the grid. Chains (`addition-subtraction`) are left out of the default
- * — they need a two-digit-carrying head for level 4, so they belong to
- * opponents chosen for it, not to a peasant.
+ * What every opponent asks unless TUNING overrides it.
+ *
+ * Addition alone at the moment. The other rows are parked in `core/math/kinds`
+ * while they are put back one at a time — the lines below come back with the
+ * kinds themselves, and until then they would not compile.
+ *
+ * Chains (`addition-subtraction`) were never in this default even so: they need
+ * a two-digit-carrying head for level 4, so they belong to opponents chosen for
+ * it, not to a peasant.
  */
 const DEFAULT_TASKS: readonly TaskKind[] = [
   'addition',
-  'subtraction',
-  'missing-number',
-  'comparing-numbers',
+  // 'subtraction',
+  // 'missing-number',
+  // 'comparing-numbers',
 ]
 
 const TUNING: Record<
@@ -175,9 +184,10 @@ const TUNING: Record<
   skeleton: { avatar: '💀' },
   'skeleton-archer': { avatar: '💀' },
   // The one opponent that also asks chains — hence the whole list spelled out.
+  // Parked with the row itself; back when `addition-subtraction` is.
   goblin: {
     avatar: '👺',
-    tasks: [...DEFAULT_TASKS, 'addition-subtraction'],
+    // tasks: [...DEFAULT_TASKS, 'addition-subtraction'],
   },
   zombie: { avatar: '🧟' },
   archer: { avatar: '🏹' },

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createRandom } from '../random'
 import { createChainExercise, generateChain } from './chains'
 import { evaluate, type ArithmeticProblem } from './generator'
-import { levelsFor, taskChoices } from './kinds'
+import { MATH_LEVELS } from './levels'
 
 function sample(levelId: number, count = 500): ArithmeticProblem[] {
   const random = createRandom(levelId * 313 + 11)
@@ -19,8 +19,11 @@ function runningTotals(problem: ArithmeticProblem): number[] {
   return totals
 }
 
+// The row is parked out of `TaskKind` for now (core/math/kinds.ts), so the
+// rungs are read from the ladder itself rather than from the task table. The
+// generator is untouched and stays under test while it waits.
 describe('chains — rules that hold on every level', () => {
-  for (const level of levelsFor('addition-subtraction')) {
+  for (const level of MATH_LEVELS) {
     describe(`level ${level}`, () => {
       const problems = sample(level)
 
@@ -60,14 +63,16 @@ describe('chains — rules that hold on every level', () => {
   }
 })
 
-describe('the row reaches every level', () => {
-  it('including the first', () => {
-    expect(levelsFor('addition-subtraction')).toEqual([1, 2, 3, 4, 5])
-    expect(taskChoices(['addition-subtraction'], [1])).toEqual([
-      { kind: 'addition-subtraction', level: 1 },
-    ])
-  })
-})
+// Back with the kind. Both assertions are about the task table, which no
+// longer has a row to ask about.
+// describe('the row reaches every level', () => {
+//   it('including the first', () => {
+//     expect(levelsFor('addition-subtraction')).toEqual([1, 2, 3, 4, 5])
+//     expect(taskChoices(['addition-subtraction'], [1])).toEqual([
+//       { kind: 'addition-subtraction', level: 1 },
+//     ])
+//   })
+// })
 
 describe('level 1 — three small numbers', () => {
   const problems = sample(1)
@@ -106,7 +111,7 @@ describe('level 2 — the same, above the ten', () => {
 
 describe('no step undoes the one before it', () => {
   it('«5 + 3 − 3» is answerable by noticing the repeat, so it never appears', () => {
-    for (const level of levelsFor('addition-subtraction')) {
+    for (const level of MATH_LEVELS) {
       for (const p of sample(level)) {
         // Only in a flat chain. Inside a bracket the signs mean something
         // else: «94 − (18 + 18)» adds the two and takes the result away, so

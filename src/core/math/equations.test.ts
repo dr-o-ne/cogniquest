@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { createRandom } from '../random'
 import { createEquationExercise, describeEquation, generateEquation, type Equation } from './equations'
 import { evaluate } from './generator'
-import { levelsFor, taskChoices } from './kinds'
 import { MATH_LEVELS } from './levels'
 import { numberToWords } from './numerals'
 
@@ -50,35 +49,48 @@ describe('missing number — rules that hold on every level', () => {
     })
   }
 
-  it('never a zero operand, on any level', () => {
-    for (const level of MATH_LEVELS) {
+  it('never a zero operand, above the rung that keeps one on purpose', () => {
+    // Level 1 rides the ladder's dose of zero (one problem in twenty), so
+    // «□ + 0 = 4» exists there. That is the price of riding rather than
+    // keeping a second ladder in step; every rung above it is clean.
+    for (const level of MATH_LEVELS.filter((candidate) => candidate > 1)) {
       for (const eq of sample(level)) {
         for (const term of eq.terms) expect(term).toBeGreaterThanOrEqual(1)
       }
     }
   })
 
-  it('the grammar ceiling widens by rung', () => {
-    expect(sample(1)[0]!.heardUpTo).toBe(10)
-    expect(sample(2)[0]!.heardUpTo).toBe(10)
-    expect(sample(3)[0]!.heardUpTo).toBe(20)
+  it('the grammar ceiling comes from the sum, not from the rung', () => {
+    for (const level of [1, 2]) expect(sample(level)[0]!.heardUpTo).toBe(10)
+    // Level 3 asks two shapes with two ceilings — across the ten stops at
+    // twenty, whole tens run to a hundred — so there is nothing here to look
+    // up by level number, which is the point (T16).
+    for (const eq of sample(3)) {
+      expect(eq.heardUpTo).toBe(eq.terms.every((term) => term % 10 === 0) ? 100 : 20)
+    }
     for (const level of [4, 5]) expect(sample(level)[0]!.heardUpTo).toBe(100)
   })
 
-  it('the sum behind the blank grows by rung', () => {
-    // Level 1 stays within five, level 2 within ten.
-    for (const eq of sample(1)) for (const n of [...eq.terms, eq.result]) expect(n).toBeLessThanOrEqual(5)
-    for (const eq of sample(2)) for (const n of [...eq.terms, eq.result]) expect(n).toBeLessThanOrEqual(10)
-    // Level 3 crosses the ten: the plain reading of the two shown-or-hidden
-    // operands is a teen answer, never single digits both.
-    for (const eq of sample(3)) {
-      expect(eq.terms).toHaveLength(2)
-      expect(Math.max(...eq.terms, eq.result)).toBeGreaterThan(10)
+  it('the sum behind the blank is the rung of the addition ladder, whole', () => {
+    // Every operand within five, though the sum behind them may reach ten.
+    for (const eq of sample(1)) for (const term of eq.terms) expect(term).toBeLessThanOrEqual(5)
+    // Up to ten and never across it, and always past five — that is the rung.
+    for (const eq of sample(2)) {
+      for (const n of [...eq.terms, eq.result]) expect(n).toBeLessThanOrEqual(10)
+      expect(Math.max(...eq.terms)).toBeGreaterThanOrEqual(6)
     }
-    // Level 4 is two-digit.
-    for (const eq of sample(4)) expect(Math.max(...eq.terms, eq.result)).toBeGreaterThanOrEqual(10)
-    // Level 5 keeps all three terms.
-    for (const eq of sample(5)) expect(eq.terms).toHaveLength(3)
+    // Level 3 works with the ten: crossed, or counted whole.
+    for (const eq of sample(3)) {
+      const round = eq.terms.every((term) => term % 10 === 0)
+      expect(Math.max(...eq.terms, eq.result)).toBeGreaterThan(round ? 19 : 10)
+    }
+    // Levels 4 and 5 are two-digit throughout.
+    for (const level of [4, 5]) {
+      for (const eq of sample(level)) {
+        expect(eq.terms).toHaveLength(2)
+        expect(Math.max(...eq.terms, eq.result)).toBeGreaterThanOrEqual(10)
+      }
+    }
   })
 })
 
@@ -156,9 +168,12 @@ describe('createEquationExercise', () => {
   })
 })
 
-describe('the row reaches every level', () => {
-  it('including the first', () => {
-    expect(levelsFor('missing-number')).toEqual([1, 2, 3, 4, 5])
-    expect(taskChoices(['missing-number'], [1])).toEqual([{ kind: 'missing-number', level: 1 }])
-  })
-})
+// Back with the kind: the row is parked out of `TaskKind` for now
+// (core/math/kinds.ts), so there is no row in the task table to ask about. The
+// generator above is untouched and stays under test while it waits.
+// describe('the row reaches every level', () => {
+//   it('including the first', () => {
+//     expect(levelsFor('missing-number')).toEqual([1, 2, 3, 4, 5])
+//     expect(taskChoices(['missing-number'], [1])).toEqual([{ kind: 'missing-number', level: 1 }])
+//   })
+// })

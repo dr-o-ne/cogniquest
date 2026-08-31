@@ -363,7 +363,7 @@ switch costs one file. See **G5**.
 
 | ID | Decision | Status |
 |---|---|---|
-| **C1** | Math — five levels. | Accepted |
+| **C1** | Math — one ladder of levels, five of them today, open upwards. | Accepted |
 | **C2** | Reading — three alternating mechanics. | Accepted |
 | **C3** | Failed tasks come back after 1 / 3 / 7 sessions. | Accepted |
 | **C4** | Three mistakes in a row → the difficulty quietly drops a step. The child does not see it. | Accepted |
@@ -380,8 +380,17 @@ last of the other three leaked back into it.
 It is kept there and not here on purpose. The two used to be copies of each
 other, and copies drift: the level 2 row in this document described «± up to 20
 without crossing the ten» long after the code had settled on two operations
-within ten. This section holds the decision — five levels — and the catalogue
-holds what they contain.
+within ten. This section holds the decision — that there is one ladder, shared
+by the rows that ride it — and the catalogue holds what its rungs contain.
+
+**Five rungs is where it stands, not how long it is.** Grades 1–2 end at
+two-digit carrying, so the ladder ends there for now; multiplication, three-digit
+numbers and the olympiad questions are rungs six and upwards, added by appending
+rather than by re-cutting. Nothing may treat five as the top: the code reads the
+ends off the list of rungs (`FIRST_LEVEL`, `LAST_LEVEL`), and the one place that
+ties an opponent's difficulty to a rung — `BY_LEVEL` in `src/game/monsters.ts`,
+which joins a King's Bounty unit level to the math ones — is the one place that
+has to be re-cut when the ladder grows.
 
 **C2** has no such document. It gets one on its own terms when it is designed,
 beside `MATH.md` rather than inside it — the same reason the placeholder types
@@ -522,3 +531,5 @@ either.
 | 2026-08-31 | **A1 stopped being a promise and became a test.** `src/architecture.test.ts` reads the layer boundary off the files on every run; `tsconfig.core.json` typechecks the core against a `lib` with no DOM, so the list of forbidden globals is the compiler's and not a handwritten one. Three holes were found and closed while building it, all the same mistake — default-allow: packages were a ban-list, browser globals were a ban-list, and an undeclared layer was waved through entirely. The last of the three came from outside review. See the stress test under **A1**. |
 | 2026-08-31 | **The reading placeholders taken out.** `ExercisePrompt` lost its `syllables` and `spoken` variants, `AnswerAttempt` its `sequence` one, `Subject` its `reading` member, and four exhaustive switches lost the branches that existed only to say «nothing to show here». `Profile` lost the per-subject level ladder with them — `levels`, `levelFor`, `promote` had no production callers at all, since a battle draws its level from `monster.levels`. Reading will be designed on its own terms in phase 4; a shape guessed a phase early only has to fit what math happened to need. `PROFILE_VERSION` deliberately **not** bumped: `fromJSON` hands back an empty profile on a version it does not know, so a bump would have wiped the child's progress to tidy a key nothing reads. Knock-on: `LAST_LEVEL` now has no callers. |
 | 2026-08-31 | **`EXERCISES.md` became [MATH.md](MATH.md), methodology and math only.** The reading section went out with the placeholder types, and so did everything that was not methodology: recognition and grammar notes, the microphone column, which opponent draws which row, `DEFAULT_TASKS`, the cost of a mistake in a battle. A catalogue of what a child is asked should read the same whether the game around it is a battle, a map or nothing at all. The one idea worth keeping — that a format punishing mistakes pulls against olympiad tasks — moved to **G6**, where facts about the format belong. **C2** gets a document of its own when it is designed, beside this one rather than inside it. |
+| 2026-08-31 | **Every row but addition parked, to be put back one at a time.** Subtraction, chains, missing number and comparing numbers are commented out of `TaskKind` and out of `DEFAULT_TASKS` — four places each, listed above the union — while the game is cut back to one thing that can be watched working. Their generators, rules and tests are untouched and stay green; only the task table forgets them. The grid in [MATH.md](MATH.md) gained a ⏸ for exactly this state, which is neither «playable» nor «not written». |
+| 2026-08-31 | **The ladder re-cut around two-digit work, and declared open upwards (C1).** The rungs are now: the bonds within five, up to ten without crossing it, the ten itself (crossed to twenty, or counted in whole tens to a hundred), two-digit without carrying, two-digit with. Carrying is the skill grades 1–2 are built towards, so it is the top rung rather than a middle one, and the olympiad trick that used to sit above it moves to the rungs beyond five — it still has a home at level 5 of the chains row. Two rules made explicit by the re-cut: a rung must not be able to draw the rung below it (level 2 always reaches past five; level 4 never draws `30+40`), and the answer range travels with the problem rather than the level number — level 3 asks two shapes with two ceilings. Missing number gives up the ladder it was granted a day ago and rides this one rung for rung; a second ladder was a second thing to keep in step, and it fell out of step at the first re-cut. **Zero stays on level 1**, at one problem in twenty rather than one in fifteen: `4+0`, `4−0` and `4−4` are three facts with nowhere else small enough to meet them, so the rung's own «numbers from one to five» is set aside for them rather than widened. The price is paid by the missing-number row, which rides the rung: about one of its level 1 questions in twenty can be read off instead of worked out (`4−□=0`). Catalogue: [MATH.md](MATH.md). |

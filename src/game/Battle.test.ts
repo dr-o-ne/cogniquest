@@ -31,7 +31,7 @@ function feed(battle: Battle, verdict: AnswerResult['verdict'], times: number) {
 
 const dummy: Monster = {
   id: 'test',
-  tasks: ['addition', 'subtraction'],
+  tasks: ['addition'],
   name: 'Test',
   hearts: 3,
   levels: [1],

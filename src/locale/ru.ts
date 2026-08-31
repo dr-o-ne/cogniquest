@@ -125,13 +125,18 @@ export const ru = {
     5: 'Босс: самые трудные',
   } as Record<number, string>,
 
-  /** Math levels (C1). Debug and the parent screen, never shown to the child. */
+  /**
+   * Math levels (C1). Debug and the parent screen, never shown to the child.
+   *
+   * Five entries today; the ladder grows upwards, and a rung with no line here
+   * shows up as its own number rather than as nothing.
+   */
   mathLevels: {
-    1: '± в пределах 10',
-    2: 'два действия в пределах 10',
-    3: '± через десяток',
-    4: 'круглые десятки',
-    5: 'всё до 100',
+    1: '± в пределах 5',
+    2: '± в пределах 10, без перехода',
+    3: '± через десяток до 20, круглые десятки до 100',
+    4: 'двузначные без перехода через разряд',
+    5: 'двузначные с переходом через разряд',
   } as Record<number, string>,
 
   /**

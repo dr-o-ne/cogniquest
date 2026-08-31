@@ -4,7 +4,14 @@
 built — level by level, row by row. Nothing here is about how it is implemented,
 how the answer reaches the game, or what the game wraps around it: those live in
 [DECISIONS.md](DECISIONS.md), and the decision this file elaborates is **C1**
-(five levels).
+(the ladder of levels).
+
+**Five rungs today, and five is not the plan.** Grades 1–2 end at two-digit
+work, so that is where the ladder ends for now; multiplication, three digits and
+the olympiad questions that have no number here yet are rungs six and upwards,
+added by appending to the ladder rather than by re-cutting it. Every rule below
+is written to survive that: a level is a place in a list, never «the hardest
+there is».
 
 Another subject would get a document of its own beside this one, on its own
 terms. It is not written into this one.
@@ -13,19 +20,21 @@ terms. It is not written into this one.
 
 ## The grades 1–2 grid
 
-Sixteen types across five levels, ticked off as they land.
+Sixteen types across the five levels there are today, ticked off as they land.
+A sixth column joins the table when a sixth rung does; nothing about the grid
+says five.
 
-✅ playable · ☐ not written ·
+✅ playable · ⏸ written, but not asked at the moment · ☐ not written ·
 ✖ needs a way of answering the game does not have ·
 — the grid does not ask for this cell
 
 | Type | 1 | 2 | 3 | 4 | 5 |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Addition + subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Missing number `□+2=5` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Comparing numbers `5 □ 7` | ✅ | ✅ | — | — | — |
+| Subtraction | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
+| Addition + subtraction | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
+| Missing number `□+2=5` | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
+| Comparing numbers `5 □ 7` | ⏸ | ⏸ | — | — | — |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Increase / decrease by | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Making a number (5 = 2 + □) | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -37,6 +46,13 @@ Sixteen types across five levels, ticked off as they land.
 | Money | ✖ | ✖ | ✖ | ✖ | ✖ |
 | Measuring | ✖ | ✖ | ✖ | ✖ | ✖ |
 | Patterns | ☐ | ☐ | ☐ | — | — |
+
+**Only addition is asked right now** — that is what ⏸ means on the four rows
+under it. What each of them asks, and by what rules, is written down below and
+still holds: nothing has been withdrawn or rethought. They are simply not drawn
+while they go back one row at a time, each given on its own long enough to say
+whether it works before the next joins it. A ⏸ is a row waiting its turn, and
+the only cell that changes when its turn comes is the tick.
 
 Our rungs are not always the grid's. It asks for three numbers at level 3,
 where we put two-digit-without-carrying, so that each rung introduces one
@@ -53,11 +69,17 @@ cannot answer by choosing an operation once and counting to the end.
 
 ---
 
-## Four rules every task obeys
+## Five rules every task obeys
 
-**One new difficulty per rung.** Size, then place value, then carrying, then
-count of operations. A rung that changes two things at once tells you nothing
-about which one the child stumbled over.
+**One new difficulty per rung.** Size, then the ten, then place value, then
+carrying. A rung that changes two things at once tells you nothing about which
+one the child stumbled over.
+
+**And a rung has to stay clear of the one below it.** Allowing the new
+difficulty is not enough — the rung must not be able to draw a problem the
+previous one already asks, or a share of it teaches nothing. That is why level 2
+always reaches past five, and why level 4 never lets both units fall to zero:
+`30+40` is a level 3 problem whatever level happens to draw it.
 
 **A rung whose difficulty is insight still has to be heavier than the one
 below.** A trick that shortens an easy sum saves nothing, so the numbers on a
@@ -76,30 +98,58 @@ adding nothing, a bracket that changes no answer, three tiny numbers dressed up
 as a trick — each of them lets the child produce the right answer without
 counting, and each has had to be deliberately kept out.
 
+Zero is the one exception, and it is an argument about dosage rather than about
+the rule. `4−4` and `4+0` are facts a child has to meet somewhere, so level 1
+asks them one time in twenty; drawn at random they were almost a third of that
+rung, and «zero» became an answer worth guessing.
+
 ---
 
 ## Addition and subtraction
 
+One table for both rows: subtraction is the same rung read backwards, not a
+ladder of its own.
+
 | Level | What is asked | Answers | Example |
 |---|---|---|---|
-| 1 | two numbers within ten | 0–10 | `3+4`, `9−4` |
-| 2 | two numbers, the ten **has** to be crossed | 0–20 | `8+5`, `13−6` |
-| 3 | up to a hundred, digit by digit, nothing carried | 0–100 | `45+20`, `68−14` |
-| 4 | two-digit, the units overflow | 0–100 | `19+32`, `70−26` |
-| 5 | three numbers where a pair makes a round one | 0–100 | `47+19+3`, `83−27−3` |
+| 1 | the bonds within five, known rather than counted | 0–10 | `3+2`, `5−2` |
+| 2 | up to ten, the ten filled but never crossed | 0–10 | `7+3`, `9−4` |
+| 3 | the ten itself: crossed to twenty, or counted whole to a hundred | 0–20, 0–100 | `8+5`, `13−6`, `30+40`, `70−40` |
+| 4 | two-digit, taken place by place, nothing carried | 0–100 | `45+23`, `68−14` |
+| 5 | two-digit, the units overflow | 0–100 | `47+28`, `63−27` |
 
-Levels 3 and 4 are a pair: one forbids carrying, the other insists on it. That
-is what makes carrying a rung of its own rather than something met by accident.
-Round tens are not a rung — `30+40` is level 3 with both units at zero.
+**Level 1 is for automaticity, not for working out.** Five and fewer is the
+range a child holds whole; the rung exists so that holding it becomes faster
+than counting it. Both numbers come from one to five, so the sum can still
+reach ten — `5+5` is the fact at the top of the rung, not an escape from it.
 
-Level 5 is the olympiad-flavoured one. Head-on it is level 4 twice over; spot
-that 47 and 3 make 50 and it becomes one easy sum.
+**Level 2 adds the second five**, and one of its two numbers is always above
+it — otherwise the rung is level 1 again, which about half of it would be if
+left to chance. The pairs that fill the ten exactly, `6+4` and `8+2`, are what
+this rung is really for: they are the facts level 3 then breaks open.
 
-**Zero is level 1's business**, about one problem in fifteen each way: `9−9=0`,
-`7+0=7`, `7−0=7`. Each is a fact worth meeting, and the dosage is what keeps it
-from becoming a way of answering without counting. `0+0` never appears — that
-is not a fact about zero, it is nothing. From level 2 up, carrying and borrowing
-rule zero out anyway.
+**Level 3 is the ten as a thing in itself**, from both sides. `8+5` breaks one
+open; `30+40` counts in nothing but tens, which is the same discovery from the
+other end and the child's first work with a hundred. Half the rung is each, so
+neither half quietly becomes the level. It is also the one rung with two
+ceilings — an answer here is at most twenty, or at most a hundred, depending on
+which half asked.
+
+**Levels 4 and 5 are a pair**: one forbids carrying, the other insists on it.
+That is what makes carrying a rung of its own rather than something met by
+accident. Round tens are not a level 4 problem — `30+40` obeys every rule of
+that rung and is level 3 all the same, so both units are never zero there.
+
+**Zero is level 1's business, one problem in twenty**: `4+0=4`, `4−0=4`,
+`4−4=0`. Each is a fact of its own, and this is the only rung small enough to
+hold them — so the rung's own rule, the numbers from one to five, is set aside
+here on purpose rather than widened to let zero in everywhere. `0+0` never
+appears: that is not a fact about zero, it is nothing. From level 2 up, the ten,
+carrying and borrowing rule zero out anyway.
+
+It costs the missing-number row something, since that row rides this rung: about
+one of its level 1 questions in twenty — `4−□=0`, `4+□=4` — can be read off
+instead of worked out. Three facts against that, on the easiest rung there is.
 
 ---
 
@@ -117,9 +167,10 @@ whether the order they are worked in is the order they are written in.
 | 4 | 3 | 0–100 | `97 − (63 − 34) = 68` |
 | 5 | 4 | 0–100 | `27 + 15 − 7 + 40 = 75` |
 
-Levels 1 and 2 differ the way they do in the row above: everything under ten,
-then the ten has to be crossed. Level 2 always works above ten somewhere —
-without that it kept reproducing level 1, and a quarter of it did.
+Levels 1 and 2 differ the way the rows above differ across their own first
+rungs: everything under ten, then the ten has to be crossed. Level 2 always
+works above ten somewhere — without that it kept reproducing level 1, and a
+quarter of it did.
 
 **Both signs always appear.** The point of the row is that the child cannot
 settle into one operation and stay there, so a chain that came out all-plus
@@ -135,7 +186,10 @@ decoration. The numbers stay two-digit — unlearning four levels of left-to-rig
 on numbers under twenty would be a rung down.
 
 **Level 5 is the same insight one step further.** Level 4 hands the child an
-order to work in; here nobody does, and they have to find one.
+order to work in; here nobody does, and they have to find one. `27+15−7+40`
+comes apart if the 27 and the 7 are seen as a pair — the trick the addition row
+used to end on, before that ladder was re-cut around two-digit work. This is the
+only row that asks it now.
 
 ---
 
@@ -147,16 +201,18 @@ ladder is about the size of the arithmetic behind the blank, nothing cleverer.
 
 | Level | The sum behind the blank | Heard | Example |
 |---|---|---|---|
-| 1 | within five | 0–10 | `□+2=5`, `4−□=3` |
-| 2 | within ten | 0–10 | `4+□=9`, `9−□=3` |
-| 3 | across the ten | 0–20 | `□+6=13`, `12−□=4` |
-| 4 | two-digit, carry or no | 0–100 | `56+□=94`, `□+15=82` |
-| 5 | three terms, a pair makes a round one | 0–100 | `47+□+3=69`, `83−□−3=53` |
+| 1 | the bonds within five | 0–10 | `□+2=5`, `4−□=3` |
+| 2 | up to ten, not crossed | 0–10 | `4+□=9`, `9−□=3` |
+| 3 | across the ten, or whole tens | 0–20, 0–100 | `□+6=13`, `30+□=70` |
+| 4 | two-digit, nothing carried | 0–100 | `45+□=68`, `□+15=87` |
+| 5 | two-digit, the units overflow | 0–100 | `□+28=75`, `63−□=36` |
 
-Levels 1 and 2 are their own small generators; level 3 is the ordinary
-across-the-ten problem; level 4 flips a coin between two-digit-without-carry and
-two-digit-with-carry so both are met; level 5 is the grouping problem
-unchanged — three terms, so the equation has three too.
+**The row has no ladder of its own: it rides the addition one rung for rung.**
+Whatever level 3 asks as a sum, level 3 asks here with one operand covered up.
+It used to remap the rungs by hand — its level 3 borrowed the across-the-ten
+generator, its level 4 flipped a coin between two others — and that was a second
+ladder to keep in step with the first, which fell out of step the moment the
+first one was re-cut. Riding along cannot drift.
 
 The blank falls on any operand but never on the result: `2+3=□` is plain
 addition with an equals sign drawn in, and that row is already played. `□+2=5`
@@ -224,14 +280,21 @@ is merely unwritten or out of reach.
   coins, a shape to assemble. These do not fit the answer shape above at all,
   which is why the grid marks them ✖ rather than ☐.
 
-### The level 5 column
+### The rungs above five
 
-Olympiad-ish by intent, and that fits: the difficulty lives in the question,
-and a question whose answer is one number is judged like any other however hard
-it is to work out.
+The olympiad questions used to be the level 5 column — a trick rung at the top
+of every row. They are not, any more: level 5 is two-digit carrying, the skill
+grades 1–2 are actually built towards, and a trick that shortens it belongs
+above it rather than instead of it. Where the insight still has a rung, it says
+so — level 5 of «addition and subtraction together» is exactly that question.
 
-One limit to remember when that column is built: number words stop at a hundred,
-so an answer of «сто двадцать» is out of reach until the vocabulary grows.
+So the olympiad column is one of the things rungs six and upwards are for, and
+that fits: the difficulty lives in the question, and a question whose answer is
+one number is judged like any other however hard it is to work out.
+
+One limit to remember when those rungs are built: number words stop at a
+hundred, so an answer of «сто двадцать» is out of reach until the vocabulary
+grows. Multiplication and three-digit numbers both run into it immediately.
 
 There is a second, and it is not a methodological one — a format that costs the
 child something for a mistake pulls against tasks meant to be reached for. It is
@@ -254,6 +317,10 @@ A new row earns its place in the mix, though. Given on its own for a while
 first, a run of nothing else says plainly whether it is understood or merely
 guessed; only then does it join the draw. Which rows are mixed together in
 practice is a question for the game, not for the methodology.
+
+Which is where the ⏸ rows stand today: the mix has been emptied back to
+addition, and each row rejoins the draw by that same rule — asked on its own
+first, then mixed in.
 
 A row is drawn only at a level it actually has. Comparing numbers has two rungs,
 so above level 2 it is simply not asked — not a gap to fill later, but the end

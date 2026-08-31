@@ -20,8 +20,11 @@ import { buildProblem, toExercise, type ArithmeticProblem } from './generator'
  *
  * The last two steps are worth reading together. At level 4 the child is told
  * what to do first; at level 5 nobody tells them, and the useful order is
- * theirs to spot. That is the same shape as level 5 of the addition ladder,
- * and it carries the same warning: an insight is only a step up while the
+ * theirs to spot. The addition ladder used to end on that same insight — «47 +
+ * 19 + 3», where a pair makes a round number — and when it was re-cut around
+ * two-digit work the trick stayed here, which is now the only row that asks it.
+ *
+ * It carries a warning with it: an insight is only a step up while the
  * arithmetic underneath it stays as heavy as the rung below. A first cut of
  * this file put brackets on numbers under twenty and came out easier than
  * level 3, which is how a ladder quietly stops being one.

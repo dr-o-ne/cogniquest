@@ -7,7 +7,6 @@ import {
   generateComparison,
   type ComparisonProblem,
 } from './comparison'
-import { levelsFor, taskChoices } from './kinds'
 
 function sample(levelId: number, count = 6000): ComparisonProblem[] {
   const random = createRandom(levelId * 977 + 13)
@@ -17,19 +16,23 @@ function sample(levelId: number, count = 6000): ComparisonProblem[] {
 const share = (problems: ComparisonProblem[], matches: (p: ComparisonProblem) => boolean) =>
   problems.filter(matches).length / problems.length
 
+// The row is parked out of `TaskKind` for now (core/math/kinds.ts). What it
+// asks and how is untouched and stays under test; only the two assertions
+// about the task table below are commented out, and they come back with the
+// kind itself.
 describe('the row stops at level 2', () => {
-  it('two rungs, and the task table agrees', () => {
+  it('two rungs', () => {
     expect(COMPARISON_LEVELS).toEqual([1, 2])
-    expect(levelsFor('comparing-numbers')).toEqual([1, 2])
+    // expect(levelsFor('comparing-numbers')).toEqual([1, 2])
   })
 
-  it('a level-3 opponent is simply never asked to compare', () => {
-    // Not a throw in the middle of a battle: the pairing drops the kind.
-    expect(taskChoices(['comparing-numbers'], [3, 4, 5])).toEqual([])
-    expect(taskChoices(['comparing-numbers'], [2, 3])).toEqual([
-      { kind: 'comparing-numbers', level: 2 },
-    ])
-  })
+  // it('a level-3 opponent is simply never asked to compare', () => {
+  //   // Not a throw in the middle of a battle: the pairing drops the kind.
+  //   expect(taskChoices(['comparing-numbers'], [3, 4, 5])).toEqual([])
+  //   expect(taskChoices(['comparing-numbers'], [2, 3])).toEqual([
+  //     { kind: 'comparing-numbers', level: 2 },
+  //   ])
+  // })
 
   it('asking for a rung that does not exist is a programming error', () => {
     expect(() => generateComparison(3, createRandom(1))).toThrow(RangeError)

@@ -18,6 +18,9 @@ function sample(levelId: number, count = 400): ArithmeticProblem[] {
   )
 }
 
+const added = (problems: ArithmeticProblem[]) => problems.filter((p) => p.ops[0] === '+')
+const taken = (problems: ArithmeticProblem[]) => problems.filter((p) => p.ops[0] === '-')
+
 const units = (n: number) => n % 10
 const tens = (n: number) => Math.floor(n / 10)
 
@@ -37,22 +40,31 @@ describe('generateProblem — rules that hold everywhere', () => {
         for (const p of problems) expect(p.answer).toBe(evaluate(p.terms, p.ops))
       })
 
-      it('one operation fewer than there are numbers', () => {
-        for (const p of problems) expect(p.ops).toHaveLength(p.terms.length - 1)
+      it('two numbers and one operation', () => {
+        for (const p of problems) {
+          expect(p.terms).toHaveLength(2)
+          expect(p.ops).toHaveLength(1)
+        }
       })
 
       // Level 1 is the exception, and a deliberate one — see «zero» below.
       if (level > 1) {
         it('no zero operands', () => {
           for (const p of problems) {
-            for (const term of p.terms.slice(1)) expect(term).toBeGreaterThanOrEqual(1)
+            for (const term of p.terms) expect(term).toBeGreaterThanOrEqual(1)
+          }
+        })
+
+        it('every subtraction leaves something behind', () => {
+          // «a − a» used to be 29% of everything level 1 asked: subtrahends
+          // were drawn from [1, a], so hitting a exactly had odds of 1/a.
+          // Above the first rung it may not happen at all.
+          for (const p of taken(problems)) {
+            expect(p.answer).toBeGreaterThanOrEqual(1)
+            expect(p.terms[0]).not.toBe(p.terms[1])
           }
         })
       }
-
-      it('nothing negative', () => {
-        for (const p of problems) expect(p.answer).toBeGreaterThanOrEqual(0)
-      })
     })
   }
 
@@ -63,107 +75,148 @@ describe('generateProblem — rules that hold everywhere', () => {
       expect(problems.some((p) => p.ops.includes('-'))).toBe(true)
     })
   }
+
+  it('rejects a level the ladder does not have', () => {
+    // The ladder grows upwards, so this is «not yet», not «never» — but until
+    // the rung exists, asking for it is a programming error and says so.
+    expect(() => generateProblem(6, createRandom(1), '+')).toThrow(RangeError)
+  })
 })
 
-describe('zero', () => {
-  const level1 = sample(1, 3000)
-  const share = (of: typeof level1) => of.length / level1.length
+describe('level 1 — the bonds within five', () => {
+  const problems = sample(1)
 
-  it('level 1 adds and takes away nothing now and then', () => {
-    const nothing = level1.filter((p) => p.terms[1] === 0)
-
-    expect(nothing.length).toBeGreaterThan(0)
-    // Both «7 + 0» and «7 − 0» turn up, not just one of them.
-    expect(nothing.some((p) => p.ops[0] === '+')).toBe(true)
-    expect(nothing.some((p) => p.ops[0] === '-')).toBe(true)
+  it('every number in the problem comes from one to five, or is the zero dose', () => {
+    for (const p of problems) {
+      expect(p.terms[0]!).toBeGreaterThanOrEqual(1)
+      expect(p.terms[0]!).toBeLessThanOrEqual(5)
+      expect(p.terms[1]!).toBeGreaterThanOrEqual(0)
+      expect(p.terms[1]!).toBeLessThanOrEqual(5)
+    }
   })
 
-  it('level 1 does not drown in nothing', () => {
-    expect(share(level1.filter((p) => p.terms[1] === 0))).toBeLessThan(0.15)
+  it('the answer never passes ten', () => {
+    for (const p of problems) expect(p.answer).toBeLessThanOrEqual(10)
+  })
+
+  it('the fives themselves turn up — «5 + 5», «5 − 3»', () => {
+    expect(added(problems).some((p) => p.terms[0] === 5 && p.terms[1] === 5)).toBe(true)
+    expect(taken(problems).some((p) => p.terms[0] === 5)).toBe(true)
+  })
+})
+
+describe('zero — level 1 only, and one problem in twenty', () => {
+  const problems = sample(1, 4000)
+  const zeros = problems.filter((p) => p.terms.includes(0) || p.answer === 0)
+
+  it('all three facts turn up: «4 + 0», «4 − 0», «4 − 4»', () => {
+    expect(problems.some((p) => p.ops[0] === '+' && p.terms[1] === 0)).toBe(true)
+    expect(problems.some((p) => p.ops[0] === '-' && p.terms[1] === 0)).toBe(true)
+    expect(problems.some((p) => p.ops[0] === '-' && p.answer === 0)).toBe(true)
+  })
+
+  it('the level does not drown in it', () => {
+    // The dosage is the whole point: met often enough to be learned, rare
+    // enough that «zero» is never a way of answering without counting.
+    const share = zeros.length / problems.length
+    expect(share).toBeGreaterThan(0.02)
+    expect(share).toBeLessThan(0.09)
   })
 
   it('«0 + 0» is not a fact about zero and never appears', () => {
-    for (const p of level1) expect(p.terms.every((term) => term === 0)).toBe(false)
+    for (const p of problems) expect(p.terms.every((term) => term === 0)).toBe(false)
   })
-})
 
-describe('subtraction and zero', () => {
-  // «a - a» used to be 29% of everything level 1 asked and 8% of level 3:
-  // subtrahends were drawn from [1, a], so hitting a exactly had odds of 1/a,
-  // and «1 - 1» was the only problem a minuend of one could produce. Zero is
-  // worth meeting, but on purpose and rarely.
-  for (const level of MATH_LEVELS.filter((candidate) => candidate > 1)) {
-    it(`level ${level} always leaves something behind`, () => {
-      for (const p of sample(level).filter((x) => x.ops[0] === '-')) {
+  it('no rung above the first has a zero anywhere in it', () => {
+    for (const level of MATH_LEVELS.filter((candidate) => candidate > 1)) {
+      for (const p of sample(level)) {
+        expect(p.terms).not.toContain(0)
         expect(p.answer).toBeGreaterThanOrEqual(1)
-        expect(p.terms[0]).not.toBe(p.terms[1])
       }
-    })
-  }
-
-  it('level 1 meets zero now and then — often enough to learn it', () => {
-    const subtractions = sample(1, 3000).filter((p) => p.ops[0] === '-')
-    const zeros = subtractions.filter((p) => p.answer === 0)
-
-    expect(zeros.length).toBeGreaterThan(0)
-    for (const p of zeros) expect(p.terms[0]).toBe(p.terms[1])
-  })
-
-  it('level 1 does not drown in it', () => {
-    const subtractions = sample(1, 3000).filter((p) => p.ops[0] === '-')
-    const share = subtractions.filter((p) => p.answer === 0).length / subtractions.length
-
-    expect(share).toBeGreaterThan(0.02)
-    expect(share).toBeLessThan(0.15)
+    }
   })
 })
 
-describe('level 1 — within ten', () => {
-  it('two numbers, neither above ten', () => {
-    for (const p of sample(1)) {
-      expect(p.terms).toHaveLength(2)
+describe('level 2 — up to ten, the ten not crossed', () => {
+  const problems = sample(2)
+
+  it('nothing goes past ten, in the numbers or in the answer', () => {
+    for (const p of problems) {
       for (const term of p.terms) expect(term).toBeLessThanOrEqual(10)
+      expect(p.answer).toBeLessThanOrEqual(10)
     }
+  })
+
+  it('always reaches past five, or it is level 1 again', () => {
+    // The new difficulty of this rung is the second five. Left to chance, a
+    // good half of it would be problems level 1 already asks.
+    for (const p of added(problems)) expect(Math.max(...p.terms)).toBeGreaterThanOrEqual(6)
+    for (const p of taken(problems)) expect(p.terms[0]!).toBeGreaterThanOrEqual(6)
+  })
+
+  it('the sum never crosses the ten', () => {
+    for (const p of added(problems)) expect(p.terms[0]! + p.terms[1]!).toBeLessThanOrEqual(10)
+  })
+
+  it('the pairs that fill the ten are among them — «6 + 4», «8 + 2»', () => {
+    expect(added(problems).some((p) => p.answer === 10)).toBe(true)
   })
 })
 
-describe('level 2 — across the ten', () => {
-  it('addition has to cross ten', () => {
-    for (const p of sample(2).filter((x) => x.ops[0] === '+')) {
-      const [left, right] = [p.terms[0]!, p.terms[1]!]
-      expect(units(left) + right).toBeGreaterThan(9)
+describe('level 3 — the ten, crossed or counted whole', () => {
+  const problems = sample(3)
+  const round = (p: ArithmeticProblem) => p.terms.every((term) => term % 10 === 0)
+
+  it('both shapes turn up, and neither one becomes the level', () => {
+    const share = problems.filter(round).length / problems.length
+    expect(share).toBeGreaterThan(0.3)
+    expect(share).toBeLessThan(0.7)
+  })
+
+  it('across the ten: the sum crosses it, and stops at twenty', () => {
+    for (const p of added(problems).filter((x) => !round(x))) {
+      expect(units(p.terms[0]!) + p.terms[1]!).toBeGreaterThan(9)
       expect(p.answer).toBeGreaterThan(10)
+      expect(p.answer).toBeLessThanOrEqual(20)
+      expect(p.heardUpTo).toBe(20)
     }
   })
 
-  it('subtraction has to borrow', () => {
-    for (const p of sample(2).filter((x) => x.ops[0] === '-')) {
+  it('across the ten: the subtraction has to borrow', () => {
+    for (const p of taken(problems).filter((x) => !round(x))) {
       const [left, right] = [p.terms[0]!, p.terms[1]!]
       expect(left).toBeGreaterThan(10)
+      expect(left).toBeLessThanOrEqual(20)
       expect(units(left)).toBeLessThan(right)
     }
   })
 
-  it('stays inside twenty', () => {
-    for (const p of sample(2)) {
-      for (const term of p.terms) expect(term).toBeLessThanOrEqual(20)
+  it('whole tens: nothing but tens, up to a hundred', () => {
+    for (const p of problems.filter(round)) {
+      for (const term of p.terms) expect(term).toBeGreaterThanOrEqual(10)
+      expect(p.answer % 10).toBe(0)
+      expect(p.answer).toBeLessThanOrEqual(100)
+      expect(p.heardUpTo).toBe(100)
     }
+  })
+
+  it('whole tens reach the hundred — the top of what can be said (T16)', () => {
+    expect(problems.some((p) => Math.max(p.answer, ...p.terms) === 100)).toBe(true)
   })
 })
 
-describe('level 3 — up to a hundred, digit by digit', () => {
-  const problems = sample(3)
+describe('level 4 — two-digit, digit by digit', () => {
+  const problems = sample(4)
 
-  it('two numbers, and the first one has tens', () => {
+  it('the first number is two-digit', () => {
     for (const p of problems) {
-      expect(p.terms).toHaveLength(2)
       expect(p.terms[0]!).toBeGreaterThanOrEqual(10)
       expect(p.terms[0]!).toBeLessThanOrEqual(99)
     }
   })
 
   it('addition never carries', () => {
-    for (const p of problems.filter((x) => x.ops[0] === '+')) {
+    for (const p of added(problems)) {
       const [left, right] = [p.terms[0]!, p.terms[1]!]
       expect(units(left) + units(right)).toBeLessThanOrEqual(9)
       expect(tens(left) + tens(right)).toBeLessThanOrEqual(9)
@@ -178,24 +231,28 @@ describe('level 3 — up to a hundred, digit by digit', () => {
     }
   })
 
-  it('round tens still turn up — a case of this level, not a level of their own', () => {
-    expect(problems.some((p) => p.terms.every((term) => term % 10 === 0))).toBe(true)
+  it('never two round numbers — that is the rung below', () => {
+    // «30 + 40» obeys every rule of this level and is a level 3 problem all
+    // the same. A rung that can draw the rung below it sometimes teaches
+    // nothing new.
+    for (const p of problems) {
+      expect(p.terms.every((term) => term % 10 === 0)).toBe(false)
+    }
   })
 })
 
-describe('level 4 — two-digit, across the place', () => {
-  const problems = sample(4)
+describe('level 5 — two-digit, and the units overflow', () => {
+  const problems = sample(5)
 
   it('two numbers, and the first one has at least a ten', () => {
     for (const p of problems) {
-      expect(p.terms).toHaveLength(2)
       expect(p.terms[0]!).toBeGreaterThanOrEqual(10)
       expect(p.terms[0]!).toBeLessThanOrEqual(99)
     }
   })
 
   it('addition always carries', () => {
-    for (const p of problems.filter((x) => x.ops[0] === '+')) {
+    for (const p of added(problems)) {
       const [left, right] = [p.terms[0]!, p.terms[1]!]
       expect(units(left) + units(right)).toBeGreaterThanOrEqual(10)
       expect(p.answer).toBeLessThanOrEqual(100)
@@ -203,88 +260,11 @@ describe('level 4 — two-digit, across the place', () => {
   })
 
   it('subtraction always borrows', () => {
-    for (const p of problems.filter((x) => x.ops[0] === '-')) {
+    for (const p of taken(problems)) {
       const [left, right] = [p.terms[0]!, p.terms[1]!]
       expect(units(right)).toBeGreaterThan(units(left))
-      // Twenty and up, or this would be level 2 again under another name.
+      // Twenty and up, or this would be level 3 again under another name.
       expect(left).toBeGreaterThanOrEqual(20)
-    }
-  })
-
-  it('the second number is never zero', () => {
-    for (const p of problems) expect(p.terms[1]!).toBeGreaterThanOrEqual(1)
-  })
-})
-
-describe('level 5 — a pair that makes ten', () => {
-  const problems = sample(5)
-  const added = problems.filter((p) => p.ops[0] === '+')
-  const taken = problems.filter((p) => p.ops[0] === '-')
-
-  it('always three numbers, and the two operations match', () => {
-    for (const p of problems) {
-      expect(p.terms).toHaveLength(3)
-      expect(p.ops).toEqual(p.ops[0] === '+' ? ['+', '+'] : ['-', '-'])
-    }
-  })
-
-  describe('added — «47 + 19 + 3»', () => {
-    it('the outer two make a round number', () => {
-      for (const p of added) {
-        expect(units(p.terms[0]!) + units(p.terms[2]!)).toBe(10)
-        expect((p.terms[0]! + p.terms[2]!) % 10).toBe(0)
-      }
-    })
-
-    it('the pair is never adjacent — otherwise there is nothing to spot', () => {
-      for (const p of added) {
-        expect(units(p.terms[0]!) + units(p.terms[1]!)).not.toBe(10)
-        expect(units(p.terms[1]!) + units(p.terms[2]!)).not.toBe(10)
-      }
-    })
-
-    it('the pair is worth spotting — it is not three small digits', () => {
-      for (const p of added) expect(p.terms[0]! + p.terms[2]!).toBeGreaterThanOrEqual(20)
-    })
-
-    it('at least two of the three carry tens', () => {
-      // «6 + 5 + 14» used to be one problem in ten here: the pair spanned
-      // twenty, but with a digit on one side and a digit in the middle the
-      // whole thing was lighter work than level 4.
-      for (const p of added) {
-        expect(p.terms[1]!).toBeGreaterThanOrEqual(10)
-        expect(p.terms.filter((term) => term >= 10).length).toBeGreaterThanOrEqual(2)
-      }
-    })
-  })
-
-  describe('taken away — «83 − 27 − 3»', () => {
-    it('the two subtrahends make a round number', () => {
-      for (const p of taken) {
-        expect(units(p.terms[1]!) + units(p.terms[2]!)).toBe(10)
-        expect((p.terms[1]! + p.terms[2]!) % 10).toBe(0)
-      }
-    })
-
-    it('what is taken away is worth combining', () => {
-      // Two single digits — «71 − 3 − 7» — save almost nothing when combined.
-      for (const p of taken) expect(p.terms[1]! + p.terms[2]!).toBeGreaterThanOrEqual(20)
-    })
-
-    it('there is always enough to take, and the trick is one step', () => {
-      for (const p of taken) {
-        expect(p.terms[0]!).toBeGreaterThanOrEqual(p.terms[1]! + p.terms[2]!)
-        expect(p.answer).toBe(p.terms[0]! - (p.terms[1]! + p.terms[2]!))
-      }
-    })
-  })
-
-  it('level 5 asks more of the child than level 4, not less', () => {
-    // The rung this replaced was built from digits and came out easier than
-    // level 4. Three terms and a two-digit sum is the floor now.
-    for (const p of problems) {
-      expect(p.terms).toHaveLength(3)
-      expect(Math.max(...p.terms)).toBeGreaterThanOrEqual(10)
     }
   })
 })
@@ -325,11 +305,6 @@ describe('createMathExercise', () => {
     expect(a.id).toMatch(/^math:\d+[+-]\d+$/)
   })
 
-  it('a chain carries every link in its id', () => {
-    const exercise = createMathExercise('addition', 5, createRandom(5))
-    expect(exercise.id).toMatch(/^math:\d+[+-]\d+[+-]\d+$/)
-  })
-
   it('assembles the whole exercise', () => {
     const exercise = createMathExercise('addition', 3, createRandom(42))
     expect(exercise.subject).toBe('math')
@@ -359,13 +334,13 @@ describe('createMathExercise', () => {
 
   it('the range comes from the problem, not from the level number', () => {
     // The point of the whole arrangement: a level says how hard, the generator
-    // says what may be heard. A second kind of task will declare something else
-    // entirely, and nothing here has to know about it.
-    expect(sample(1)[0]!.heardUpTo).toBe(10)
-    expect(sample(2)[0]!.heardUpTo).toBe(20)
-    for (const level of [3, 4, 5]) {
-      expect(sample(level)[0]!.heardUpTo).toBe(100)
+    // says what may be heard. Level 3 is the proof — one rung, two shapes, two
+    // ceilings — and a second kind of task will declare something else again.
+    for (const level of [1, 2]) expect(sample(level)[0]!.heardUpTo).toBe(10)
+    for (const p of sample(3)) {
+      expect(p.heardUpTo).toBe(p.terms.every((term) => term % 10 === 0) ? 100 : 20)
     }
+    for (const level of [4, 5]) expect(sample(level)[0]!.heardUpTo).toBe(100)
   })
 
   it('rejects a level that does not exist', () => {
