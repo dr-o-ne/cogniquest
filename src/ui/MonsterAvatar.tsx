@@ -4,9 +4,16 @@ import type { Monster } from '@/game'
 type Size = 'hud' | 'card' | 'popup'
 
 /**
- * The character's picture. Only units that have one reach the selection
- * screen, so the fallback is really only for a broken link: the emoji first if
- * there is one, otherwise the first letter of the name.
+ * The character's picture.
+ *
+ * Only units that have one are ever fielded, so the fallback is for a broken
+ * link and nothing else: a renamed file, or a base path that resolves somewhere
+ * the pictures are not. The first letter on the unit's own colour keeps such a
+ * screen usable while somebody fixes it.
+ *
+ * There used to be an emoji between the two — one per unit in TUNING, thirty-one
+ * lines of it — and it could not be reached: a unit without a picture never
+ * reaches the game at all. It went the way `Monster.stats` did.
  */
 export function MonsterAvatar({ monster, size }: { monster: Monster; size: Size }) {
   const [failed, setFailed] = useState(false)
@@ -22,14 +29,6 @@ export function MonsterAvatar({ monster, size }: { monster: Monster; size: Size 
         alt={monster.name}
         onError={() => setFailed(true)}
       />
-    )
-  }
-
-  if (monster.avatar) {
-    return (
-      <span className={`avatar avatar--${size} avatar--emoji`} role="img" aria-label={monster.name}>
-        {monster.avatar}
-      </span>
     )
   }
 
