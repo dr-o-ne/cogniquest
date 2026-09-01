@@ -64,18 +64,36 @@ export const ru = {
     pickAnother: 'выбрать другого',
   },
 
+  /**
+   * The line above the pad. One at a time, freshest first (T18).
+   *
+   * `heard` is no longer a verdict but a mirror: it shows what recognition made
+   * of what was said, while the answer itself waits in the field to be sent.
+   */
   mic: {
     correct: 'верно',
+    wrong: 'не то',
     heard: (text: string) => `услышал «${text}»`,
     unheard: 'не расслышал, скажи ещё разок',
     listening: '🎤 говори',
   },
 
-  /** Fallback number pad, revealed after two misses (T5). */
+  /**
+   * The answer pad, always on screen (T18). Both ways in fill the same field,
+   * so the hint names both, and neither of them sends anything by itself.
+   */
   pad: {
-    hint: 'Давай пока наберём, а потом снова голосом',
+    hint: 'скажи или набери',
     empty: '—',
-    submit: 'готово',
+    /** The label of the ⌫ key — the glyph itself is a sign, not a word. */
+    erase: 'стереть',
+    /**
+     * The one button that answers — and in a battle (**G6**) answering IS the
+     * blow, so it is named after the blow rather than after the form being
+     * filled in. «Готово» described the paperwork; this describes what happens.
+     * The sword beside it is drawn in the component, like the comparison signs.
+     */
+    submit: 'Атака',
   },
 
   /** Spoken by the teacher through speech synthesis (T12). */
@@ -87,6 +105,14 @@ export const ru = {
      * After a miss (C5). Deliberately different from the line above: the
      * microphone is at fault here, and the teacher says so. Same words in the
      * same tone would tell the child they got it wrong when they did not.
+     *
+     * Nothing asks for it since **T18**, and the reason is not that the teacher
+     * is mute. A miss no longer interrupts the task — the microphone stays open
+     * and simply listens again — so this line would now be spoken across an open
+     * microphone, into a recogniser that would hear the teacher say «не
+     * расслышал». On screen the same news is `mic.unheard`. Kept for the voice
+     * that comes back, which may well want to say it at a moment when nobody is
+     * listening for an answer.
      */
     didNotCatch: 'Ой, я не расслышал. Скажи ещё разок',
     theAnswerIs: (words: string) => `Правильно ${words}`,

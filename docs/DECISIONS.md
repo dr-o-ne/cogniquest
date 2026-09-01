@@ -2,7 +2,7 @@
 
 A learning game for a child: math and reading by syllables, answered by voice.
 
-**Last updated:** 2026-08-31
+**Last updated:** 2026-09-01
 **State:** phase 3 closed on the child; reading (phase 4) is next, and the
 ground for it is now clear rather than half-guessed
 **What comes next:** [ROADMAP.md](ROADMAP.md)
@@ -60,10 +60,18 @@ the child works at. The side benefit is large: the processor handles speech
 recognition with room to spare, and a whole layer of work goes away with
 Android — SDKs, signing, screen sizes, rotation, gestures.
 
-**P9 — why.** This was the first requirement of the project. The key
-consequence is **T5**: the fallback input is **not shown** by default. With
+**P9 — why.** This was the first requirement of the project. The consequence
+drawn from it was **T5**: the fallback input is **not shown** by default. With
 number buttons permanently in view the child will press buttons — they are
 easier — and the whole point of the exercise is lost.
+
+**P9 stands; T5 did not (2026-09-01).** The buttons are on screen for every task
+now (**T18**), and the reasoning above is not retracted — it is a real risk being
+run on purpose. What changed is that hiding them turned out to cost more than it
+protected: recognition is slow and fallible, and **T5** made every mishearing an
+answer the child could not take back. Speaking is still the way in — the
+microphone is live first and needs no press — but it now fills a field instead of
+answering for the child.
 
 ---
 
@@ -75,19 +83,20 @@ easier — and the whole point of the exercise is lost.
 | ~~T2~~ | ~~`Game.Core` on netstandard2.1.~~ | Replaced by **T10** |
 | **T3** | Speech recognition — **Vosk**, offline. The **vosk-browser** build (WebAssembly), with the model held locally. | Accepted |
 | **T4** | Vosk runs in **grammar mode**: a closed list of expected words instead of the whole language. | Accepted |
-| **T5** | The fallback input (keyboard) is **hidden by default** and slides out only after two misses. | Accepted |
+| ~~T5~~ | ~~The fallback input (keyboard) is **hidden by default** and slides out only after two misses.~~ | Replaced by **T18** |
 | ~~T6~~ | ~~Narration — Android TTS.~~ | Replaced by **T12** |
 | ~~T7~~ | ~~Storage — JSON in `Application.persistentDataPath`.~~ | Replaced by **T13** |
 | ~~T8~~ | ~~Development loop — Play Mode, Device Simulator, emulator.~~ | Replaced by **T14** |
 | **T9** | The stack is **TypeScript + Vite + React**. | Accepted |
 | **T10** | The core (`src/core`) is written in TypeScript and depends on **neither** React, nor the DOM, nor the browser. | Accepted |
 | **T11** | The playfield is **DOM and CSS animation**, with no canvas engine. | Accepted |
-| **T12** | The teacher's narration is the Windows system synthesiser through the Web Speech API, **local voices only**. | Accepted |
+| **T12** | The teacher's narration is the Windows system synthesiser through the Web Speech API, **local voices only**. | Accepted — **silent since 2026-09-01** while the voice is replaced (**O2**) |
 | **T13** | Storage is local to the browser, and after packaging a file next to the `.exe`. No database, no cloud. | Accepted |
 | **T14** | Packaging is **Electron**, producing an `.exe` with a shortcut. Development still happens in plain Chrome. | Accepted |
 | **T15** | Tests are **Vitest**. The core runs in the node environment, browserless, in a second. | Accepted |
 | **T16** | The recognition grammar gets the **whole range of plausible answers**, not just the correct one. | Accepted |
 | **T17** | The model is **`vosk-model-small-ru-0.22`** (44 MB). The choice was not free: see below. | Accepted |
+| **T18** | The pad is **always on screen**. Voice and fingers fill one and the same field, and **only a button press sends it**. | Accepted |
 
 **T9 — why.** UI/UX priority decided it. Interface quality is a function of how
 many iterations you get: how many times you moved the button, tweaked an
@@ -130,6 +139,36 @@ look back.
 
 Verified against the API: `new model.KaldiRecognizer(sampleRate, grammarJson)`
 takes the grammar as a JSON string — **T4 confirmed in code, not in theory**.
+
+**T18 — why it replaced T5.** Recognition is slow and it is not always right.
+Both were known and both were budgeted for, but the shape **T5** gave them was
+wrong: the child says a number, waits out the pause the recogniser needs to
+decide they have stopped talking, and then finds out that what arrived was
+already an answer — scored, a heart gone, and no way to say «no, not that». Two
+misses had to pile up before there was any other way in at all.
+
+So the two jobs recognition was doing get separated. It **fills the field**; it
+does not **answer**. What that buys:
+
+- **A mishearing costs nothing.** «Семь» heard as «семнадцать» sits in the field
+  in plain sight and is erased. Before, it was a wrong answer.
+- **A miss is not even an attempt.** The microphone simply listens again, with
+  the same question still standing. **C5** used to be bookkeeping — a verdict the
+  session had to be taught not to punish; now nothing reaches the session at all.
+- **The wait stops being a wall.** Recognition being slow no longer blocks
+  anything: the pad is right there, and the answer goes when the child says it
+  goes.
+- **A dead microphone is no longer fatal.** Voice used to be the only way in, so
+  its failure ended the battle. Now it is one of two, and the loop treats the
+  failure as such.
+
+**What it costs, and it is the real cost.** **P9** said the buttons must stay
+hidden precisely so the child would not reach for the easy way. That protection
+is gone, and it was not imaginary. What is kept in its place is smaller but not
+nothing: the microphone is always live and always first, the mic line above the
+pad asks out loud («🎤 говори»), and voice fills the field faster than ten
+presses do. If the child settles into typing anyway, that shows up in play — and
+the answer to it is a rule about the pad, not the return of a hidden one.
 
 ### What has to be installed
 
@@ -232,8 +271,7 @@ The port is `src/core/ports/AnswerInput.ts`, implementations are in
 
 **Why.** Voice is just one of the inputs. Until recognition is ready we play
 with the keyboard; once it is, we add it to the list without rewriting the
-mini-game. And in reverse: two misses in a row and the session brings out the
-fallback input itself (**T5**).
+mini-game.
 
 **A clarification from phase 3.** The port describes an input the game **asks
 and waits for**: «listen for the answer to this task». Voice fits perfectly. The
@@ -241,10 +279,20 @@ keyboard works the other way round — the child types when they feel like it, a
 there is no telling when. Forcing it into the same shape means wrapping a
 promise around component state for the sake of a symmetry that buys nothing.
 
-So: **voice implements the port, the keyboard answers the session directly.** In
-the session loop they meet through `Promise.race` — whichever arrives first
-counts. Reading will keep the same split: «read aloud» through the port, «build
-the word» and «catch the syllable» directly.
+So: **voice implements the port, the keyboard answers the session directly.**
+That split still holds; where they meet has changed.
+
+**Where they meet, since T18.** They used to race in the session loop and
+whichever arrived first counted. They do not race any more — they write to the
+same place. The loop holds one **draft** of the answer, the pad and the port both
+fill it, and a button press is what turns it into an attempt. So the port's
+return value is no longer an answer but a reading: `read()` still hands back an
+`AnswerAttempt`, and the loop takes the text out of it, parses it into the draft,
+and throws the rest away. Nothing about the port had to change for that, which is
+the point of having one.
+
+Reading will keep the same split: «read aloud» through the port, «build the word»
+and «catch the syllable» directly.
 
 ### A4. `SessionObserver` — the seam gamification will plug into — **Accepted**
 
@@ -411,6 +459,14 @@ concludes that they are bad at counting.
 Encoded in the types: `AnswerAttempt` has a separate `unrecognised` variant, and
 `Verdict` a separate value beside `correct` and `wrong`.
 
+**Since T18 the types have less to forgive.** A battle no longer submits what it
+heard, so a miss never becomes an attempt: the microphone listens again with the
+same question standing, and the session is never told. `unrecognised` therefore
+stops arriving from a battle at all — `unheardInARow` sits at zero, and the
+`unrecognised` branch of the battle loop is unreachable. Both stay. The variant
+is how the decision is written down, and a way to answer that can miss will come
+back the moment reading (**C2**) needs one.
+
 ---
 
 ## G. Gamification
@@ -500,7 +556,7 @@ one row in the array plus a name in the text pack.
 | ID | Question | When we decide |
 |---|---|---|
 | ~~O1~~ | ~~Which Vosk model: small or accurate~~ — **closed**: there is no choice, only small models support a grammar (**T17**) | closed 2026-08-29 |
-| **O2** | A human narrator instead of the system synthesiser (**T12**) | after phase 5, if synthesis sounds bad |
+| **O2** | A human narrator instead of the system synthesiser (**T12**) — the synthesiser is unplugged in the meantime, so the game speaks nothing at all | next voice, whichever it turns out to be |
 | **G2** | The setting | phase 6 |
 | **G3** | Who the teacher characters are | phase 5, possibly with the child |
 | **G4** | A timer on answers | phase 6 |
@@ -551,3 +607,5 @@ either.
 | 2026-08-31 | **Every row but addition parked, to be put back one at a time.** Subtraction, chains, missing number and comparing numbers are commented out of `TaskKind` and out of `DEFAULT_TASKS` — four places each, listed above the union — while the game is cut back to one thing that can be watched working. Their generators, rules and tests are untouched and stay green; only the task table forgets them. The grid in [MATH.md](MATH.md) gained a ⏸ for exactly this state, which is neither «playable» nor «not written». |
 | 2026-08-31 | **The ladder re-cut around two-digit work, and declared open upwards (C1).** The rungs are now: the bonds within five, up to ten without crossing it, the ten itself (crossed to twenty, or counted in whole tens to a hundred), two-digit without carrying, two-digit with. Carrying is the skill grades 1–2 are built towards, so it is the top rung rather than a middle one, and the olympiad trick that used to sit above it moves to the rungs beyond five — it still has a home at level 5 of the chains row. Two rules made explicit by the re-cut: a rung must not be able to draw the rung below it (level 2 always reaches past five; level 4 never draws `30+40`), and the answer range travels with the problem rather than the level number — level 3 asks two shapes with two ceilings. Missing number gives up the ladder it was granted a day ago and rides this one rung for rung; a second ladder was a second thing to keep in step, and it fell out of step at the first re-cut. **Zero stays on level 1**, at one problem in twenty rather than one in fifteen: `4+0`, `4−0` and `4−4` are three facts with nowhere else small enough to meet them, so the rung's own «numbers from one to five» is set aside for them rather than widened. The price is paid by the missing-number row, which rides the rung: about one of its level 1 questions in twenty can be read off instead of worked out (`4−□=0`). Catalogue: [MATH.md](MATH.md). |
 | 2026-09-01 | **A battle's length comes from the level, not from King's Bounty health (G7).** Twenty tasks at level 1, then 18, 16, 12, 10 — the easy rungs are the long ones, because easy tasks are quick and want repeating, and the hard rungs are short, because two-digit carrying is slow. Health set the hearts before, on a log scale, which made the hardest opponent the longest one as well: thirty-five carries for an ancient ent against six small sums for a peasant. `heartsFromHealth` is gone with it, and `HEARTS_MIN`/`HEARTS_MAX` are now read off the table rather than written down beside it. The fairy loses her hand-set hearts — the reason for them was that she has no stats, and stats no longer decide. Health stays in the roster as reference data, and stays out of the battle. |
+| 2026-09-01 | **The teacher went quiet, on purpose (T12, O2).** Every spoken line — the question read out, «I did not catch that», the answer after a mistake — goes to `SilentTeacher`, an implementation of the `TextToSpeech` port that drops what it is given. The voice is being replaced, and unplugging it is one line where tearing it out would have been the loop, the lines in the text pack and the port. `WebSpeechTts` stays in the tree, unused, as the worked example of what an implementation looks like; `tts.prepare()` goes with it, since a mute teacher has no voices to wait for. Nothing else changes: the child still answers out loud (P9), the question is still on the screen, and the loop still asks for every line it always asked for. |
+| 2026-09-01 | **The pad came out of hiding, and the voice stopped answering (T18, replacing T5).** Recognition is slow and sometimes wrong, and **T5** turned both facts into a punishment: the answer was whatever the recogniser decided, scored the moment it decided it. So the two jobs are split. The pad is on screen for every task; the microphone is live from the first moment and fills the **same field** the keys do; nothing is sent until «Атака» is pressed. A mishearing is now something to look at and erase rather than a lost heart, and a miss is not even an attempt — the loop listens again with the question still standing, so **C5** has nothing left to forgive and `unrecognised` stops reaching the session from a battle. The draft moved up into `useBattle` because two things write to it, `Promise.race` between voice and keyboard is gone (**A3** amended), and a microphone that dies now costs the mic line rather than the battle. Comparisons follow the same rule for the sake of having one rule: picking a sign selects it, «Атака» sends it. The price is the one **P9** named — buttons in permanent view are the easy way, and it is now available; written down under **T18** rather than glossed over, to be watched on the child. |

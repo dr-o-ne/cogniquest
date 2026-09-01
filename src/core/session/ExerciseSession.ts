@@ -90,7 +90,11 @@ export class ExerciseSession {
 
   /**
    * How many times in a row the current task went unheard.
-   * The interface brings out the fallback input off this counter (T5).
+   *
+   * The screen used to bring out the hidden keypad off this counter (**T5**).
+   * Since **T18** the pad is always there and a miss is not submitted at all, so
+   * a battle leaves this at zero — it stays because a session is not only a
+   * battle, and an input that can miss is still a thing the engine knows about.
    */
   get unheardInARow(): number {
     return this.unheard

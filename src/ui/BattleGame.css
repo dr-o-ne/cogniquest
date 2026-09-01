@@ -433,9 +433,36 @@ img.avatar {
   padding: 1rem 1.5rem;
 }
 
-.fight__bottom .link {
-  font-size: 0.75rem;
-  opacity: 0.5;
+/* Leaving a battle. A proper button rather than faint underlined text — it has a
+   real job and was hard to aim at — but deliberately the quietest thing on the
+   screen: nothing here should compete with «Атака», and there is no «are you
+   sure» waiting behind it. It only comes forward under the cursor. */
+.fight__leave {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.fight__leave:hover {
+  border-color: color-mix(in srgb, var(--fg) 32%, transparent);
+  background: color-mix(in srgb, var(--fg) 9%, transparent);
+  color: var(--fg);
+}
+
+/* Sized apart from the word: an arrow set at the text's own size reads as a
+   punctuation mark rather than as a direction. */
+.fight__leave-arrow {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 /* --- The result of the battle --- */
@@ -485,7 +512,7 @@ img.avatar {
   color: var(--muted);
 }
 
-/* --- The fallback input (T5) --- */
+/* --- The answer pad: on screen for every task (T18) --- */
 
 .pad {
   display: flex;
@@ -542,19 +569,58 @@ img.avatar {
   border-color: #4a7de0;
 }
 
-.pad__key--wide {
-  grid-column: span 5;
+/* Two columns of the bottom row, leaving three for «Атака» */
+.pad__key--erase {
+  grid-column: span 2;
   width: 100%;
-  height: 2.4rem;
-  font-size: 0.95rem;
-  background: #4a7de0;
-  border-color: #4a7de0;
-  color: #fff;
 }
 
-.pad__key--wide:disabled {
+.pad__key:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+/* The only button that answers (T18), so it is the only one painted like it —
+   in both pads, which is why it is not a modifier of .pad__key. Taller and
+   bolder than a digit key: it is the blow, not a keystroke. */
+.pad__send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 2.8rem;
+  min-width: 7.5rem;
+  border: 1px solid #4a7de0;
+  border-radius: 10px;
+  background: #4a7de0;
+  color: #fff;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.pad__send:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px color-mix(in srgb, #4a7de0 40%, transparent);
+}
+
+.pad__send:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The sword keeps its own size: the emoji is drawn small for its box, and left
+   at the label's size it would read as a speck rather than as a weapon. */
+.pad__send-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.pad__keys .pad__send {
+  grid-column: span 3;
+  width: 100%;
 }
 
 /* Brackets sit tight against their numbers — a gap would read as another term */
@@ -607,6 +673,13 @@ img.avatar {
 
 .pad__choice:hover {
   border-color: #4a7de0;
+}
+
+/* Picking is not answering any more (T18), so a pick has to be visible — it sits
+   there waiting to be sent, the same way a typed number does. */
+.pad__choice--picked {
+  border-color: #4a7de0;
+  background: color-mix(in srgb, #4a7de0 14%, var(--bg));
 }
 
 .pad__choice-sign {

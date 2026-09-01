@@ -108,7 +108,9 @@ will later plug into. So the seam is real, not merely drawn.
 
 - [x] the task screen: big numbers, plenty of air, nothing extra
 - [x] voice input as an implementation of `AnswerInput` (**A3**)
-- [x] the fallback input hidden, sliding out after two misses (**T5**)
+- [x] the fallback input hidden, sliding out after two misses (**T5** — replaced
+      by **T18** on 2026-09-01: the pad is on screen for every task, and voice
+      fills it instead of answering)
 - [x] a stand-in teacher: four moods — waiting, listening, delighted, encouraging
 - [x] speech synthesis (**T12**): the teacher reads the problem out, encourages, says the answer when the attempts run out
 - [x] sounds synthesised by an oscillator, no files

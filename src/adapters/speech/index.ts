@@ -1,6 +1,7 @@
 import { publicUrl } from '@/assets'
 
 export { VoskRecognizer } from './VoskRecognizer'
+export { SilentTeacher } from './SilentTeacher'
 export { WebSpeechTts } from './WebSpeechTts'
 
 /** Where the model sits. Put there by `npm run fetch-model`. */

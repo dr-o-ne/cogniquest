@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import type { Exercise, MathOp } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
 import { comparisonSign, comparisonWord, COMPARISONS, type Comparison } from '@/core/math'
@@ -6,11 +6,33 @@ import { availableMonsters, PLAYER_HEARTS, type Monster } from '@/game'
 import { t } from '@/locale'
 import { MonsterAvatar } from './MonsterAvatar'
 import { Teacher } from './Teacher'
-import { useBattle, type GameState } from './useBattle'
+import { useBattle, type Draft, type GameState } from './useBattle'
 import './BattleGame.css'
 
+/**
+ * The four ways the child touches the pad, in one bundle.
+ *
+ * They always travel together, two levels down, and nowhere but to the pad — so
+ * they arrive as one prop rather than as four that have to be threaded through
+ * `FightScreen` one at a time.
+ */
+export interface PadInput {
+  readonly digit: (digit: string) => void
+  readonly erase: () => void
+  readonly choose: (value: Comparison) => void
+  readonly send: (draft: Draft) => void
+}
+
 export function BattleGame() {
-  const { state, setName, fight, submitNumber, submitChoice, toSelect, resetAll } = useBattle()
+  const { state, setName, fight, typeDigit, eraseDigit, chooseComparison, sendAnswer, toSelect, resetAll } =
+    useBattle()
+
+  // Stable, so the pad's keyboard listener is not torn down and rebuilt on
+  // every patch the battle loop makes.
+  const input = useMemo<PadInput>(
+    () => ({ digit: typeDigit, erase: eraseDigit, choose: chooseComparison, send: sendAnswer }),
+    [typeDigit, eraseDigit, chooseComparison, sendAnswer],
+  )
 
   switch (state.screen) {
     case 'loading':
@@ -25,8 +47,7 @@ export function BattleGame() {
       return (
         <FightScreen
           state={state}
-          onNumber={submitNumber}
-          onChoice={submitChoice}
+          input={input}
           onLeave={toSelect}
           onRematch={() => state.monster && void fight(state.monster)}
         />
@@ -139,14 +160,12 @@ function SelectScreen({
 
 function FightScreen({
   state,
-  onNumber,
-  onChoice,
+  input,
   onLeave,
   onRematch,
 }: {
   state: GameState
-  onNumber: (value: number) => void
-  onChoice: (value: Comparison) => void
+  input: PadInput
   onLeave: () => void
   onRematch: () => void
 }) {
@@ -179,13 +198,18 @@ function FightScreen({
       <div className="fight__stage">
         {state.exercise && <Expression exercise={state.exercise} />}
         <MicState state={state} />
-        {state.showFallback && state.exercise && (
-          <Fallback exercise={state.exercise} onNumber={onNumber} onChoice={onChoice} />
-        )}
+        {/* A draft means there is an answer to give, which is the only thing
+            the pad needs to know — no task, no pad. */}
+        {state.draft && <AnswerPad draft={state.draft} input={input} />}
       </div>
 
       <footer className="fight__bottom">
-        <button className="link" onClick={onLeave} tabIndex={-1}>
+        {/* Out of the tab order on purpose: the keys belong to the pad, and a
+            stray Enter must not walk the child out of a battle. */}
+        <button className="fight__leave" onClick={onLeave} tabIndex={-1}>
+          <span className="fight__leave-arrow" aria-hidden="true">
+            ←
+          </span>
           {t.fight.leave}
         </button>
       </footer>
@@ -369,46 +393,40 @@ function Expression({ exercise }: { exercise: Exercise }) {
 }
 
 /**
- * The way in after two misses (T5), matched to what is being asked.
+ * The way in, always on screen (T18), matched to the answer being built.
  *
- * A keypad cannot answer «5 □ 7», so the kind of prompt picks the pad. Written
- * as an exhaustive switch for the same reason the drawing above is: a new kind
- * of task must not quietly inherit a pad that cannot answer it.
+ * A keypad cannot answer «5 □ 7», so the draft's shape picks the pad — the
+ * draft rather than the prompt, because the draft is what the pad fills and
+ * what gets sent. Written as an exhaustive switch for the same reason the
+ * drawing above is: a new kind of answer must not quietly inherit a pad that
+ * cannot send it.
  */
-function Fallback({
-  exercise,
-  onNumber,
-  onChoice,
-}: {
-  exercise: Exercise
-  onNumber: (value: number) => void
-  onChoice: (value: Comparison) => void
-}) {
-  const prompt = exercise.prompt
+function AnswerPad({ draft, input }: { draft: Draft; input: PadInput }) {
+  switch (draft.kind) {
+    case 'number':
+      return <NumberPad digits={draft.digits} input={input} />
 
-  switch (prompt.kind) {
-    // Both are answered with a number — the sum of a chain, or the operand
-    // hidden in an equation.
-    case 'arithmetic':
-    case 'equation':
-      return <NumberPad onSubmit={onNumber} />
-
-    case 'comparison':
-      return <ChoicePad onSubmit={onChoice} />
+    case 'choice':
+      return <ChoicePad value={draft.value} input={input} />
 
     default:
-      return assertNever(prompt, 'exercise prompt')
+      return assertNever(draft, 'answer draft')
   }
 }
 
+/**
+ * One line above the pad, and the freshest news wins it.
+ *
+ * The verdict comes first, then a miss, then what recognition made of what was
+ * said. That last one is worth the space now the voice no longer answers: the
+ * digits in the field cannot show a mishearing, and «семь» heard as «семнадцать»
+ * is precisely what the child needs to see to know to fix it (T18).
+ */
 function MicState({ state }: { state: GameState }) {
-  if (state.flash === 'correct') {
-    return <p className="mic-state mic-state--correct">{state.heard ?? t.mic.correct}</p>
-  }
-  if (state.flash === 'wrong') {
-    return <p className="mic-state mic-state--wrong">{t.mic.heard(state.heard ?? '')}</p>
-  }
+  if (state.flash === 'correct') return <p className="mic-state mic-state--correct">{t.mic.correct}</p>
+  if (state.flash === 'wrong') return <p className="mic-state mic-state--wrong">{t.mic.wrong}</p>
   if (state.flash === 'unheard') return <p className="mic-state">{t.mic.unheard}</p>
+  if (state.heard !== null) return <p className="mic-state">{t.mic.heard(state.heard)}</p>
   if (state.mic === 'listening') return <p className="mic-state mic-state--live">{t.mic.listening}</p>
   return <p className="mic-state">&nbsp;</p>
 }
@@ -418,66 +436,92 @@ function MicState({ state }: { state: GameState }) {
  *
  * The sign is there because it is what the box is waiting for: the child says
  * «меньше», and the button shows them the mark that stands for it.
+ *
+ * Picking one no longer sends it (T18). Three buttons and one more press is a
+ * step this pad does not need for itself — it is here so that there is one rule
+ * for both pads, and so that a sign the voice picked can be looked at before it
+ * counts, exactly like a number.
  */
-function ChoicePad({ onSubmit }: { onSubmit: (value: Comparison) => void }) {
+function ChoicePad({ value, input }: { value: Comparison | null; input: PadInput }) {
   return (
     <div className="pad">
       <p className="pad__hint">{t.pad.hint}</p>
       <div className="pad__choices">
-        {COMPARISONS.map((value) => (
-          <button key={value} className="pad__choice" onClick={() => onSubmit(value)}>
-            <span className="pad__choice-sign">{comparisonSign(value)}</span>
-            <span className="pad__choice-word">{comparisonWord(value)}</span>
+        {COMPARISONS.map((option) => (
+          <button
+            key={option}
+            className={option === value ? 'pad__choice pad__choice--picked' : 'pad__choice'}
+            onClick={() => input.choose(option)}
+          >
+            <span className="pad__choice-sign">{comparisonSign(option)}</span>
+            <span className="pad__choice-word">{comparisonWord(option)}</span>
           </button>
         ))}
       </div>
+      <SendButton onClick={() => input.send({ kind: 'choice', value })} disabled={value === null} />
     </div>
   )
 }
 
-function NumberPad({ onSubmit }: { onSubmit: (value: number) => void }) {
-  const [value, setValue] = useState('')
+/**
+ * The blow. The only button that answers (T18), so the only one that looks like
+ * it — and the sword says which of the two things on screen it is: the pad fills
+ * a field, this lands a hit (G6).
+ *
+ * An emoji rather than a file, the same way the child, the trophy and the hearts
+ * are. A sword is one glyph the system already has, and a battle screen is a
+ * poor place to be waiting on an image to load.
+ */
+function SendButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  return (
+    <button className="pad__send" onClick={onClick} disabled={disabled}>
+      <span className="pad__send-icon" aria-hidden="true">
+        ⚔️
+      </span>
+      {t.pad.submit}
+    </button>
+  )
+}
 
+function NumberPad({ digits, input }: { digits: string; input: PadInput }) {
+  const send = () => input.send({ kind: 'number', digits })
+
+  // The physical keyboard drives the same pad, which is how a grown-up tests a
+  // battle without reaching for the mouse. It belongs here rather than in the
+  // hook: a key is an input device, not a rule of the game.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key >= '0' && event.key <= '9') {
-        setValue((current) => (current.length >= 3 ? current : current + event.key))
-      } else if (event.key === 'Backspace') {
-        setValue((current) => current.slice(0, -1))
-      } else if (event.key === 'Enter') {
-        setValue((current) => {
-          if (current !== '') onSubmit(Number(current))
-          return ''
-        })
-      }
+      if (event.key >= '0' && event.key <= '9') input.digit(event.key)
+      else if (event.key === 'Backspace') input.erase()
+      else if (event.key === 'Enter') send()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onSubmit])
-
-  const send = () => {
-    if (value === '') return
-    onSubmit(Number(value))
-    setValue('')
-  }
+    // `send` is rebuilt every render, but nothing is in it except `digits` and
+    // `input` — so re-subscribing when those change is exactly often enough.
+  }, [digits, input])
 
   return (
     <div className="pad">
       <p className="pad__hint">{t.pad.hint}</p>
-      <div className="pad__value">{value || t.pad.empty}</div>
+      <div className="pad__value">{digits || t.pad.empty}</div>
       <div className="pad__keys">
         {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((digit) => (
-          <button
-            key={digit}
-            className="pad__key"
-            onClick={() => setValue((c) => (c.length >= 3 ? c : c + digit))}
-          >
+          <button key={digit} className="pad__key" onClick={() => input.digit(digit)}>
             {digit}
           </button>
         ))}
-        <button className="pad__key pad__key--wide" onClick={send} disabled={value === ''}>
-          {t.pad.submit}
+        {/* Erase earns its place now the voice writes here too: a misheard
+            number has to be got rid of without the child hunting for a key. */}
+        <button
+          className="pad__key pad__key--erase"
+          onClick={input.erase}
+          disabled={digits === ''}
+          aria-label={t.pad.erase}
+        >
+          ⌫
         </button>
+        <SendButton onClick={send} disabled={digits === ''} />
       </div>
     </div>
   )

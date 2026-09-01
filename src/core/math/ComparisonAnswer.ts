@@ -79,8 +79,8 @@ export class ComparisonAnswer implements AnswerSpec, VoiceAnswerable {
 
   check(attempt: AnswerAttempt): Verdict {
     switch (attempt.kind) {
-      // The fallback pad (T5): three buttons rather than a keypad, so the
-      // answer arrives already decided.
+      // The pad (T18): three signs rather than a keypad, so the answer arrives
+      // already decided — whether the child pointed at it or said it.
       case 'choice':
         return attempt.value === this.value ? 'correct' : 'wrong'
 

@@ -70,7 +70,7 @@ describe('ComparisonAnswer', () => {
     expect(spec.check({ kind: 'text', value: 'больше' })).toBe('wrong')
   })
 
-  it('judges a button on the fallback pad', () => {
+  it('judges a sign picked on the pad', () => {
     expect(spec.check({ kind: 'choice', value: 'less' })).toBe('correct')
     expect(spec.check({ kind: 'choice', value: 'equal' })).toBe('wrong')
   })

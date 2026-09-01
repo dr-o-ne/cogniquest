@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { AnswerAttempt, Exercise, MathOp, Verdict } from '@/core/exercises'
+import type { AnswerAttempt, Exercise, MathOp } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
 import {
   compare,
   comparisonWord,
   createMathExercise,
   evaluate,
+  MAX_NUMBER,
   numberToWords,
+  parseComparison,
+  parseNumber,
   taskChoices,
   type Comparison,
 } from '@/core/math'
+import type { TextToSpeech } from '@/core/ports'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
 import { pick, systemRandom } from '@/core/random'
 import { ExerciseSession } from '@/core/session'
@@ -17,15 +21,39 @@ import { Battle, type BattleState, type Monster } from '@/game'
 import { t } from '@/locale'
 import { playCorrect, playFinish, playUnheard, playWrong } from '@/adapters/audio/sfx'
 import { VoiceAnswerInput } from '@/adapters/input'
-import { RUSSIAN_MODEL_URL, VoskRecognizer, WebSpeechTts } from '@/adapters/speech'
+import { RUSSIAN_MODEL_URL, SilentTeacher, VoskRecognizer } from '@/adapters/speech'
 import { BrowserProfileStorage, PROFILE_KEY } from '@/adapters/storage'
 
-/** This many «did not catch that» in a row and out comes the fallback input (T5). */
-const UNHEARD_BEFORE_FALLBACK = 2
+/** How wide the pad's field gets. The ladder tops out at a hundred (C1). */
+const MAX_DIGITS = String(MAX_NUMBER).length
+
+/**
+ * A breath between one listen and the next, after a miss.
+ *
+ * Normally it is not felt at all: recognition has already sat through 1.2 s of
+ * silence before deciding nothing came. It is here as a floor under the loop —
+ * should recognition ever start failing the instant it is asked, this is what
+ * stops the game spinning on it and puffing «did not catch that» as fast as the
+ * event loop allows.
+ */
+const RELISTEN_PAUSE_MS = 400
 
 export type Mic = 'idle' | 'speaking' | 'listening'
 export type Flash = 'correct' | 'wrong' | 'unheard' | null
 export type Screen = 'loading' | 'error' | 'name' | 'select' | 'fight'
+
+/**
+ * The answer being built, before anything is sent (T18).
+ *
+ * It lives up here rather than inside the pad because two things write into it
+ * — the child's fingers and the child's voice — and one of those is the battle
+ * loop. Its shape is the shape of the answer the task wants, settled once when
+ * the task appears; everything downstream follows the draft rather than asking
+ * the prompt a second time.
+ */
+export type Draft =
+  | { readonly kind: 'number'; readonly digits: string }
+  | { readonly kind: 'choice'; readonly value: Comparison | null }
 
 export interface GameState {
   screen: Screen
@@ -36,8 +64,10 @@ export interface GameState {
   exercise: Exercise | null
   mic: Mic
   flash: Flash
+  /** What recognition made of the last thing said, in its own words. */
   heard: string | null
-  showFallback: boolean
+  /** Null exactly when no answer is being taken — between tasks, and after. */
+  draft: Draft | null
   /** Battles won in total. */
   wins: number
   /** monster id → times beaten. Beaten ones are struck through in the list. */
@@ -46,7 +76,8 @@ export interface GameState {
 
 interface Deps {
   readonly recognizer: VoskRecognizer
-  readonly tts: WebSpeechTts
+  /** The port, not an adapter: the teacher is mute today and will not be. */
+  readonly tts: TextToSpeech
   readonly voiceInput: VoiceAnswerInput
   readonly storage: BrowserProfileStorage
   /** Replaced wholesale on «start over». */
@@ -61,6 +92,21 @@ function deferred<T>() {
     resolve = r
   })
   return { promise, resolve }
+}
+
+/**
+ * Resolves when the signal fires.
+ *
+ * The loop now waits on a button press and nothing else (T18), and the child
+ * may simply walk away from the task — press «выйти», or close the window.
+ * Without something to race that wait against, the loop would sit on a promise
+ * nobody is ever going to resolve, holding the battle alive behind it.
+ */
+function aborted(signal: AbortSignal): Promise<null> {
+  return new Promise((resolve) => {
+    if (signal.aborted) resolve(null)
+    else signal.addEventListener('abort', () => resolve(null), { once: true })
+  })
 }
 
 /**
@@ -149,6 +195,70 @@ function spokenAnswer(exercise: Exercise): string | null {
   }
 }
 
+/**
+ * The empty draft a task is answered into.
+ *
+ * An exhaustive switch for the same reason the drawing and the reading out are:
+ * a new kind of prompt must not quietly inherit a field that cannot hold its
+ * answer. The keypad cannot answer «5 □ 7», and a build that says so beats a
+ * screen that silently offers the wrong pad.
+ */
+function draftFor(exercise: Exercise): Draft {
+  const prompt = exercise.prompt
+
+  switch (prompt.kind) {
+    // Both are answered with a number — the sum of a chain, or the operand
+    // hidden in an equation.
+    case 'arithmetic':
+    case 'equation':
+      return { kind: 'number', digits: '' }
+
+    case 'comparison':
+      return { kind: 'choice', value: null }
+
+    default:
+      return assertNever(prompt, 'exercise prompt')
+  }
+}
+
+/**
+ * What the child said, read into the draft instead of answered with (T18).
+ *
+ * Null when it cannot be read as an answer at all: recognition missed, which
+ * costs nothing and is not the child's fault (C5). Nothing is sent either way —
+ * this only fills the field the child is looking at.
+ */
+function heardAs(kind: Draft['kind'], text: string): Draft | null {
+  switch (kind) {
+    case 'number': {
+      const value = parseNumber(text)
+      return value === null ? null : { kind: 'number', digits: String(value) }
+    }
+
+    case 'choice': {
+      const value = parseComparison(text)
+      return value === null ? null : { kind: 'choice', value }
+    }
+
+    default:
+      return assertNever(kind, 'answer draft')
+  }
+}
+
+/** The draft as an attempt the session can judge. Null while it is still empty. */
+function attemptFrom(draft: Draft): AnswerAttempt | null {
+  switch (draft.kind) {
+    case 'number':
+      return draft.digits === '' ? null : { kind: 'number', value: Number(draft.digits) }
+
+    case 'choice':
+      return draft.value === null ? null : { kind: 'choice', value: draft.value }
+
+    default:
+      return assertNever(draft, 'answer draft')
+  }
+}
+
 const initial: GameState = {
   screen: 'loading',
   error: null,
@@ -159,7 +269,7 @@ const initial: GameState = {
   mic: 'idle',
   flash: null,
   heard: null,
-  showFallback: false,
+  draft: null,
   wins: 0,
   defeated: {},
 }
@@ -168,7 +278,11 @@ export function useBattle() {
   const [state, setState] = useState<GameState>(initial)
   const deps = useRef<Deps | null>(null)
   const runAbort = useRef<AbortController | null>(null)
-  const manualAnswer = useRef<((attempt: AnswerAttempt) => void) | null>(null)
+  /**
+   * Set exactly while an answer is being taken, and the only way one gets sent
+   * (T18). Also the flag for «is the pad live»: no resolver, no editing.
+   */
+  const answer = useRef<((attempt: AnswerAttempt) => void) | null>(null)
 
   const patch = useCallback((changes: Partial<GameState>) => {
     setState((previous) => ({ ...previous, ...changes }))
@@ -180,13 +294,16 @@ export function useBattle() {
     void (async () => {
       try {
         const recognizer = new VoskRecognizer(RUSSIAN_MODEL_URL)
-        const tts = new WebSpeechTts()
+        // Silent while the voice is being chosen (O2). Swap the class and
+        // the teacher speaks again — see SilentTeacher.
+        const tts = new SilentTeacher()
         const storage = new BrowserProfileStorage()
 
+        // WebSpeechTts had a prepare() to wait for its voices; a silent one
+        // has nothing to wait for. The next voice brings its own back here.
         const [saved] = await Promise.all([
           storage.load<ProfileData>(PROFILE_KEY),
           recognizer.load(),
-          tts.prepare(),
         ])
         if (cancelled) return
 
@@ -265,12 +382,50 @@ export function useBattle() {
         battle: battle.state,
         flash: null,
         heard: null,
-        showFallback: false,
+        draft: null,
       })
       session.start()
 
+      /**
+       * Listening on a loop, writing into the draft rather than answering (T18).
+       *
+       * It runs beside the wait for the button instead of racing it, and that is
+       * the whole change: the child can say a number, see it come out wrong, and
+       * say it again, because recognition simply starts over. A miss never
+       * becomes an attempt now — C5 has nothing left to forgive.
+       */
+      const listen = async (exercise: Exercise, kind: Draft['kind'], signal: AbortSignal) => {
+        try {
+          while (!signal.aborted) {
+            const attempt = await d.voiceInput.read(exercise.answer, signal)
+            if (signal.aborted) return
+
+            const text = attempt.kind === 'text' ? attempt.value : null
+            const said = text === null ? null : heardAs(kind, text)
+
+            if (said === null) {
+              // Not caught. The line stays up while we listen again, because
+              // «say it once more» is exactly what we are waiting for.
+              playUnheard()
+              patch({ flash: 'unheard', heard: null })
+              await wait(RELISTEN_PAUSE_MS)
+              continue
+            }
+
+            // Wholesale, never added to: what was said is a whole answer, so
+            // the last thing the child expressed is what stands in the field.
+            patch({ draft: said, heard: text, flash: null })
+          }
+        } catch (cause) {
+          if (signal.aborted) return
+          // The microphone gave up. The pad is on screen, so the battle carries
+          // on without it — which it could not do while voice was the only way in.
+          console.warn('Voice input stopped:', cause)
+          patch({ mic: 'idle' })
+        }
+      }
+
       let lastPosition = -1
-      let lastVerdict: Verdict | null = null
 
       while (!battle.finished && !session.finished && !run.signal.aborted) {
         const exercise = session.current
@@ -279,75 +434,68 @@ export function useBattle() {
         const isNewTask = session.position !== lastPosition
         lastPosition = session.position
 
-        patch({ exercise, flash: null, heard: null })
-        if (isNewTask) patch({ showFallback: false })
+        const draft = draftFor(exercise)
+        patch({ exercise, draft, flash: null, heard: null })
 
-        // Repeating the task sounds different depending on why we are back on
-        // it. C5 says a miss is the equipment's fault, not the child's — and
-        // that has to be audible, not just written on screen. The same line for
-        // both tells a child who was never heard that they got it wrong.
-        const line = isNewTask
-          ? questionText(exercise)
-          : lastVerdict === 'unrecognised'
-            ? t.teacher.didNotCatch
-            : t.teacher.tryAgain
+        // Coming back to a task sounds different from being asked it: «try once
+        // more», not the problem read out again. A miss no longer brings us back
+        // here at all — the listening loop above deals with it, and the task is
+        // never answered (C5), so there is only one reason left to repeat.
+        const line = isNewTask ? questionText(exercise) : t.teacher.tryAgain
 
         patch({ mic: 'speaking' })
         await d.tts.speak(line, run.signal)
         if (run.signal.aborted) return
 
-        patch({ mic: 'listening' })
         const task = new AbortController()
         const stopTask = () => task.abort()
         run.signal.addEventListener('abort', stopTask, { once: true })
 
-        const manual = deferred<AnswerAttempt>()
-        manualAnswer.current = manual.resolve
+        // An answer nobody can say out loud would leave the mic listening for a
+        // word that is not coming. The pad still takes it.
+        const byVoice = d.voiceInput.canHandle(exercise.answer)
+        patch({ mic: byVoice ? 'listening' : 'idle' })
+        if (byVoice) void listen(exercise, draft.kind, task.signal)
 
-        const attempt = await Promise.race([
-          d.voiceInput.read(exercise.answer, task.signal),
-          manual.promise,
-        ])
+        const sent = deferred<AnswerAttempt>()
+        answer.current = sent.resolve
+        const attempt = await Promise.race([sent.promise, aborted(run.signal)])
 
         task.abort()
-        manualAnswer.current = null
+        answer.current = null
         run.signal.removeEventListener('abort', stopTask)
-        if (run.signal.aborted) return
+        if (attempt === null || run.signal.aborted) return
 
         patch({ mic: 'idle' })
         const positionBefore = session.position
         const result = session.submit(attempt)
         difficulty.onVerdict(result.verdict)
-        lastVerdict = result.verdict
-
-        const heard = attempt.kind === 'text' ? attempt.value : null
 
         if (result.verdict === 'correct') {
           playCorrect()
-          patch({ flash: 'correct', heard, battle: battle.state })
+          patch({ flash: 'correct', battle: battle.state })
           await wait(battle.finished ? 400 : 700)
           continue
         }
 
         if (result.verdict === 'wrong') {
           playWrong()
-          patch({ flash: 'wrong', heard, battle: battle.state })
+          patch({ flash: 'wrong', battle: battle.state })
 
           if (session.position !== positionBefore && !battle.finished) {
-            const answer = spokenAnswer(exercise)
-            if (answer !== null) await d.tts.speak(t.teacher.theAnswerIs(answer), run.signal)
+            const words = spokenAnswer(exercise)
+            if (words !== null) await d.tts.speak(t.teacher.theAnswerIs(words), run.signal)
           }
           await wait(battle.finished ? 400 : 700)
           continue
         }
 
-        // C5: not caught — not one heart suffered.
+        // Unreachable: the pad sends a number or a choice, and the spec that
+        // asked for the pad judges both. Left standing rather than thrown away,
+        // because a mismatch between pad and spec would otherwise be scored as
+        // an ordinary wrong answer, and this is the one place that can say so.
         playUnheard()
-        patch({
-          flash: 'unheard',
-          heard: null,
-          showFallback: session.unheardInARow >= UNHEARD_BEFORE_FALLBACK,
-        })
+        patch({ flash: 'unheard', heard: null })
         await wait(400)
       }
 
@@ -364,6 +512,7 @@ export function useBattle() {
       patch({
         battle: battle.state,
         exercise: null,
+        draft: null,
         mic: 'idle',
         flash: null,
         wins: d.profile.victories,
@@ -373,13 +522,67 @@ export function useBattle() {
     [patch],
   )
 
-  const submitNumber = useCallback((value: number) => {
-    manualAnswer.current?.({ kind: 'number', value })
+  /**
+   * A digit from the pad or from the keyboard.
+   *
+   * A field the microphone filled is a proposal, not something to add to: the
+   * first key the child presses starts the number over. Otherwise «семь» heard
+   * as «семнадцать» plus a corrected 7 makes 177. `heard` is precisely the flag
+   * for «what is in the field came from the microphone» — it is dropped the
+   * moment a finger touches it.
+   */
+  const typeDigit = useCallback((digit: string) => {
+    if (!answer.current) return
+    setState((previous) => {
+      const draft = previous.draft
+      if (draft?.kind !== 'number') return previous
+
+      const digits = previous.heard === null ? draft.digits : ''
+      if (digits.length >= MAX_DIGITS) return previous
+
+      return { ...previous, draft: { kind: 'number', digits: digits + digit }, heard: null }
+    })
   }, [])
 
-  /** The other fallback (T5): three buttons, for a task with no number to type. */
-  const submitChoice = useCallback((value: Comparison) => {
-    manualAnswer.current?.({ kind: 'choice', value })
+  /**
+   * Erase — one digit by hand, but the whole thing when the voice put it there.
+   *
+   * Same reason as above: a mishearing is wrong as a number, not in its last
+   * digit. Taking the tail off «семнадцать» leaves 1, which is not what anybody
+   * meant, so the proposal goes as a whole and the field is clear to answer into.
+   */
+  const eraseDigit = useCallback(() => {
+    if (!answer.current) return
+    setState((previous) => {
+      const draft = previous.draft
+      if (draft?.kind !== 'number' || draft.digits === '') return previous
+
+      const digits = previous.heard === null ? draft.digits.slice(0, -1) : ''
+      return { ...previous, draft: { kind: 'number', digits }, heard: null }
+    })
+  }, [])
+
+  /** Picking one of the three signs. Picking is not sending any more (T18). */
+  const chooseComparison = useCallback((value: Comparison) => {
+    if (!answer.current) return
+    setState((previous) =>
+      previous.draft?.kind === 'choice'
+        ? { ...previous, draft: { kind: 'choice', value }, heard: null }
+        : previous,
+    )
+  }, [])
+
+  /**
+   * Send what is on the screen — the one and only way an answer reaches the
+   * session now (T18).
+   *
+   * The draft comes in from the caller rather than out of state: the pad is
+   * rendered from it, so what arrives here is exactly what the child was
+   * looking at when they pressed the button.
+   */
+  const sendAnswer = useCallback((draft: Draft) => {
+    const attempt = attemptFrom(draft)
+    if (attempt !== null) answer.current?.(attempt)
   }, [])
 
   /** Start over: wipe the profile and ask for a name again. */
@@ -401,6 +604,7 @@ export function useBattle() {
       monster: null,
       battle: null,
       exercise: null,
+      draft: null,
       mic: 'idle',
       flash: null,
     })
@@ -409,8 +613,26 @@ export function useBattle() {
   const toSelect = useCallback(() => {
     runAbort.current?.abort()
     deps.current?.tts.stop()
-    patch({ screen: 'select', monster: null, battle: null, exercise: null, mic: 'idle', flash: null })
+    patch({
+      screen: 'select',
+      monster: null,
+      battle: null,
+      exercise: null,
+      draft: null,
+      mic: 'idle',
+      flash: null,
+    })
   }, [patch])
 
-  return { state, setName, fight, submitNumber, submitChoice, toSelect, resetAll }
+  return {
+    state,
+    setName,
+    fight,
+    typeDigit,
+    eraseDigit,
+    chooseComparison,
+    sendAnswer,
+    toSelect,
+    resetAll,
+  }
 }

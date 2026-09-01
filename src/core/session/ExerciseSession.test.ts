@@ -139,7 +139,7 @@ describe('ExerciseSession', () => {
       expect(s.current?.id).toBe('math:3')
     })
 
-    it('counts consecutive misses for T5', () => {
+    it('counts consecutive misses', () => {
       const s = session([3])
       s.start()
       expect(s.unheardInARow).toBe(0)
