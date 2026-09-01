@@ -5,6 +5,7 @@ import type { AnswerResult } from '@/core/session'
 import { t } from '@/locale'
 import { Battle } from './Battle'
 import {
+  ASKS,
   availableMonsters,
   HEARTS_MAX,
   HEARTS_MIN,
@@ -174,13 +175,16 @@ describe('the monster config', () => {
    * G8: a row comes back on a share of the roster, and the share is taken
    * inside each level band rather than between them.
    *
-   * This is the half of the decision a list cannot hold on its own. Adding an
-   * opponent is one row in an array, and nothing about that row says which side
-   * of the split it lands on — so a band can tilt, or empty out altogether,
-   * without anybody meaning it to. Then «subtraction» starts to mean «the hard
-   * ones», which is the one thing G8 says it must not mean.
+   * This is the half of the decision the table cannot hold on its own. Adding
+   * an opponent is one id in one pile, and nothing about it says whether that
+   * pile was already the fullest — so a band can tilt, or leave a row out
+   * altogether, without anybody meaning it to. Then «subtraction» starts to
+   * mean «the hard ones», which is the one thing G8 says it must not mean.
+   *
+   * Measured off the built monsters rather than off ASKS, so the dealing in
+   * `build` is under test too, and not only the table it reads.
    */
-  describe('the split covers every band', () => {
+  describe('the rows are shared out evenly, band by band', () => {
     /** Shown opponents grouped by the rung they top out at. */
     const bands = () => {
       const byLevel = new Map<number, Monster[]>()
@@ -194,27 +198,54 @@ describe('the monster config', () => {
     const asking = (units: readonly Monster[], kind: TaskKind) =>
       units.filter((monster) => monster.tasks.includes(kind))
 
-    it('both rows are on the selection screen at all', () => {
+    it('every row is on the selection screen at all', () => {
       const shown = availableMonsters()
-      expect(asking(shown, 'addition').length).toBeGreaterThan(0)
-      expect(asking(shown, 'subtraction').length).toBeGreaterThan(0)
-    })
-
-    it('every band offers both rows', () => {
-      for (const [level, units] of bands()) {
-        expect(asking(units, 'addition').length, `no addition at level ${level}`).toBeGreaterThan(0)
-        expect(asking(units, 'subtraction').length, `no subtraction at level ${level}`).toBeGreaterThan(0)
+      for (const kind of Object.keys(ASKS[1]!) as TaskKind[]) {
+        expect(asking(shown, kind).length, `nobody asks ${kind}`).toBeGreaterThan(0)
       }
     })
 
-    it('neither row is a token presence in a band', () => {
-      // A third, floored, and never less than one: a band of six wants two of
-      // each, a band of ten wants three. One opponent out of ten is a row the
-      // child meets by accident rather than one they are being taught.
-      for (const [level, units] of bands()) {
-        const least = Math.max(1, Math.floor(units.length / 3))
-        for (const kind of ['addition', 'subtraction'] as const) {
-          expect(asking(units, kind).length, `${kind} at level ${level}`).toBeGreaterThanOrEqual(least)
+    it('no pile in a band runs more than one ahead of another', () => {
+      // Even, exactly: with a band of seven and three rows the piles are 3/2/2,
+      // and 4/2/1 is the shape that turns a row into a difficulty. A band too
+      // small to hold every row — level 5 is one opponent so far — reads as
+      // «0 or 1 each» and passes, which is the most even it can be.
+      for (const [band, piles] of Object.entries(ASKS)) {
+        const units = bands().get(Number(band)) ?? []
+        const kinds = Object.keys(piles) as TaskKind[]
+        const counts = kinds.map((kind) => asking(units, kind).length)
+        const dealt = counts.reduce((sum, count) => sum + count, 0)
+
+        for (const [i, count] of counts.entries()) {
+          const where = `${kinds[i]} at level ${band}`
+          expect(count, where).toBeGreaterThanOrEqual(Math.floor(dealt / kinds.length))
+          expect(count, where).toBeLessThanOrEqual(Math.ceil(dealt / kinds.length))
+        }
+      }
+    })
+
+    it('only a unit nobody can field resolves through the fallback', () => {
+      // Every unit resolves to a row; the question is by which route. ASKS for
+      // anyone the child can pick, UNDEALT_TASKS for the eighty-odd that have
+      // no picture and never appear. An opponent taking the fallback is the
+      // accident this suite exists for — and does not get this far, since
+      // `build` throws for it and the file would not even load.
+      const dealt = new Set(Object.values(ASKS).flatMap((piles) => Object.values(piles).flat()))
+      for (const monster of MONSTERS) {
+        expect(monster.tasks.length, `${monster.id} asks nothing`).toBeGreaterThan(0)
+        if (dealt.has(monster.id)) continue
+        expect(monster.image, `${monster.id} is fielded on the fallback`).toBeUndefined()
+      }
+    })
+
+    it('the table and the roster agree on which band a unit is in', () => {
+      // The band is written twice — as a key here, as a level in ROSTER — and
+      // a pile under the wrong key would balance a band the child never plays.
+      for (const [band, piles] of Object.entries(ASKS)) {
+        for (const id of Object.values(piles).flat()) {
+          expect(Math.max(...monsterById(id).levels), `${id} is not a level ${band} unit`).toBe(
+            Number(band),
+          )
         }
       }
     })

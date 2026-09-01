@@ -1,16 +1,14 @@
 /**
- * OPPONENT CONFIG.
- *
- * Three tables below, and normally only the second one gets edited:
+ * OPPONENT CONFIG. Four tables, and normally only the middle two get edited:
  *
  *   ROSTER  — every King's Bounty unit and the level it fights at
  *   IMAGES  — pictures. A UNIT WITHOUT A PICTURE NEVER APPEARS IN THE GAME
+ *   ASKS    — which row of the grid each opponent asks, band by band
  *   TUNING  — hand corrections where the level alone gets a unit wrong
  *
- * To add an opponent: drop a picture into public/monsters/ and add a line to
- * IMAGES. Nothing else is needed — both the length of the battle and the
- * difficulty of its tasks come from the unit's level. The display name comes
- * from the text pack (src/locale), keyed by the same id.
+ * To add an opponent: a picture in public/monsters/, a line in IMAGES, the id
+ * in the smallest pile of its band in ASKS, a name in the text pack
+ * (src/locale) under the same id. Length and difficulty come from the level.
  */
 import { publicUrl } from '@/assets'
 import type { TaskKind } from '@/core/math'
@@ -21,14 +19,11 @@ export interface Monster {
   /** Localised display name, from `t.monsters`. */
   readonly name: string
   /**
-   * Which kinds of task this fight draws from — a pool, like `levels`, with
-   * one drawn afresh for every question. A row of the grid per name; an
-   * opponent listing four asks all four, turn about.
-   *
-   * `DEFAULT_TASKS` unless TUNING says otherwise. A kind whose rungs miss this
-   * opponent's levels is simply never drawn (`taskChoices` pairs kind with
-   * level), so a short row like comparing-numbers can ride along in every pool
-   * and still only surface for opponents that reach levels 1–2.
+   * Which rows of the grid this fight draws from — a pool, like `levels`, with
+   * one drawn afresh for every question. Dealt out by ASKS: one row each today,
+   * the run of nothing else the methodology asks for (**G8**). A row whose
+   * rungs miss these levels is simply never drawn (`taskChoices` pairs kind
+   * with level).
    */
   readonly tasks: readonly TaskKind[]
   /** A picture from public/monsters/. No picture, and the unit stays hidden. */
@@ -41,43 +36,31 @@ export interface Monster {
 }
 
 /**
- * How many hearts the child has. One is lost per wrong answer.
- *
- * Set against the longest battle rather than the average one: twenty tasks are
- * twenty chances to collect a mistake simply along the way, and at five hearts
- * a long battle would turn not into «longer» but into «harder».
+ * How many hearts the child has, one lost per wrong answer. Set against the
+ * longest battle, not the average one: at five hearts, twenty tasks would turn
+ * not into «longer» but into «harder».
  */
 export const PLAYER_HEARTS = 6
 
 // ─────────────────────────────────────────────────────────────────────────
-// How a unit's level turns into a battle
-//
-// Both dials come from LEVEL: how many tasks the battle runs to, and which
-// math rungs they are drawn from. HEALTH no longer enters into it. It used to
-// set the hearts on a log scale, which balanced the wrong thing — health is a
-// King's Bounty number tuned for King's Bounty fights, and it made the hardest
-// opponent the longest one as well, thirty-five tasks for an ancient ent.
-//
-// The two dials now run in opposite directions, on purpose. Easy tasks are
-// quick and want repeating, so a level 1 battle is twenty of them; two-digit
-// carrying is slow and expensive to hold, so a level 5 battle is ten.
+// How a unit's level turns into a battle (G7)
 //
 // Math levels (C1, see docs/MATH.md):
 //   1 — ± within five                    4 — two-digit, nothing carried
 //   2 — ± up to ten, the ten not crossed  5 — two-digit, the units overflow
 //   3 — across the ten, and whole tens to a hundred
 //
-// A unit's own level is a King's Bounty number and runs 1–5; the math ladder
-// is a different list that will grow past five. BY_LEVEL below is the join
-// between them, and it is the one place that has to be re-cut when it does.
+// A unit's level is a King's Bounty number, 1–5; the math ladder is a separate
+// list that will grow past five. BY_LEVEL is the join, and the one place to
+// re-cut when it does.
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * What a unit's level is worth: how many tasks its battle runs to, which math
- * rungs (C1) they are drawn from, and the colour of its card.
+ * What a level is worth: the length of the battle, the rungs (C1) it draws
+ * from, the colour of the card.
  *
- * Hearts fall as the rungs rise. Twenty bonds within five is a warm-up a child
- * can hold; twenty two-digit carries is an evening's work.
+ * Hearts fall as the rungs rise — twenty bonds within five is a warm-up, twenty
+ * two-digit carries is an evening's work.
  */
 const BY_LEVEL: Record<number, { hearts: number; levels: number[]; color: string }> = {
   1: { hearts: 20, levels: [1], color: '#7cb342' },
@@ -88,21 +71,17 @@ const BY_LEVEL: Record<number, { hearts: number; levels: number[]; color: string
 }
 
 /**
- * How long the shortest and longest battles are — read off the table rather
- * than written down beside it, so a re-tuned rung cannot leave them behind.
- *
- * Worth having because TUNING may still set hearts by hand, and a slip there
- * is how a battle of forty questions would arrive.
+ * The shortest and longest battles, read off the table rather than written
+ * down beside it. TUNING can still set hearts by hand, and a slip there is how
+ * a battle of forty questions would arrive.
  */
 const HEARTS_PER_LEVEL = Object.values(BY_LEVEL).map((battle) => battle.hearts)
 export const HEARTS_MIN = Math.min(...HEARTS_PER_LEVEL)
 export const HEARTS_MAX = Math.max(...HEARTS_PER_LEVEL)
 
 // ─────────────────────────────────────────────────────────────────────────
-// IMAGES — who takes part in the game
-//
-// The key is a unit id from ROSTER. Units missing here never show up on the
-// selection screen, even though they are in the roster.
+// IMAGES — who takes part in the game. Keyed by a ROSTER id; a unit missing
+// here stays in the roster and off the selection screen.
 // ─────────────────────────────────────────────────────────────────────────
 
 const IMAGES: Record<string, string> = {
@@ -136,99 +115,80 @@ const IMAGES: Record<string, string> = {
   pyromancer: '/monsters/pyromancer.webp',
   knight: '/monsters/knight.webp',
   paladin: '/monsters/paladin.webp',
-  // Off the selection screen for now — he is wanted, but not yet within reach.
-  // Uncomment when level 5 sums stop being a wall.
-  // archdemon: '/monsters/archdemon.webp',
+  archdemon: '/monsters/archdemon.webp',
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// TUNING — hand corrections to the computed values
-//
-// Going by level alone gives every unit of a level the same battle. Here they
-// can be pulled apart by character: one tough, another quick and nasty.
+// ASKS — which row of the grid each opponent asks. Then TUNING, where a unit
+// can be pulled away from what its level computes.
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * What an opponent asks unless it is on the other side of the split, or TUNING
- * overrides it outright.
+ * Who asks what: a pile of ids per row, grouped by level band (**G8** — why a
+ * row takes a share of the roster, and why the share is even inside a band).
  *
- * Addition alone at the moment. The rows still parked in `core/math/kinds` are
- * listed below and would not compile until they come back.
+ * Adding an opponent: its id goes in the smallest pile of its band. Bringing a
+ * row back: a new key in every band — the `Record` is full, so nothing compiles
+ * until each band has said what it gives the row — then take one id from each of
+ * the fullest piles. «The rows are shared out evenly, band by band» in
+ * Battle.test.ts holds the shares — no pile more than one ahead of another —
+ * and `build` throws outright for an opponent with a picture and no pile.
  *
- * Chains (`addition-subtraction`) were never in this default even so: they need
- * a two-digit-carrying head for level 4, so they belong to opponents chosen for
- * it, not to a peasant.
+ * A band is the unit's level, which is also its top rung (see BY_LEVEL).
  */
-const DEFAULT_TASKS: readonly TaskKind[] = [
-  'addition',
-  // 'missing-number',
-  // 'comparing-numbers',
-]
-
-/** The other side of the split (G8). One row, nothing mixed into it. */
-const SUBTRACTION_TASKS: readonly TaskKind[] = ['subtraction']
-
-/**
- * Which opponents are on it (**G8**).
- *
- * A row comes back on a share of the roster rather than in every pool, because
- * a battle is already a run of one row — ten to twenty tasks of nothing else —
- * and that is the run the methodology asks for before a row joins the draw. The
- * child meets both rows in a session and one row in a battle.
- *
- * **The share is taken inside each level band and never between them.** Were
- * the subtraction opponents the hard ones, «subtraction» would quietly become a
- * name for a difficulty, and **G7** has two dials already. «The split covers
- * every band» in Battle.test.ts holds it, so a new opponent cannot tilt a band
- * unnoticed — a list on its own could not, since nothing about a roster row
- * says which side it lands on.
- *
- * A list and not a rule, deliberately. Faction was the tempting rule — the
- * undead and the demons take away — and it does not divide: at level 2 they are
- * two opponents out of ten. A rule bent until the numbers work is worse than a
- * list that says what it is.
- */
-const SUBTRACTS: ReadonlySet<string> = new Set([
-  // level 1
-  'robber',
-  'skeleton',
-  'skeleton-archer',
-  // level 2
-  'zombie',
-  'imp',
-  'pirate',
-  'swordsman',
-  'fire-spider',
-  // level 3
-  'gorgul',
-  'inquisitor',
-  'sky-guard',
-  // level 4
-  'archmage',
-  'cavalryman',
-  'paladin',
-])
-
-const TUNING: Record<
-  string,
-  { hearts?: number; levels?: number[]; tasks?: TaskKind[] }
-> = {
-  // Off the addition/subtraction split entirely: the goblin asks comparing
-  // numbers, its own row for the length of a battle. Rungs 1–2 here (numbers),
-  // and — when `addition-subtraction` comes back — this is also where the whole
-  // list would be spelled out for chains.
-  goblin: { tasks: ['comparing-numbers'] },
-  // The other comparing-numbers opponent, up where the sides are expressions
-  // to work out first — rungs 3–4 (levels [3, 4]).
-  assassin: { tasks: ['comparing-numbers'] },
+export const ASKS: Record<number, Record<TaskKind, readonly string[]>> = {
+  1: {
+    addition: ['gobot', 'peasant', 'sea-devil'],
+    subtraction: ['robber', 'skeleton'],
+    'comparing-numbers': ['forest-fairy', 'skeleton-archer'],
+  },
+  2: {
+    addition: ['adult-gobot', 'archer', 'mage-slayer', 'priest'],
+    subtraction: ['imp', 'pirate', 'zombie'],
+    'comparing-numbers': ['fire-spider', 'goblin', 'swordsman'],
+  },
+  3: {
+    addition: ['guardsman', 'scout'],
+    subtraction: ['gorgul', 'inquisitor'],
+    'comparing-numbers': ['ghost-pirate', 'sky-guard'],
+  },
+  4: {
+    addition: ['ancient-vampire-bat', 'knight', 'pyromancer'],
+    subtraction: ['archmage', 'cavalryman'],
+    'comparing-numbers': ['assassin', 'paladin'],
+  },
+  5: {
+    // One opponent, so one row — «even» here can only mean 0 or 1 each.
+    addition: ['archdemon'],
+    subtraction: [],
+    'comparing-numbers': [],
+  },
 }
 
+/** id → the rows it asks, read off ASKS once at load. */
+const ASKED_BY: ReadonlyMap<string, readonly TaskKind[]> = (() => {
+  const dealt = new Map<string, TaskKind[]>()
+  for (const piles of Object.values(ASKS)) {
+    for (const [kind, ids] of Object.entries(piles) as [TaskKind, readonly string[]][]) {
+      for (const id of ids) dealt.set(id, [...(dealt.get(id) ?? []), kind])
+    }
+  }
+  return dealt
+})()
+
+/**
+ * What a unit asks when ASKS does not name it — only the picture-less ones,
+ * which never appear; listing all hundred would be upkeep for nobody. The test
+ * above holds the other half: a unit with a picture is dealt its row by hand.
+ */
+const UNDEALT_TASKS: readonly TaskKind[] = ['addition']
+
+/** Hand corrections to what the level computes (**G7**). Empty today. */
+const TUNING: Record<string, { hearts?: number; levels?: number[] }> = {}
+
 // ─────────────────────────────────────────────────────────────────────────
-// ROSTER — every unit
-//
-// id · level. The battle is worked out from the level alone (see BY_LEVEL);
-// King's Bounty's own combat stats are not part of it and are not carried.
-// Ordered by level, then by id.
+// ROSTER — every unit, as id · level, ordered by level then id. The battle
+// comes from the level alone; King's Bounty's combat stats are not carried.
 // ─────────────────────────────────────────────────────────────────────────
 
 type Row = readonly [id: string, level: number]
@@ -371,12 +331,20 @@ function build(row: Row): Monster {
   const tuned = TUNING[id] ?? {}
   const image = IMAGES[id]
 
+  // A unit on the selection screen must be dealt its row by hand. Letting it
+  // take UNDEALT_TASKS instead would put it on addition without a word and
+  // tilt its band (**G8**), and a tilted band is not something the game shows.
+  const asked = ASKED_BY.get(id)
+  if (image !== undefined && asked === undefined) {
+    throw new RangeError(`Unit ${id} has a picture but no pile in ASKS`)
+  }
+
   return {
     id,
     // Falling back to the id keeps a missing translation visible instead of
     // blank. A test makes sure it never actually comes to that.
     name: t.monsters[id] ?? id,
-    tasks: tuned.tasks ?? (SUBTRACTS.has(id) ? SUBTRACTION_TASKS : DEFAULT_TASKS),
+    tasks: asked ?? UNDEALT_TASKS,
     // Written as a root path in IMAGES, resolved against wherever the app is
     // actually served from — see src/assets.ts.
     ...(image !== undefined ? { image: publicUrl(image) } : {}),
@@ -390,9 +358,8 @@ function build(row: Row): Monster {
 export const MONSTERS: readonly Monster[] = ROSTER.map(build)
 
 /**
- * Who is shown on the selection screen: only units that have a picture.
- * Ordered from the easiest tasks to the hardest, so the ladder reads at a
- * glance — which is also, now, from the longest battle to the shortest.
+ * Who is shown on the selection screen: units with a picture, easiest tasks
+ * first — which is also longest battle first (**G7**).
  */
 export function availableMonsters(): readonly Monster[] {
   return MONSTERS.filter((monster) => monster.image !== undefined).sort(

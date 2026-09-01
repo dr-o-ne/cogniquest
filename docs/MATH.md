@@ -65,8 +65,8 @@ rather than for this document, answered by **G8** in [DECISIONS.md](DECISIONS.md
 **Comparing numbers came back second, re-cut to a full five rungs.** The old
 two-rung form stopped where the numerals do; the new one climbs past that by
 comparing sums instead of bare numbers from level 3 on — `13 − 6 □ 30 + 40` —
-so nothing over a hundred ever has to be named, only worked out. Its two
-opponents ask it and nothing else, the run the methodology asks for.
+so nothing over a hundred ever has to be named, only worked out. Its share of
+the opponents ask it and nothing else, the run the methodology asks for.
 
 Our rungs are not always the grid's. It asks for three numbers at level 3,
 where we put two-digit-without-carrying, so that each rung introduces one
