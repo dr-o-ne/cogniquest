@@ -115,6 +115,19 @@ const IMAGES: Record<string, string> = {
   pyromancer: '/monsters/pyromancer.webp',
   knight: '/monsters/knight.webp',
   paladin: '/monsters/paladin.webp',
+  hyena: '/monsters/hyena.webp',
+  wolf: '/monsters/wolf.webp',
+  snake: '/monsters/snake.webp',
+  'swamp-snake': '/monsters/swamp-snake.webp',
+  bear: '/monsters/bear.webp',
+  'ancient-bear': '/monsters/ancient-bear.webp',
+  'white-wolf': '/monsters/white-wolf.webp',
+  'frost-spider': '/monsters/frost-spider.webp',
+  griffin: '/monsters/griffin.webp',
+  beholder: '/monsters/beholder.webp',
+  'evil-beholder': '/monsters/evil-beholder.webp',
+  'royal-griffin': '/monsters/royal-griffin.webp',
+  'royal-thorn': '/monsters/royal-thorn.webp',
   archdemon: '/monsters/archdemon.webp',
 }
 
@@ -143,19 +156,19 @@ export const ASKS: Record<number, Record<TaskKind, readonly string[]>> = {
     'comparing-numbers': ['forest-fairy', 'skeleton-archer'],
   },
   2: {
-    addition: ['adult-gobot', 'archer', 'mage-slayer', 'priest'],
-    subtraction: ['imp', 'pirate', 'zombie'],
-    'comparing-numbers': ['fire-spider', 'goblin', 'swordsman'],
+    addition: ['adult-gobot', 'archer', 'mage-slayer', 'priest', 'wolf'],
+    subtraction: ['hyena', 'imp', 'pirate', 'snake', 'zombie'],
+    'comparing-numbers': ['fire-spider', 'goblin', 'swamp-snake', 'swordsman'],
   },
   3: {
-    addition: ['guardsman', 'scout'],
-    subtraction: ['gorgul', 'inquisitor'],
-    'comparing-numbers': ['ghost-pirate', 'sky-guard'],
+    addition: ['beholder', 'griffin', 'guardsman', 'scout'],
+    subtraction: ['bear', 'gorgul', 'inquisitor', 'white-wolf'],
+    'comparing-numbers': ['ancient-bear', 'frost-spider', 'ghost-pirate', 'sky-guard'],
   },
   4: {
-    addition: ['ancient-vampire-bat', 'knight', 'pyromancer'],
-    subtraction: ['archmage', 'cavalryman'],
-    'comparing-numbers': ['assassin', 'paladin'],
+    addition: ['ancient-vampire-bat', 'knight', 'pyromancer', 'royal-thorn'],
+    subtraction: ['archmage', 'cavalryman', 'evil-beholder'],
+    'comparing-numbers': ['assassin', 'paladin', 'royal-griffin'],
   },
   5: {
     // One opponent, so one row — «even» here can only mean 0 or 1 each.
