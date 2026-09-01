@@ -37,21 +37,3 @@ export class BrowserProfileStorage implements ProfileStorage {
     }
   }
 }
-
-/** In-memory storage: for tests, and for when the browser one is unavailable. */
-export class MemoryProfileStorage implements ProfileStorage {
-  private readonly map = new Map<string, string>()
-
-  async load<T>(key: string): Promise<T | null> {
-    const raw = this.map.get(key)
-    return raw === undefined ? null : (JSON.parse(raw) as T)
-  }
-
-  async save<T>(key: string, value: T): Promise<void> {
-    this.map.set(key, JSON.stringify(value))
-  }
-
-  async remove(key: string): Promise<void> {
-    this.map.delete(key)
-  }
-}

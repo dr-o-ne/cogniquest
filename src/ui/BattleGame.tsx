@@ -16,7 +16,7 @@ import './BattleGame.css'
  * they arrive as one prop rather than as four that have to be threaded through
  * `FightScreen` one at a time.
  */
-export interface PadInput {
+interface PadInput {
   readonly digit: (digit: string) => void
   readonly erase: () => void
   readonly choose: (value: Comparison) => void

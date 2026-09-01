@@ -38,9 +38,9 @@ const MAX_DIGITS = String(MAX_NUMBER).length
  */
 const RELISTEN_PAUSE_MS = 400
 
-export type Mic = 'idle' | 'speaking' | 'listening'
-export type Flash = 'correct' | 'wrong' | 'unheard' | null
-export type Screen = 'loading' | 'error' | 'name' | 'select' | 'fight'
+type Mic = 'idle' | 'speaking' | 'listening'
+type Flash = 'correct' | 'wrong' | 'unheard' | null
+type Screen = 'loading' | 'error' | 'name' | 'select' | 'fight'
 
 /**
  * The answer being built, before anything is sent (T18).

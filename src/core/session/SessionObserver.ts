@@ -23,13 +23,6 @@ export interface AnswerResult {
   readonly attemptNumber: number
 }
 
-export type HintKind = 'fingers' | 'numberLine' | 'sound' | 'text'
-
-export interface Hint {
-  readonly kind: HintKind
-  readonly text?: string
-}
-
 export interface SessionResult {
   readonly sessionId: string
   /** How many tasks we got to show. */
@@ -52,6 +45,5 @@ export interface SessionObserver {
   onSessionStarted?(info: SessionInfo): void
   onTaskPresented?(exercise: Exercise): void
   onAnswerAccepted?(result: AnswerResult): void
-  onHintShown?(hint: Hint): void
   onSessionFinished?(result: SessionResult): void
 }

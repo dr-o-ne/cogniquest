@@ -4,7 +4,7 @@ import { randomInt, type Random } from '../random'
 import { ArithmeticAnswer } from './ArithmeticAnswer'
 
 /** One bracketed run of terms, worked out before the rest of the chain. */
-export interface Bracket {
+interface Bracket {
   readonly from: number
   readonly to: number
 }

@@ -170,7 +170,8 @@ there is no half-written scaffolding to hide a leak in.
 - **decide G5:** Rive, or 3D through an AI pipeline
 - a `TeacherView` implementation behind abstraction **A10**
 - two to four characters, a selection screen (**G3**)
-- reactions bound to **A4** events: correct answer, mistake, hint, end of session
+- reactions bound to **A4** events: correct answer, mistake, end of session — and a
+  hint, once hints exist and the seam carries an event for them again
 - costumes and lines as data (**A6**)
 
 **Done when:** the child has picked a character and calls them by name.

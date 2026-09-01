@@ -23,10 +23,10 @@ import { MATH_LEVELS } from './levels'
  * **Addition and subtraction are asked; the other three rows are parked.** They
  * are written and still under test — their generators, their rules and their
  * test files are untouched — but not drawn while they go back one at a time.
- * Parked, not deleted: a row is commented out in exactly four places, this
- * union, `TASK_KINDS`, `RUNGS` and the switch at the foot of the file, plus its
- * import at the top. Uncomment those and the row is playable again, along with
- * whatever in game/monsters.ts offers it to an opponent.
+ * Parked, not deleted: a row is commented out in exactly three places, this
+ * union, `RUNGS` and the switch at the foot of the file, plus its import at the
+ * top. Uncomment those and the row is playable again, along with whatever in
+ * game/monsters.ts offers it to an opponent.
  *
  * Subtraction needed no import of its own, which is why it came back first: it
  * shares `generateProblem` with addition and passes it a different operation.
@@ -38,15 +38,6 @@ export type TaskKind =
 // | 'addition-subtraction'
 // | 'missing-number'
 // | 'comparing-numbers'
-
-/** Every kind that exists today, for defaults and for tests. */
-export const TASK_KINDS: readonly TaskKind[] = [
-  'addition',
-  'subtraction',
-  // 'addition-subtraction',
-  // 'missing-number',
-  // 'comparing-numbers',
-]
 
 /**
  * Which levels each kind actually has a rung on.

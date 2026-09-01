@@ -2,9 +2,9 @@ import type { Verdict } from '../exercises'
 import { FIRST_LEVEL } from '../math/levels'
 
 /** Three mistakes in a row and the level quietly drops a step (C4). */
-export const MISTAKES_BEFORE_EASING = 3
+const MISTAKES_BEFORE_EASING = 3
 /** Five correct in a row and we climb back. */
-export const CORRECT_BEFORE_RESTORING = 5
+const CORRECT_BEFORE_RESTORING = 5
 
 /**
  * The invisible difficulty adjustment (C4).

@@ -21,7 +21,7 @@ export {
   generateEquation,
   type Equation,
 } from './equations'
-export { createMathExercise, levelsFor, TASK_KINDS, taskChoices, type TaskKind } from './kinds'
+export { createMathExercise, levelsFor, taskChoices, type TaskKind } from './kinds'
 export {
   describe,
   evaluate,

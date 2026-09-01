@@ -3,7 +3,7 @@
  * after 1, then 3, then 7 sessions. Survive all three and we call it learned
  * and forget it.
  */
-export const REVIEW_INTERVALS = [1, 3, 7] as const
+const REVIEW_INTERVALS = [1, 3, 7] as const
 
 export interface ReviewItem {
   readonly exerciseId: string

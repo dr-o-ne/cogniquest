@@ -10,7 +10,4 @@ import { ru } from './ru'
  */
 export const t = ru
 
-/** Shape every future text pack has to satisfy. */
-export type Locale = typeof ru
-
 export { ru }

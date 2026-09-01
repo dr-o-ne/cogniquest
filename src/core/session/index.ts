@@ -1,7 +1,5 @@
 export type {
   AnswerResult,
-  Hint,
-  HintKind,
   SessionInfo,
   SessionObserver,
   SessionResult,
