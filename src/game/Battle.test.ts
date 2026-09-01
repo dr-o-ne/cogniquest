@@ -140,20 +140,6 @@ describe('the monster config', () => {
     }
   })
 
-  it('stats were carried over without loss', () => {
-    const dragon = monsterById('black-dragon')
-    expect(dragon.stats).toEqual({
-      level: 5,
-      leadership: 2500,
-      attack: 70,
-      defense: 70,
-      initiative: 6,
-      speed: 8,
-      health: 1000,
-      damage: '110–130',
-    })
-  })
-
   it('the stronger the unit, the harder the tasks — and the shorter the battle', () => {
     const peasant = monsterById('peasant')
     const dragon = monsterById('black-dragon')
@@ -248,8 +234,9 @@ describe('the monster config', () => {
       const goblin = monsterById('goblin')
 
       // The zombie used to outlast the goblin by four tasks for having more
-      // health. Health is King's Bounty balance, not a child's practice.
-      expect(zombie.stats!.health).toBeGreaterThan(goblin.stats!.health)
+      // King's Bounty health. Health is that game's balance, not a child's
+      // practice — it is no longer carried, and both units are level 2, so
+      // both get the same battle.
       expect(zombie.hearts).toBe(goblin.hearts)
     })
 
@@ -269,10 +256,9 @@ describe('the monster config', () => {
       }
     })
 
-    it('a unit with no stats still gets a battle from its level', () => {
+    it('a unit gets its battle from its level alone', () => {
       const fairy = monsterById('forest-fairy')
 
-      expect(fairy.stats).toBeUndefined()
       expect(fairy.hearts).toBe(20)
     })
   })

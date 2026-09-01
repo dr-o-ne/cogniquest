@@ -7,5 +7,4 @@ export {
   monsterById,
   PLAYER_HEARTS,
   type Monster,
-  type UnitStats,
 } from './monsters'
