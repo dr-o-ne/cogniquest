@@ -4,14 +4,9 @@ import { ArithmeticAnswer, taskChoices, type TaskKind } from '@/core/math'
 import type { AnswerResult } from '@/core/session'
 import { t } from '@/locale'
 import { Battle } from './Battle'
-import {
-  availableMonsters,
-  HEARTS_MAX,
-  HEARTS_MIN,
-  MONSTERS,
-  monsterById,
-  type Monster,
-} from './monsters'
+import { playerHeartsFor, type Encounter } from './encounter'
+import { heartsPerStack } from './journey'
+import { availableMonsters, MONSTERS, monsterById, type Monster } from './monsters'
 
 const exercise: Exercise = {
   id: 'math:2+3',
@@ -33,51 +28,65 @@ const dummy: Monster = {
   id: 'test',
   tasks: ['addition'],
   name: 'Test',
-  hearts: 3,
+  level: 1,
   levels: [1],
   color: '#000',
 }
 
+/** A squad of `hearts.length` stacks, each holding the hearts given. */
+function squad(...hearts: number[]): Encounter {
+  return {
+    id: 'squad',
+    stacks: hearts.map((count) => ({ monster: dummy, hearts: count })),
+    levels: [1],
+    tasks: ['addition'],
+    kind: 'road',
+    gold: 0,
+  }
+}
+
+const solo = squad(3)
+
 describe('Battle', () => {
-  it('a correct answer takes a heart off the monster', () => {
-    const battle = new Battle(dummy, 5)
+  it('a correct answer takes a heart off the stack in front', () => {
+    const battle = new Battle(solo, 5)
     battle.onAnswerAccepted(answer('correct'))
 
-    expect(battle.state.monsterHearts).toBe(2)
+    expect(battle.state.stacks[0]!.hearts).toBe(2)
     expect(battle.state.playerHearts).toBe(5)
     expect(battle.state.lastHit).toBe('monster')
   })
 
   it('a mistake takes a heart off the child', () => {
-    const battle = new Battle(dummy, 5)
+    const battle = new Battle(solo, 5)
     battle.onAnswerAccepted(answer('wrong'))
 
     expect(battle.state.playerHearts).toBe(4)
-    expect(battle.state.monsterHearts).toBe(3)
+    expect(battle.state.stacks[0]!.hearts).toBe(3)
     expect(battle.state.lastHit).toBe('player')
   })
 
   it('C5: a miss costs not a single heart', () => {
-    const battle = new Battle(dummy, 5)
+    const battle = new Battle(solo, 5)
     feed(battle, 'unrecognised', 10)
 
     expect(battle.state.playerHearts).toBe(5)
-    expect(battle.state.monsterHearts).toBe(3)
+    expect(battle.state.stacks[0]!.hearts).toBe(3)
     expect(battle.state.lastHit).toBeNull()
     expect(battle.finished).toBe(false)
   })
 
-  it('the monster runs out of hearts — the child wins', () => {
-    const battle = new Battle(dummy, 5)
+  it('the last stack falls — the child wins', () => {
+    const battle = new Battle(solo, 5)
     feed(battle, 'correct', 3)
 
     expect(battle.finished).toBe(true)
     expect(battle.state.winner).toBe('player')
-    expect(battle.state.monsterHearts).toBe(0)
+    expect(battle.state.stacks[0]!.hearts).toBe(0)
   })
 
   it('the child runs out of hearts — the monster wins', () => {
-    const battle = new Battle(dummy, 2)
+    const battle = new Battle(solo, 2)
     feed(battle, 'wrong', 2)
 
     expect(battle.finished).toBe(true)
@@ -85,7 +94,7 @@ describe('Battle', () => {
   })
 
   it('answers change nothing once the battle is over', () => {
-    const battle = new Battle(dummy, 5)
+    const battle = new Battle(solo, 5)
     feed(battle, 'correct', 3)
     feed(battle, 'wrong', 10)
 
@@ -94,14 +103,83 @@ describe('Battle', () => {
   })
 
   it('hearts never go negative', () => {
-    const battle = new Battle(dummy, 1)
+    const battle = new Battle(solo, 1)
     feed(battle, 'wrong', 5)
     expect(battle.state.playerHearts).toBe(0)
   })
 
   it('a battle without hearts makes no sense', () => {
-    expect(() => new Battle(dummy, 0)).toThrow(RangeError)
-    expect(() => new Battle({ ...dummy, hearts: 0 })).toThrow(RangeError)
+    expect(() => new Battle(solo, 0)).toThrow(RangeError)
+    expect(() => new Battle(squad(0))).toThrow(RangeError)
+    expect(() => new Battle(squad())).toThrow(RangeError)
+  })
+})
+
+/**
+ * A squad is the length dial (G7 as amended): the level says how hard the
+ * questions are, the number of stacks says how long the battle runs. Which is
+ * also why a stack falling matters — it is a win every few tasks instead of
+ * one at the end.
+ */
+describe('a battle against a squad', () => {
+  it('stacks fall front to back, one at a time', () => {
+    const battle = new Battle(squad(2, 2, 2), 5)
+
+    feed(battle, 'correct', 2)
+    expect(battle.state.stacks[0]!.hearts).toBe(0)
+    expect(battle.state.stacks[1]!.hearts).toBe(2)
+    expect(battle.state.target).toBe(1)
+    expect(battle.finished).toBe(false)
+
+    feed(battle, 'correct', 2)
+    expect(battle.state.target).toBe(2)
+    expect(battle.state.stacks[2]!.hearts).toBe(2)
+    expect(battle.finished).toBe(false)
+  })
+
+  it('the win comes only when the last stack falls', () => {
+    const battle = new Battle(squad(1, 1, 1, 1, 1), 5)
+
+    feed(battle, 'correct', 4)
+    expect(battle.finished).toBe(false)
+
+    battle.onAnswerAccepted(answer('correct'))
+    expect(battle.finished).toBe(true)
+    expect(battle.state.winner).toBe('player')
+  })
+
+  it('a felled stack is announced once, so the screen can drop it', () => {
+    const battle = new Battle(squad(2, 2), 5)
+
+    battle.onAnswerAccepted(answer('correct'))
+    expect(battle.state.felled).toBeNull()
+
+    battle.onAnswerAccepted(answer('correct'))
+    expect(battle.state.felled).toBe(0)
+
+    // The next answer is about the next stack; the fall is old news.
+    battle.onAnswerAccepted(answer('correct'))
+    expect(battle.state.felled).toBeNull()
+  })
+
+  it('a mistake costs the child a heart whichever stack is in front', () => {
+    const battle = new Battle(squad(1, 3), 5)
+
+    feed(battle, 'correct', 1)
+    feed(battle, 'wrong', 2)
+
+    expect(battle.state.playerHearts).toBe(3)
+    expect(battle.state.stacks[1]!.hearts).toBe(3)
+    expect(battle.state.target).toBe(1)
+  })
+
+  it('the length of the battle is the squad added up', () => {
+    const battle = new Battle(squad(5, 5, 5, 5), 40)
+    feed(battle, 'correct', 19)
+    expect(battle.finished).toBe(false)
+
+    battle.onAnswerAccepted(answer('correct'))
+    expect(battle.finished).toBe(true)
   })
 })
 
@@ -111,9 +189,10 @@ describe('the monster config', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('every unit has hearts and at least one task level', () => {
+  it('every unit has a level and at least one task level', () => {
     for (const monster of MONSTERS) {
-      expect(monster.hearts).toBeGreaterThanOrEqual(1)
+      expect(monster.level).toBeGreaterThanOrEqual(1)
+      expect(monster.level).toBeLessThanOrEqual(5)
       expect(monster.levels.length).toBeGreaterThan(0)
       for (const level of monster.levels) {
         expect(level).toBeGreaterThanOrEqual(1)
@@ -145,8 +224,7 @@ describe('the monster config', () => {
     const dragon = monsterById('black-dragon')
 
     expect(Math.max(...dragon.levels)).toBeGreaterThan(Math.max(...peasant.levels))
-    // The other way round the hardest opponent would also be the longest.
-    expect(dragon.hearts).toBeLessThan(peasant.hearts)
+    expect(dragon.level).toBeGreaterThan(peasant.level)
   })
 
   describe('only units with a picture are shown', () => {
@@ -220,46 +298,68 @@ describe('the monster config', () => {
     })
   })
 
-  describe('hearts come from the level', () => {
-    it('the table, rung by rung', () => {
-      expect(monsterById('peasant').hearts).toBe(20) // unit level 1
-      expect(monsterById('goblin').hearts).toBe(18) // 2
-      expect(monsterById('gorgul').hearts).toBe(16) // 3
-      expect(monsterById('paladin').hearts).toBe(12) // 4
-      expect(monsterById('black-dragon').hearts).toBe(10) // 5
+  /**
+   * A unit no longer carries a battle length at all. It used to: hearts came
+   * off the level, 20 down to 10, and one dial did both jobs. The squad does
+   * the length now, so what is left to check is that the level still decides
+   * the maths and that a unit without stats is not treated differently.
+   */
+  describe('the level decides the questions, not the length', () => {
+    it('the rungs, level by level', () => {
+      expect(monsterById('peasant').levels).toEqual([1])
+      expect(monsterById('goblin').levels).toEqual([1, 2])
+      expect(monsterById('gorgul').levels).toEqual([2, 3])
+      expect(monsterById('paladin').levels).toEqual([3, 4])
+      expect(monsterById('black-dragon').levels).toEqual([4, 5])
     })
 
-    it('two units of a level get the same battle, whatever their health', () => {
+    it('two units of a level get the same questions, whatever their health', () => {
       const zombie = monsterById('zombie')
       const goblin = monsterById('goblin')
 
       // The zombie used to outlast the goblin by four tasks for having more
-      // King's Bounty health. Health is that game's balance, not a child's
-      // practice — it is no longer carried, and both units are level 2, so
-      // both get the same battle.
-      expect(zombie.hearts).toBe(goblin.hearts)
+      // King's Bounty health. That number is not even carried any more, and
+      // both units are level 2, so both draw from the same rungs.
+      expect(zombie.level).toBe(goblin.level)
+      expect(zombie.levels).toEqual(goblin.levels)
     })
 
-    it('the harder the tasks, the shorter the battle', () => {
-      const shown = availableMonsters()
-      for (let i = 1; i < shown.length; i++) {
-        // The list runs easiest first, so hearts may only fall along it.
-        expect(shown[i]!.hearts).toBeLessThanOrEqual(shown[i - 1]!.hearts)
-      }
-    })
-
-    it('every battle stays inside the table', () => {
-      // TUNING can still set hearts by hand; nothing may wander off the scale.
-      for (const monster of MONSTERS) {
-        expect(monster.hearts).toBeGreaterThanOrEqual(HEARTS_MIN)
-        expect(monster.hearts).toBeLessThanOrEqual(HEARTS_MAX)
-      }
-    })
-
-    it('a unit gets its battle from its level alone', () => {
+    it('a unit gets its rungs from its level alone', () => {
       const fairy = monsterById('forest-fairy')
 
-      expect(fairy.hearts).toBe(20)
+      expect(fairy.level).toBe(1)
+      expect(fairy.levels).toEqual([1])
+    })
+  })
+
+  /**
+   * Six hearts were chosen against a twenty-task battle. Squads make battles of
+   * five tasks and of twenty-five, and six would mean two very different games,
+   * so the number follows the work instead of sitting still.
+   */
+  describe('the child brings hearts to match the battle', () => {
+    const atLevel = (level: number, count: number) =>
+      squad(...(Array(count).fill(heartsPerStack(level)) as number[]))
+
+    it('a twenty-question fight is still worth six, as it always was', () => {
+      // One stack at level 1 is exactly the battle six hearts were chosen for.
+      expect(heartsPerStack(1)).toBe(20)
+      expect(playerHeartsFor(atLevel(1, 1))).toBe(6)
+    })
+
+    it('a bigger squad brings more, one heart per three and a half questions', () => {
+      expect(playerHeartsFor(atLevel(1, 2))).toBe(11)
+      expect(playerHeartsFor(atLevel(1, 5))).toBe(29)
+    })
+
+    it('never fewer than four, or a skirmish is a coin toss', () => {
+      expect(playerHeartsFor(squad(1))).toBe(4)
+      expect(playerHeartsFor(squad(5))).toBe(4)
+    })
+
+    it('the battle takes the count unless it is told otherwise', () => {
+      expect(new Battle(atLevel(1, 2)).state.playerMax).toBe(11)
+      expect(new Battle(atLevel(1, 2), 3).state.playerMax).toBe(3)
     })
   })
 

@@ -17,7 +17,7 @@ import type { TextToSpeech } from '@/core/ports'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
 import { pick, systemRandom } from '@/core/random'
 import { ExerciseSession } from '@/core/session'
-import { Battle, type BattleState, type Monster } from '@/game'
+import { Battle, generateCampaign, type BattleState, type Campaign, type Encounter } from '@/game'
 import { t } from '@/locale'
 import { playCorrect, playFinish, playUnheard, playWrong } from '@/adapters/audio/sfx'
 import { VoiceAnswerInput } from '@/adapters/input'
@@ -40,7 +40,7 @@ const RELISTEN_PAUSE_MS = 400
 
 type Mic = 'idle' | 'speaking' | 'listening'
 type Flash = 'correct' | 'wrong' | 'unheard' | null
-type Screen = 'loading' | 'error' | 'name' | 'select' | 'fight'
+type Screen = 'loading' | 'error' | 'name' | 'map' | 'fight'
 
 /**
  * The answer being built, before anything is sent (T18).
@@ -59,19 +59,23 @@ export interface GameState {
   screen: Screen
   error: string | null
   name: string
-  monster: Monster | null
+  /** What is being fought — one unit or a whole squad. */
+  encounter: Encounter | null
   battle: BattleState | null
   exercise: Exercise | null
   mic: Mic
   flash: Flash
+  /** The road being walked. Rebuilt from its seed on every load, never stored. */
+  campaign: Campaign | null
+  /** Nodes already beaten in this campaign. */
+  cleared: ReadonlySet<string>
+  gold: number
+  /** What the battle just won paid, for the popup. Null after a defeat. */
+  earned: number | null
   /** What recognition made of the last thing said, in its own words. */
   heard: string | null
   /** Null exactly when no answer is being taken — between tasks, and after. */
   draft: Draft | null
-  /** Battles won in total. */
-  wins: number
-  /** monster id → times beaten. Beaten ones are struck through in the list. */
-  defeated: Record<string, number>
 }
 
 interface Deps {
@@ -85,6 +89,9 @@ interface Deps {
 }
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/** A seed for a fresh campaign. Any number will do. */
+const newSeed = () => Math.floor(Math.random() * 2 ** 31)
 
 function deferred<T>() {
   let resolve!: (value: T) => void
@@ -280,15 +287,17 @@ const initial: GameState = {
   screen: 'loading',
   error: null,
   name: '',
-  monster: null,
+  encounter: null,
   battle: null,
   exercise: null,
   mic: 'idle',
   flash: null,
   heard: null,
   draft: null,
-  wins: 0,
-  defeated: {},
+  campaign: null,
+  cleared: new Set(),
+  gold: 0,
+  earned: null,
 }
 
 export function useBattle() {
@@ -327,11 +336,19 @@ export function useBattle() {
         const profile = Profile.fromJSON(saved)
         deps.current = { recognizer, tts, voiceInput: new VoiceAnswerInput(recognizer), storage, profile }
 
+        // The map is generated, not stored: the save holds a seed and a list of
+        // what has been beaten, and the road is rebuilt from them.
+        if (!profile.campaign) {
+          profile.startCampaign(newSeed())
+          await storage.save(PROFILE_KEY, profile.toJSON())
+        }
+
         patch({
-          screen: profile.name ? 'select' : 'name',
+          screen: profile.name ? 'map' : 'name',
           name: profile.name,
-          wins: profile.victories,
-          defeated: profile.defeated,
+          campaign: generateCampaign(profile.campaign!.seed),
+          cleared: profile.cleared,
+          gold: profile.gold,
         })
       } catch (cause) {
         if (cancelled) return
@@ -353,13 +370,13 @@ export function useBattle() {
       if (!d) return
       d.profile.name = name.trim()
       await d.storage.save(PROFILE_KEY, d.profile.toJSON())
-      patch({ name: d.profile.name, screen: 'select' })
+      patch({ name: d.profile.name, screen: 'map' })
     },
     [patch],
   )
 
   const fight = useCallback(
-    async (monster: Monster) => {
+    async (encounter: Encounter) => {
       const d = deps.current
       if (!d) return
 
@@ -367,14 +384,17 @@ export function useBattle() {
       const run = new AbortController()
       runAbort.current = run
 
-      const battle = new Battle(monster)
-      // Difficulty adjusts within the monster's own pool of levels (C4):
+      const battle = new Battle(encounter)
+      // Difficulty adjusts within the encounter's own pool of levels (C4):
       // going badly, we draw from the easy end; going well, we come back.
-      const difficulty = new DifficultyAdapter(Math.max(...monster.levels), Math.min(...monster.levels))
+      const difficulty = new DifficultyAdapter(
+        Math.max(...encounter.levels),
+        Math.min(...encounter.levels),
+      )
 
       const session = new ExerciseSession({
         subject: 'math',
-        level: Math.max(...monster.levels),
+        level: Math.max(...encounter.levels),
         // No length given: the battle runs until somebody wins.
         nextExercise: () => {
           // Kind and level are drawn together, afresh each time, so an
@@ -385,8 +405,8 @@ export function useBattle() {
           // reaches every level: drawing them separately can land on a pair
           // that has no rung, and there is nothing sensible to do about it
           // that late.
-          const affordable = monster.levels.filter((level) => level <= difficulty.current)
-          const choice = pick(systemRandom, taskChoices(monster.tasks, affordable))
+          const affordable = encounter.levels.filter((level) => level <= difficulty.current)
+          const choice = pick(systemRandom, taskChoices(encounter.tasks, affordable))
 
           return createMathExercise(choice.kind, choice.level, systemRandom)
         },
@@ -395,7 +415,7 @@ export function useBattle() {
 
       patch({
         screen: 'fight',
-        monster,
+        encounter,
         battle: battle.state,
         flash: null,
         heard: null,
@@ -523,7 +543,22 @@ export function useBattle() {
 
       // A win accumulates in the profile. A loss takes nothing away: the battle
       // can be lost, the progress cannot (P10).
-      if (battle.state.winner === 'player') d.profile.recordVictory(monster.id)
+      //
+      // Every distinct unit of the squad is recorded, not only the one in
+      // front: `defeated` is the child's collection of who they have beaten,
+      // and the three skeletons behind the robber were beaten too.
+      const won = battle.state.winner === 'player'
+
+      if (won) {
+        for (const id of new Set(encounter.stacks.map((stack) => stack.monster.id))) {
+          d.profile.recordVictory(id)
+        }
+        // Beating a node twice clears it once and pays once — a battle can be
+        // replayed for the practice, not farmed for the purse.
+        const fresh = !d.profile.cleared.has(encounter.id)
+        d.profile.clearNode(encounter.id)
+        if (fresh) d.profile.earn(encounter.gold)
+      }
       await d.storage.save(PROFILE_KEY, d.profile.toJSON())
 
       patch({
@@ -532,8 +567,9 @@ export function useBattle() {
         draft: null,
         mic: 'idle',
         flash: null,
-        wins: d.profile.victories,
-        defeated: d.profile.defeated,
+        cleared: d.profile.cleared,
+        gold: d.profile.gold,
+        earned: won ? encounter.gold : null,
       })
     },
     [patch],
@@ -612,13 +648,17 @@ export function useBattle() {
 
     await d.storage.remove(PROFILE_KEY)
     d.profile = new Profile()
+    d.profile.startCampaign(newSeed())
+    await d.storage.save(PROFILE_KEY, d.profile.toJSON())
 
     patch({
       screen: 'name',
       name: '',
-      wins: 0,
-      defeated: {},
-      monster: null,
+      campaign: generateCampaign(d.profile.campaign!.seed),
+      cleared: new Set(),
+      gold: 0,
+      earned: null,
+      encounter: null,
       battle: null,
       exercise: null,
       draft: null,
@@ -627,12 +667,35 @@ export function useBattle() {
     })
   }, [patch])
 
-  const toSelect = useCallback(() => {
+  /**
+   * The castle has fallen: draw another road.
+   *
+   * The purse carries over, and `defeated` with it — the campaign is what
+   * starts again, not the child's standing.
+   */
+  const newRun = useCallback(async () => {
+    const d = deps.current
+    if (!d) return
+
+    d.profile.startCampaign(newSeed())
+    await d.storage.save(PROFILE_KEY, d.profile.toJSON())
+
+    patch({
+      screen: 'map',
+      campaign: generateCampaign(d.profile.campaign!.seed),
+      cleared: new Set(),
+      earned: null,
+      encounter: null,
+      battle: null,
+    })
+  }, [patch])
+
+  const toMap = useCallback(() => {
     runAbort.current?.abort()
     deps.current?.tts.stop()
     patch({
-      screen: 'select',
-      monster: null,
+      screen: 'map',
+      encounter: null,
       battle: null,
       exercise: null,
       draft: null,
@@ -649,7 +712,8 @@ export function useBattle() {
     eraseDigit,
     chooseComparison,
     sendAnswer,
-    toSelect,
+    toMap,
+    newRun,
     resetAll,
   }
 }

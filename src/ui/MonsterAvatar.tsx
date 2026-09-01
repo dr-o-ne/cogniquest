@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Monster } from '@/game'
 
-type Size = 'hud' | 'card' | 'popup'
+type Size = 'hud' | 'card' | 'popup' | 'map'
 
 /**
  * The character's picture. Only units that have one reach the selection

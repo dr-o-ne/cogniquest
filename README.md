@@ -9,8 +9,10 @@ The interface is in Russian; the code, the comments and the docs are in English.
 ## State
 
 Phases 0–3 are done: the learning core, voice input, and a playable battle the
-child has fought through by voice and asked to play again. Reading (phase 4) is
-next.
+child has fought through by voice and asked to play again. Phase 6 is part done
+— the way in is a generated **campaign map** (**G9**): one road up five regions
+to a castle, a region to a screen, battles against squads of up to five, and
+gold for winning. Reading (phase 4) is still to come.
 
 What comes next — [docs/ROADMAP.md](docs/ROADMAP.md). Why it was done this way —
 [docs/DECISIONS.md](docs/DECISIONS.md). What the child is asked in math, level by
@@ -53,7 +55,7 @@ docs\           decisions, the plan, and the math ladder
 src\core\       pure TypeScript: the rules of the game and of the learning.
                 Zero dependencies on React, the DOM or the browser.
 src\adapters\   implementations of the core ports: voice, speech, saves, sounds
-src\game\       the battle and the roster of opponents
+src\game\       the battle, the campaign map, and the roster of opponents
 src\locale\     the text pack: every word the child sees or hears
 src\ui\         React components
 scripts\        fetching the speech model

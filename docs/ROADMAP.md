@@ -15,7 +15,7 @@ that has to be found out in the first week, not in the second month.
 | 3 | The first playable mini-game | **done** — the child asked for more |
 | 4 | Reading by syllables | |
 | 5 | The teacher | |
-| 6 | Gamification | |
+| 6 | Gamification | **part done** — the map, squads and gold |
 | 7 | Packaging into an `.exe` | |
 
 ---
@@ -185,14 +185,21 @@ recorded narration is needed.
 
 **Goal:** so that the child comes back unprompted.
 
-- reactors on top of **A4** — the mini-games are not touched at all, which is the test of **G1**
-- battle: HP, damage, the teacher's shield on a mistake
-- stars, coins, streaks, a pet on three correct in a row
-- a map of five islands by the levels of **C1**
-- a shop: costumes, pets
+- [x] reactors on top of **A4** — the mini-games were not touched at all, which was the test of **G1**
+- [x] battle: HP, damage — and since **G9**, a squad of up to five fought front to back
+- [x] a map across the levels of **C1** (**G9**): one road, a region to a screen, a castle taken in three
+- [x] coins (**G10**) — earned, but nothing spends them yet
+- streaks, a pet on three correct in a row
+- the teacher's shield on a mistake
+- a shop: costumes, pets, and the obvious home for the gold
 - **decide G2** (setting), **G3**, **G4** (timer)
 
 **Done when:** the child sits down to play without being reminded.
+
+**What the map is worth watching for.** A level 1 node with five stacks is a
+hundred questions in one battle, with no way to stop and keep the win. That is
+the number to check on a real child first; the two knobs are the heart ladder
+and `MAX_STACKS`, both in `journey.ts`.
 
 ---
 

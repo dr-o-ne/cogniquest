@@ -40,18 +40,37 @@ export const ru = {
     start: 'Вперёд',
   },
 
-  select: {
-    title: (name: string) => `С кем сразимся, ${name}?`,
-    wins: (count: number) => `Побед: ${count}`,
+  fight: {
+    vs: 'VS',
+    leave: 'выйти',
+  },
+
+  /**
+   * The journey map. Region names are keyed by the math rung the region is
+   * built on (C1), because that is what a region *is* — a stretch of road
+   * where the sums stay the same.
+   */
+  map: {
+    title: (name: string) => `Поход, ${name}`,
     newGame: 'Новая игра',
     wipeAsk: 'Всё стереть?',
     wipeYes: 'Да',
     wipeNo: 'Нет',
-  },
-
-  fight: {
-    vs: 'VS',
-    leave: 'выйти',
+    gold: (amount: number) => `${amount} золота`,
+    goldOf: (amount: number, all: number) => `${amount} из ${all}`,
+    reward: (amount: number) => `+${amount} золота`,
+    pocket: 'можно обойти',
+    newRun: 'Новый поход',
+    castleTaken: 'Замок взят!',
+    squad: (count: number) => `×${count}`,
+    regions: {
+      1: 'Хрюкино Поле',
+      2: 'Гоблинские Огороды',
+      3: 'Пещера Потерянных Носков',
+      4: 'Гора Ржавых Доспехов',
+      5: 'Замок Ста Чертей',
+    } as Record<number, string>,
+    siege: ['Стена', 'Ворота', 'Тронный зал'],
   },
 
   result: {

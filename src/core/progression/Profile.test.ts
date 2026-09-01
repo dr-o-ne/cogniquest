@@ -145,3 +145,95 @@ describe('Profile', () => {
     })
   })
 })
+
+/**
+ * The purse and the campaign were added after the child had a save on disk, and
+ * PROFILE_VERSION was deliberately not bumped for them — bumping it hands back
+ * an empty profile, which would wipe real progress to tidy a key nothing reads.
+ * So the defaults have to hold on their own.
+ */
+describe('the journey', () => {
+  it('starts with an empty purse and no campaign', () => {
+    const profile = new Profile()
+
+    expect(profile.gold).toBe(0)
+    expect(profile.campaign).toBeNull()
+    expect(profile.cleared.size).toBe(0)
+  })
+
+  it('a save written before either existed still loads', () => {
+    const old = { version: PROFILE_VERSION, name: 'Ника', stars: 12 }
+    const profile = Profile.fromJSON(old)
+
+    expect(profile.name).toBe('Ника')
+    expect(profile.stars).toBe(12)
+    expect(profile.gold).toBe(0)
+    expect(profile.campaign).toBeNull()
+  })
+
+  it('a corrupted campaign is dropped rather than trusted', () => {
+    expect(Profile.fromJSON({ version: PROFILE_VERSION, campaign: 'nonsense' }).campaign).toBeNull()
+    expect(Profile.fromJSON({ version: PROFILE_VERSION, campaign: { seed: 1 } }).campaign).toBeNull()
+    expect(Profile.fromJSON({ version: PROFILE_VERSION, gold: 'lots' }).gold).toBe(0)
+  })
+
+  it('remembers the road and what has been beaten on it', () => {
+    const profile = new Profile()
+    profile.startCampaign(42)
+    profile.clearNode('n0')
+    profile.clearNode('n1')
+
+    expect(profile.campaign).toEqual({ seed: 42, cleared: ['n0', 'n1'] })
+    expect(profile.cleared.has('n1')).toBe(true)
+  })
+
+  it('clearing the same node twice changes nothing', () => {
+    const profile = new Profile()
+    profile.startCampaign(1)
+    profile.clearNode('n0')
+    profile.clearNode('n0')
+
+    expect(profile.campaign!.cleared).toEqual(['n0'])
+  })
+
+  it('a new campaign wipes the road and keeps the purse', () => {
+    const profile = new Profile()
+    profile.startCampaign(1)
+    profile.clearNode('n0')
+    profile.earn(300)
+
+    profile.startCampaign(2)
+
+    expect(profile.campaign).toEqual({ seed: 2, cleared: [] })
+    expect(profile.gold).toBe(300)
+  })
+
+  it('the purse only ever grows', () => {
+    const profile = new Profile()
+    profile.earn(40)
+    profile.earn(0)
+    profile.earn(-100)
+
+    expect(profile.gold).toBe(40)
+  })
+
+  it('hands out copies, so nobody edits the campaign from outside', () => {
+    const profile = new Profile()
+    profile.startCampaign(1)
+    profile.campaign!.cleared.push('n7')
+
+    expect(profile.cleared.size).toBe(0)
+  })
+
+  it('survives a round trip through JSON', () => {
+    const profile = new Profile()
+    profile.startCampaign(99)
+    profile.clearNode('n3')
+    profile.earn(75)
+
+    const restored = Profile.fromJSON(JSON.parse(JSON.stringify(profile.toJSON())))
+
+    expect(restored.gold).toBe(75)
+    expect(restored.campaign).toEqual({ seed: 99, cleared: ['n3'] })
+  })
+})

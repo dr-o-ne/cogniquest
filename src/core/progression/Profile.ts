@@ -3,6 +3,18 @@ import { ReviewQueue, type ReviewItem } from './ReviewQueue'
 
 export const PROFILE_VERSION = 1
 
+/**
+ * The campaign in progress: which one, and how much of it is behind us.
+ *
+ * The map itself is not stored. It is generated from the seed, so the save
+ * stays a handful of bytes and the road is identical every time it is drawn.
+ */
+export interface CampaignData {
+  seed: number
+  /** Node ids already beaten. Pockets and road nodes alike. */
+  cleared: string[]
+}
+
 export interface ProfileData {
   version: number
   name: string
@@ -15,6 +27,9 @@ export interface ProfileData {
   solved: number
   mistakes: number
   lastPlayedAt: number | null
+  /** The purse. It carries across campaigns; nothing spends it yet (G10). */
+  gold: number
+  campaign: CampaignData | null
 }
 
 function defaults(): ProfileData {
@@ -28,11 +43,20 @@ function defaults(): ProfileData {
     solved: 0,
     mistakes: 0,
     lastPlayedAt: null,
+    gold: 0,
+    campaign: null,
   }
 }
 
+function isCampaign(value: unknown): value is CampaignData {
+  if (value === null || typeof value !== 'object') return false
+  const campaign = value as Partial<CampaignData>
+  return typeof campaign.seed === 'number' && Array.isArray(campaign.cleared)
+}
+
 /**
- * Everything that outlives quitting the game: level, tally, review queue.
+ * Everything that outlives quitting the game: the purse, the campaign, the
+ * tally, the review queue.
  *
  * The profile subscribes to the session itself (A4) — that is, it works
  * through the very seam gamification will later plug into. Which doubles as
@@ -52,9 +76,19 @@ export class Profile implements SessionObserver {
 
   constructor(data: Partial<ProfileData> = {}, now: () => number = () => Date.now()) {
     this.data = { ...defaults(), ...data }
-    // The save could come from an older version, or be corrupted.
+    // The save could come from an older version, or be corrupted. Every field
+    // added after the fact is checked here rather than trusted: a save written
+    // before it existed is the normal case, not the exception, because
+    // PROFILE_VERSION is deliberately not bumped for an addition (bumping it
+    // would wipe the child's progress to tidy a key nothing reads).
     if (typeof this.data.defeated !== 'object' || this.data.defeated === null) {
       this.data.defeated = {}
+    }
+    if (typeof this.data.gold !== 'number' || !Number.isFinite(this.data.gold)) {
+      this.data.gold = 0
+    }
+    if (!isCampaign(this.data.campaign)) {
+      this.data.campaign = null
     }
     this.queue = new ReviewQueue(this.data.review)
     this.now = now
@@ -110,6 +144,39 @@ export class Profile implements SessionObserver {
     return Object.values(this.data.defeated).reduce((sum, count) => sum + count, 0)
   }
 
+  // --- the journey ---
+
+  get gold(): number {
+    return this.data.gold
+  }
+
+  /** What the child is walking, or null before the first campaign is drawn. */
+  get campaign(): CampaignData | null {
+    const campaign = this.data.campaign
+    return campaign === null ? null : { seed: campaign.seed, cleared: [...campaign.cleared] }
+  }
+
+  /** What has been beaten in the campaign in progress. */
+  get cleared(): ReadonlySet<string> {
+    return new Set(this.data.campaign?.cleared ?? [])
+  }
+
+  /** A fresh road. The purse is deliberately left alone — it is the one thing that carries. */
+  startCampaign(seed: number): void {
+    this.data.campaign = { seed, cleared: [] }
+  }
+
+  /** A node taken. Beating it a second time changes nothing. */
+  clearNode(nodeId: string): void {
+    const campaign = this.data.campaign
+    if (!campaign) return
+    if (!campaign.cleared.includes(nodeId)) campaign.cleared.push(nodeId)
+  }
+
+  earn(amount: number): void {
+    if (amount > 0) this.data.gold += Math.round(amount)
+  }
+
   hasDefeated(monsterId: string): boolean {
     return (this.data.defeated[monsterId] ?? 0) > 0
   }
@@ -146,6 +213,11 @@ export class Profile implements SessionObserver {
   }
 
   toJSON(): ProfileData {
-    return { ...this.data, review: this.queue.toJSON(), defeated: { ...this.data.defeated } }
+    return {
+      ...this.data,
+      review: this.queue.toJSON(),
+      defeated: { ...this.data.defeated },
+      campaign: this.campaign,
+    }
   }
 }

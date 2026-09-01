@@ -5,7 +5,7 @@
  *
  *   ROSTER  — every King's Bounty unit and the level it fights at
  *   IMAGES  — pictures. A UNIT WITHOUT A PICTURE NEVER APPEARS IN THE GAME
- *   TUNING  — hand corrections to hearts and difficulty where the maths is off
+ *   TUNING  — hand corrections where the level alone gets a unit wrong
  *
  * To add an opponent: drop a picture into public/monsters/ and add a line to
  * IMAGES. Nothing else is needed — both the length of the battle and the
@@ -21,6 +21,11 @@ export interface Monster {
   /** Localised display name, from `t.monsters`. */
   readonly name: string
   /**
+   * The unit's King's Bounty level, 1–5: which region of the journey it belongs
+   * to, and the one number every other dial is read off.
+   */
+  readonly level: number
+  /**
    * Which kinds of task this fight draws from — a pool, like `levels`, with
    * one drawn afresh for every question. A row of the grid per name; an
    * opponent listing four asks all four, turn about.
@@ -35,34 +40,19 @@ export interface Monster {
   readonly image?: string
   /** An emoji for when the picture fails to load. */
   readonly avatar?: string
-  /** How many correct answers it takes to win. */
-  readonly hearts: number
   /** Which math levels (C1) the tasks are drawn from. */
   readonly levels: readonly number[]
   readonly color: string
 }
 
-/**
- * How many hearts the child has. One is lost per wrong answer.
- *
- * Set against the longest battle rather than the average one: twenty tasks are
- * twenty chances to collect a mistake simply along the way, and at five hearts
- * a long battle would turn not into «longer» but into «harder».
- */
-export const PLAYER_HEARTS = 6
+
 
 // ─────────────────────────────────────────────────────────────────────────
-// How a unit's level turns into a battle
+// What a unit's level decides
 //
-// Both dials come from LEVEL: how many tasks the battle runs to, and which
-// math rungs they are drawn from. HEALTH no longer enters into it. It used to
-// set the hearts on a log scale, which balanced the wrong thing — health is a
-// King's Bounty number tuned for King's Bounty fights, and it made the hardest
-// opponent the longest one as well, thirty-five tasks for an ancient ent.
-//
-// The two dials now run in opposite directions, on purpose. Easy tasks are
-// quick and want repeating, so a level 1 battle is twenty of them; two-digit
-// carrying is slow and expensive to hold, so a level 5 battle is ten.
+// One thing now: which math rungs its questions are drawn from. The length of
+// a battle is not here at all any more — it is the size of the squad, which
+// the journey decides (see journey.ts, and G7 as amended by G9).
 //
 // Math levels (C1, see docs/MATH.md):
 //   1 — ± within five                    4 — two-digit, nothing carried
@@ -75,30 +65,21 @@ export const PLAYER_HEARTS = 6
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * What a unit's level is worth: how many tasks its battle runs to, which math
- * rungs (C1) they are drawn from, and the colour of its card.
+ * What a unit's level is worth: which math rungs (C1) its questions are drawn
+ * from, and the colour it is drawn in.
  *
- * Hearts fall as the rungs rise. Twenty bonds within five is a warm-up a child
- * can hold; twenty two-digit carries is an evening's work.
+ * The hearts that used to sit here are now a ladder in journey.ts, and they
+ * mean the hearts of one stack rather than the length of a whole battle.
  */
-const BY_LEVEL: Record<number, { hearts: number; levels: number[]; color: string }> = {
-  1: { hearts: 20, levels: [1], color: '#7cb342' },
-  2: { hearts: 18, levels: [1, 2], color: '#4aa3a0' },
-  3: { hearts: 16, levels: [2, 3], color: '#4a7de0' },
-  4: { hearts: 12, levels: [3, 4], color: '#a0417a' },
-  5: { hearts: 10, levels: [4, 5], color: '#c0392b' },
+const BY_LEVEL: Record<number, { levels: number[]; color: string }> = {
+  1: { levels: [1], color: '#7cb342' },
+  2: { levels: [1, 2], color: '#4aa3a0' },
+  3: { levels: [2, 3], color: '#4a7de0' },
+  4: { levels: [3, 4], color: '#a0417a' },
+  5: { levels: [4, 5], color: '#c0392b' },
 }
 
-/**
- * How long the shortest and longest battles are — read off the table rather
- * than written down beside it, so a re-tuned rung cannot leave them behind.
- *
- * Worth having because TUNING may still set hearts by hand, and a slip there
- * is how a battle of forty questions would arrive.
- */
-const HEARTS_PER_LEVEL = Object.values(BY_LEVEL).map((battle) => battle.hearts)
-export const HEARTS_MIN = Math.min(...HEARTS_PER_LEVEL)
-export const HEARTS_MAX = Math.max(...HEARTS_PER_LEVEL)
+
 
 // ─────────────────────────────────────────────────────────────────────────
 // IMAGES — who takes part in the game
@@ -211,12 +192,7 @@ const SUBTRACTS: ReadonlySet<string> = new Set([
   'paladin',
 ])
 
-const TUNING: Record<
-  string,
-  { hearts?: number; levels?: number[]; avatar?: string; tasks?: TaskKind[] }
-> = {
-  // Her hearts used to be set by hand; the level answers that now, so the
-  // correction is gone.
+const TUNING: Record<string, { levels?: number[]; avatar?: string; tasks?: TaskKind[] }> = {
   'forest-fairy': { avatar: '🧚' },
   peasant: { avatar: '🧑‍🌾' },
   robber: { avatar: '🦹' },
@@ -409,12 +385,12 @@ function build(row: Row): Monster {
     // Falling back to the id keeps a missing translation visible instead of
     // blank. A test makes sure it never actually comes to that.
     name: t.monsters[id] ?? id,
+    level,
     tasks: tuned.tasks ?? (SUBTRACTS.has(id) ? SUBTRACTION_TASKS : DEFAULT_TASKS),
     // Written as a root path in IMAGES, resolved against wherever the app is
     // actually served from — see src/assets.ts.
     ...(image !== undefined ? { image: publicUrl(image) } : {}),
     ...(tuned.avatar !== undefined ? { avatar: tuned.avatar } : {}),
-    hearts: tuned.hearts ?? base.hearts,
     levels: tuned.levels ?? base.levels,
     color: base.color,
   }
@@ -424,14 +400,18 @@ function build(row: Row): Monster {
 export const MONSTERS: readonly Monster[] = ROSTER.map(build)
 
 /**
- * Who is shown on the selection screen: only units that have a picture.
- * Ordered from the easiest tasks to the hardest, so the ladder reads at a
- * glance — which is also, now, from the longest battle to the shortest.
+ * Who the game can actually field: only units that have a picture. Ordered
+ * easiest first, so the ladder reads at a glance.
  */
 export function availableMonsters(): readonly Monster[] {
   return MONSTERS.filter((monster) => monster.image !== undefined).sort(
-    (a, b) => Math.max(...a.levels) - Math.max(...b.levels) || a.hearts - b.hearts,
+    (a, b) => a.level - b.level || a.id.localeCompare(b.id),
   )
+}
+
+/** The colour a level is drawn in — hearts, bands of the map, and the road. */
+export function levelColor(level: number): string {
+  return BY_LEVEL[level]?.color ?? '#7a7a88'
 }
 
 export function monsterById(id: string): Monster {

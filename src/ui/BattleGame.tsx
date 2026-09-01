@@ -2,8 +2,9 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import type { Exercise, MathOp } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
 import { comparisonSign, comparisonWord, COMPARISONS, type Comparison } from '@/core/math'
-import { availableMonsters, PLAYER_HEARTS, type Monster } from '@/game'
+import { leaderOf, type BattleState, type Encounter } from '@/game'
 import { t } from '@/locale'
+import { MapScreen } from './MapScreen'
 import { MonsterAvatar } from './MonsterAvatar'
 import { Teacher } from './Teacher'
 import { useBattle, type Draft, type GameState } from './useBattle'
@@ -24,8 +25,18 @@ interface PadInput {
 }
 
 export function BattleGame() {
-  const { state, setName, fight, typeDigit, eraseDigit, chooseComparison, sendAnswer, toSelect, resetAll } =
-    useBattle()
+  const {
+    state,
+    setName,
+    fight,
+    typeDigit,
+    eraseDigit,
+    chooseComparison,
+    sendAnswer,
+    toMap,
+    newRun,
+    resetAll,
+  } = useBattle()
 
   // Stable, so the pad's keyboard listener is not torn down and rebuilt on
   // every patch the battle loop makes.
@@ -41,15 +52,22 @@ export function BattleGame() {
       return <Splash title={t.app.errorTitle} note={state.error ?? ''} bad />
     case 'name':
       return <NameScreen onDone={(name) => void setName(name)} />
-    case 'select':
-      return <SelectScreen state={state} onPick={(m) => void fight(m)} onReset={() => void resetAll()} />
+    case 'map':
+      return (
+        <MapScreen
+          state={state}
+          onFight={(encounter) => void fight(encounter)}
+          onReset={() => void resetAll()}
+          onNewRun={() => void newRun()}
+        />
+      )
     case 'fight':
       return (
         <FightScreen
           state={state}
           input={input}
-          onLeave={toSelect}
-          onRematch={() => state.monster && void fight(state.monster)}
+          onLeave={toMap}
+          onRematch={() => state.encounter && void fight(state.encounter)}
         />
       )
   }
@@ -91,73 +109,6 @@ function NameScreen({ onDone }: { onDone: (name: string) => void }) {
   )
 }
 
-function SelectScreen({
-  state,
-  onPick,
-  onReset,
-}: {
-  state: GameState
-  onPick: (monster: Monster) => void
-  onReset: () => void
-}) {
-  const [confirming, setConfirming] = useState(false)
-
-  return (
-    <div className="screen screen--center">
-      {/* Wipes everything, hence two steps: a stray click must not clear the
-          child's progress. */}
-      <div className="reset-corner">
-        {confirming ? (
-          <>
-            <span className="reset__ask">{t.select.wipeAsk}</span>
-            <button className="reset__yes" onClick={onReset}>
-              {t.select.wipeYes}
-            </button>
-            <button className="reset__no" onClick={() => setConfirming(false)}>
-              {t.select.wipeNo}
-            </button>
-          </>
-        ) : (
-          <button className="reset__start" onClick={() => setConfirming(true)}>
-            {t.select.newGame}
-          </button>
-        )}
-      </div>
-
-      <h1 className="splash__title">{t.select.title(state.name)}</h1>
-      <div className="roster">
-        {availableMonsters().map((monster) => {
-          const beaten = state.defeated[monster.id] ?? 0
-
-          return (
-          <button
-            key={monster.id}
-            className={beaten > 0 ? 'card card--beaten' : 'card'}
-            style={{ '--card': monster.color } as React.CSSProperties}
-            onClick={() => onPick(monster)}
-          >
-            {/* Beaten ones are struck through, but can still be played */}
-            {beaten > 0 && (
-              <span className="card__badge" title={t.select.wins(beaten)}>
-                ✔{beaten > 1 && <span className="card__times">{beaten}</span>}
-              </span>
-            )}
-            <MonsterAvatar monster={monster} size="card" />
-            <span className="card__name">{monster.name}</span>
-            {/* Every last heart: how many there are IS the main difference
-                between monsters, so that number must not be abbreviated. */}
-            <span className="card__hearts" style={{ fontSize: `${heartSize(monster.hearts)}rem` }}>
-              {'❤'.repeat(monster.hearts)}
-            </span>
-          </button>
-          )
-        })}
-      </div>
-      {state.wins > 0 && <p className="splash__note">{t.select.wins(state.wins)}</p>}
-    </div>
-  )
-}
-
 function FightScreen({
   state,
   input,
@@ -169,8 +120,13 @@ function FightScreen({
   onLeave: () => void
   onRematch: () => void
 }) {
-  const { battle, monster } = state
-  if (!battle || !monster) return null
+  const { battle, encounter } = state
+  if (!battle || !encounter) return null
+
+  // The stack the answer lands on. Once the last one falls `target` runs past
+  // the end of the list, and the name shown should stay the one just beaten
+  // rather than blank out under the victory popup.
+  const active = encounter.stacks[Math.min(battle.target, encounter.stacks.length - 1)]!
 
   const hitClass = state.flash === 'correct' ? 'hit-monster' : state.flash === 'wrong' ? 'hit-player' : ''
 
@@ -181,18 +137,14 @@ function FightScreen({
           name={state.name}
           avatar={<span className="avatar avatar--hud avatar--emoji">🧒</span>}
           hearts={battle.playerHearts}
-          max={PLAYER_HEARTS}
+          max={battle.playerMax}
           color="#4a7de0"
         />
         <span className="hud__vs">{t.fight.vs}</span>
-        <Fighter
-          name={monster.name}
-          avatar={<MonsterAvatar monster={monster} size="hud" />}
-          hearts={battle.monsterHearts}
-          max={monster.hearts}
-          color={monster.color}
-          mirrored
-        />
+        <div className="hud__foes">
+          <span className="hud__foe-name">{active.monster.name}</span>
+          <Squad encounter={encounter} battle={battle} />
+        </div>
       </header>
 
       <div className="fight__stage">
@@ -217,8 +169,9 @@ function FightScreen({
       {battle.winner && (
         <WinnerPopup
           won={battle.winner === 'player'}
-          monster={monster}
+          monster={leaderOf(encounter)}
           name={state.name}
+          earned={state.earned}
           onRematch={onRematch}
           onLeave={onLeave}
         />
@@ -240,26 +193,76 @@ function heartRowStyle(count: number): React.CSSProperties {
   return { fontSize: `${size}rem`, maxWidth: `${size * 13}rem` }
 }
 
+/**
+ * The other side of the fight: every stack at once, front to back.
+ *
+ * Drawn in full rather than one at a time because the length of a battle is
+ * the squad added up (G7 as amended). The child should be able to see how much
+ * is left the same way they see their own hearts — by looking, not by counting
+ * in their head — and a stack going grey is the small win the format is for.
+ */
+function Squad({ encounter, battle }: { encounter: Encounter; battle: BattleState }) {
+  return (
+    <div className="squad">
+      {encounter.stacks.map((stack, i) => {
+        const state = battle.stacks[i]!
+        const down = state.hearts === 0
+        const active = !down && i === battle.target
+
+        return (
+          <div
+            key={i}
+            className={
+              'squad__stack' +
+              (down ? ' squad__stack--down' : active ? ' squad__stack--active' : '')
+            }
+            style={{ '--fighter': stack.monster.color } as React.CSSProperties}
+          >
+            <MonsterAvatar monster={stack.monster} size="hud" />
+
+            {/* Only the stack being fought gets its hearts drawn one by one.
+                Five stacks of twenty would be a hundred hearts across the top
+                of the screen, and the child only has to watch the one in front
+                come down — the ones behind need to say how much is coming, and
+                a number says that in the space of a badge. */}
+            {active ? (
+              <span className="squad__hearts" style={heartRowStyle(state.max)}>
+                {Array.from({ length: state.max }, (_, heart) => (
+                  <span key={heart} className={heart < state.hearts ? 'heart' : 'heart heart--lost'}>
+                    ❤
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className="squad__count">
+                <span className="heart" aria-hidden="true">
+                  ❤
+                </span>
+                {state.hearts}
+              </span>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function Fighter({
   name,
   avatar,
   hearts,
   max,
   color,
-  mirrored,
 }: {
   name: string
   avatar: React.ReactNode
   hearts: number
   max: number
   color: string
-  mirrored?: boolean
 }) {
   return (
-    <div
-      className={mirrored ? 'fighter fighter--right' : 'fighter'}
-      style={{ '--fighter': color } as React.CSSProperties}
-    >
+    <div className="fighter" style={{ '--fighter': color } as React.CSSProperties}>
       <span className="fighter__avatar">{avatar}</span>
       <div className="fighter__info">
         <span className="fighter__name">{name}</span>
@@ -282,12 +285,14 @@ function WinnerPopup({
   won,
   monster,
   name,
+  earned,
   onRematch,
   onLeave,
 }: {
   won: boolean
-  monster: Monster
+  monster: Encounter['stacks'][number]['monster']
   name: string
+  earned: number | null
   onRematch: () => void
   onLeave: () => void
 }) {
@@ -305,6 +310,11 @@ function WinnerPopup({
         <p className="popup__note">
           {won ? t.result.victoryNote(name) : t.result.defeatNote}
         </p>
+        {/* Only on a first win: coming back for the practice is welcome, but
+            the same node does not pay twice. */}
+        {won && earned !== null && earned > 0 && (
+          <p className="popup__gold">{t.map.reward(earned)}</p>
+        )}
         <button className="big-button" onClick={onRematch} autoFocus>
           {won ? t.result.fightAgain : t.result.rematch}
         </button>

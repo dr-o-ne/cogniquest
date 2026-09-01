@@ -76,37 +76,6 @@
   border-color: #4a7de0;
 }
 
-/* --- Picking an opponent --- */
-
-.roster {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  width: 11rem;
-  padding: 1.25rem 1rem;
-  border: 2px solid color-mix(in srgb, var(--card) 40%, transparent);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--card) 8%, var(--bg));
-  color: var(--fg);
-  font: inherit;
-  cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease;
-}
-
-.card:hover {
-  transform: translateY(-4px);
-  border-color: var(--card);
-}
-
 /* --- Characters: the picture from the config, or an emoji --- */
 
 .avatar {
@@ -135,79 +104,10 @@
   font-size: 2.6rem;
 }
 
-/* A fifth larger than it was: the card lost its line of text, and the picture
-   is what the child actually picks by. */
-.avatar--card {
-  width: 5.4rem;
-  height: 5.4rem;
-  font-size: 4.2rem;
-}
-
 .avatar--popup {
   width: 5.5rem;
   height: 5.5rem;
   font-size: 4.5rem;
-}
-
-/* A picture needs a backing plate: with a transparent png, a dark outline is
-   lost against the dark theme and a light one against the light theme. */
-img.avatar {
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--fg) 6%, transparent);
-}
-
-.card__name {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.card__hearts {
-  line-height: 1.2;
-  color: #d64545;
-  letter-spacing: -1px;
-  /* Twenty hearts will not fit one line — wrap them, but keep them centred */
-  overflow-wrap: anywhere;
-  text-align: center;
-}
-
-/* Beaten: struck through diagonally, but still playable */
-.card--beaten {
-  opacity: 0.62;
-}
-
-.card--beaten:hover {
-  opacity: 1;
-}
-
-.card--beaten::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(
-    to top right,
-    transparent calc(50% - 2px),
-    var(--card) calc(50% - 2px),
-    var(--card) calc(50% + 2px),
-    transparent calc(50% + 2px)
-  );
-}
-
-.card__badge {
-  position: absolute;
-  top: 0.4rem;
-  right: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.1rem;
-  color: var(--card);
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.card__times {
-  font-size: 0.7rem;
 }
 
 /* Start over — at the top of the selection screen */
@@ -303,11 +203,6 @@ img.avatar {
   min-width: 0;
 }
 
-.fighter--right {
-  flex-direction: row-reverse;
-  text-align: right;
-}
-
 .fighter__avatar {
   display: block;
   line-height: 1;
@@ -332,10 +227,6 @@ img.avatar {
   line-height: 1.15;
 }
 
-.fighter--right .fighter__hearts {
-  justify-content: flex-end;
-}
-
 .heart {
   color: #d64545;
   transition: transform 0.2s ease;
@@ -347,12 +238,76 @@ img.avatar {
   transform: scale(0.82);
 }
 
+/* The squad, front to back. The one being fought is picked out; the ones
+   already down stay on screen, greyed, so the pile is visible. */
+.hud__foes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.hud__foe-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.squad {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+}
+
+.squad__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  opacity: 0.7;
+  transition: opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease;
+}
+
+.squad__stack--active {
+  opacity: 1;
+  transform: scale(1.14);
+}
+
+.squad__stack--down {
+  opacity: 0.32;
+  filter: grayscale(1);
+  transform: scale(0.8);
+}
+
+/* What a stack still holds, when its hearts are not being drawn one by one. */
+.squad__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.squad__stack--down .squad__count {
+  text-decoration: line-through;
+}
+
+.squad__hearts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1.15;
+}
+
 /* A hit: shake whichever side took it */
-.hit-monster .fighter--right .fighter__avatar {
+.hit-monster .squad__stack--active .avatar {
   animation: shake 0.4s ease;
 }
 
-.hit-player .fighter:not(.fighter--right) .fighter__avatar {
+.hit-player .fighter .fighter__avatar {
   animation: shake 0.4s ease;
 }
 
@@ -699,4 +654,11 @@ img.avatar {
 .pad__choice-word {
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+/* What a first win paid. Only ever shown once per node. */
+.popup__gold {
+  margin: 0;
+  font-weight: 700;
+  color: #c8952a;
 }

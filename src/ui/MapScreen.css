@@ -1,0 +1,268 @@
+/* The journey map. The grid the nodes are packed into is never drawn: bands
+   for the regions, a curve for the road, and the medallions on top of both. */
+
+.map {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem 1.2rem;
+  align-items: stretch;
+}
+
+.map__top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.map__title {
+  margin: 0;
+  font-size: 1.4rem;
+  flex: 1;
+}
+
+.purse {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
+  border-radius: 999px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.purse__coin {
+  color: #c8952a;
+  font-size: 1.1rem;
+}
+
+/* The window onto the map. One region fills it; the rest is below. */
+.map__view {
+  flex: 1;
+  min-height: 24rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+  border-radius: 14px;
+  scroll-behavior: smooth;
+}
+
+/* As many windows tall as there are regions.
+   Stated in vh rather than measured: a percentage of a scroll box does not
+   resolve, and a height that arrives from JavaScript is a height that can fail
+   to arrive at all — which looks exactly like an empty map. The 6rem is the
+   header above it, near enough. The count of screens comes in from the markup,
+   so it cannot drift from MAP_SCREENS. */
+.map__frame {
+  position: relative;
+  width: 100%;
+  height: calc(var(--screens, 5) * (100vh - 6rem));
+}
+
+.map__band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--hue) 8%, var(--bg));
+  border-top: 1px solid color-mix(in srgb, var(--hue) 18%, transparent);
+}
+
+.map__band:last-of-type {
+  border-bottom: none;
+}
+
+/* Named once, large and faint: the child reads the region off the colour and
+   the pictures, not off a label they have to hunt for. */
+.map__band-name {
+  position: absolute;
+  left: 1.2rem;
+  top: 0.7rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--hue) 38%, transparent);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.map__road {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.map__road-walked {
+  fill: none;
+  stroke: #2e9e5b;
+  stroke-width: 9;
+  stroke-linecap: round;
+  opacity: 0.4;
+}
+
+.map__road-ahead {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 2 12;
+  opacity: 0.45;
+}
+
+/* Sized off the frame's HEIGHT, which is five windows: 2.4% of it is a little
+   under an eighth of one window, the same on every region whether that region
+   packs its screen with one row of cells or two. */
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  height: 2.4%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 3px solid color-mix(in srgb, var(--hue) 60%, transparent);
+  border-radius: 50%;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+}
+
+.node:hover:not(:disabled) {
+  transform: translate(-50%, -50%) scale(1.12);
+  z-index: 5;
+}
+
+.node:focus-visible {
+  outline: 3px solid var(--fg);
+  outline-offset: 3px;
+}
+
+.node--pocket {
+  height: 1.6%;
+  border-style: dashed;
+  border-color: color-mix(in srgb, #c8952a 70%, transparent);
+}
+
+.node--siege {
+  height: 3.1%;
+  border-width: 4px;
+  border-color: color-mix(in srgb, #c0392b 85%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, #c0392b 14%, transparent);
+}
+
+.node--done {
+  border-color: #2e9e5b;
+}
+
+.node--done .avatar {
+  opacity: 0.45;
+  filter: saturate(0.5);
+}
+
+/* Ahead but reachable stays bright; what the road has not got to yet is dimmed
+   rather than hidden — the world is worth looking at before you get there. */
+.node--shut {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.node--shut .avatar {
+  filter: grayscale(1);
+}
+
+.node--here {
+  border-color: var(--hue);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--hue) 22%, transparent);
+  animation: standing 2.4s ease-in-out infinite;
+  z-index: 4;
+}
+
+@keyframes standing {
+  50% {
+    box-shadow: 0 0 0 11px color-mix(in srgb, var(--hue) 8%, transparent);
+  }
+}
+
+.avatar--map {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar--map.avatar--emoji {
+  display: grid;
+  place-items: center;
+  font-size: 2.2rem;
+}
+
+.node--pocket .avatar--map.avatar--emoji {
+  font-size: 1.4rem;
+}
+
+.node--siege .avatar--map.avatar--emoji {
+  font-size: 2.8rem;
+}
+
+.node__count {
+  position: absolute;
+  right: -0.5rem;
+  bottom: -0.35rem;
+  min-width: 1.6rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hue) 85%, var(--bg));
+  color: #fff;
+  border: 2px solid var(--bg);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.node--pocket .node__count {
+  background: #c8952a;
+  font-size: 0.6rem;
+  min-width: 1.1rem;
+}
+
+.node--done .node__count {
+  background: #2e9e5b;
+}
+
+.node__won {
+  position: absolute;
+  left: -0.35rem;
+  top: -0.35rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: #2e9e5b;
+  color: #fff;
+  font-size: 0.65rem;
+  display: grid;
+  place-items: center;
+}
+
+.node__token {
+  position: absolute;
+  left: -1.4rem;
+  top: -1.4rem;
+  font-size: 2rem;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
+  animation: bob 2.4s ease-in-out infinite;
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node--here,
+  .node__token {
+    animation: none;
+  }
+}

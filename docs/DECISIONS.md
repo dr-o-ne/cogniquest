@@ -475,7 +475,9 @@ back the moment reading (**C2**) needs one.
 |---|---|---|
 | **G1** | Self-sufficient mini-games first; gamification is hung on top later (through **A4**). | Accepted |
 | **G6** | The format is a **Mortal Kombat style battle**: hearts on both sides, fought to a win, a result window. | Accepted |
-| **G7** | A monster's battle comes from its **level**: how many tasks it runs to, and which math rungs they are drawn from. The harder the tasks, the shorter the battle. | Accepted |
+| ~~G7~~ | ~~A monster's battle comes from its **level**: how many tasks it runs to, and which math rungs they are drawn from.~~ | Amended by **G9** |
+| **G9** | The way in is a **generated campaign map**: one road to a castle, and battles against **squads of up to five stacks**. Length comes from the squad, difficulty from the level. | Accepted |
+| **G10** | Winning pays **gold**. It accumulates and nothing spends it — a counter, knowingly. | Accepted |
 | **G8** | A row coming back takes a **share of the roster**, not a share of every battle: opponents are split between the rows, so one battle is a run of one row. The split is **probation and dissolves** once the row has proved itself. | Accepted |
 | **G2** | The setting: wizard against a little monster / space / something else. | **Open** — phase 6 |
 | **G3** | The cast of teacher characters. | **Open** — the child may pick them |
@@ -504,17 +506,23 @@ wants a home outside the battle; deciding where is phase 6 work. Recorded here
 rather than in the exercise catalogue, because it is a fact about the format and
 not about the mathematics.
 
-**G7 — why the two dials turn together, and in opposite directions.** Length
-and difficulty are still two different things, but they are no longer set
-independently: both are read off the unit's level.
+**G7 — why the two dials turned together, and why they no longer do.** Length
+and difficulty were both read off the unit's level: twenty tasks at level 1,
+ten at level 5.
 
-| Unit level | Tasks | Levels (C1) | What it plays like |
+That table survives, but it means something else now. **G9** gave the length of
+a battle to the size of the squad, so 20 / 18 / 16 / 14 / 12 is the hearts on
+**one stack** rather than the length of a whole battle. The level decides how
+hard the questions are and how long one kill takes; the number of stacks
+decides how many kills there are.
+
+| Unit level | Hearts per stack | Levels (C1) | What it plays like |
 |---|---|---|---|
-| 1 | 20 | 1 | long and easy — the bonds within five, drilled |
+| 1 | 20 | 1 | the bonds within five, drilled |
 | 2 | 18 | 1–2 | the same, up to ten |
 | 3 | 16 | 2–3 | the ten, crossed and counted whole |
-| 4 | 12 | 3–4 | two-digit, and it starts to cost |
-| 5 | 10 | 4–5 | short and heavy — carrying |
+| 4 | 14 | 3–4 | two-digit, and it starts to cost |
+| 5 | 12 | 4–5 | carrying |
 
 Hearts used to come from the unit's **health** on a log scale, and that is where
 «two independent dials» came from: a tough unit made a long battle. It balanced
@@ -572,6 +580,20 @@ so it is a decision with an end, not a permanent arrangement.
 
 Two consequences worth stating rather than discovering.
 
+**Since G9 the split has a second half to keep.** «The share is taken inside
+each level band» was enough while the child picked a card off a grid. A single
+road can satisfy it and still hand out fifteen additions before the first
+subtraction, so the journey takes the rows turn about — never the same row twice
+running, region boundaries included — and `journey.test.ts` holds it. The roster
+test still guards the bands; this one guards the order they are met in.
+
+**Which rows exist is still the roster's business, not the map's.** The journey
+reads them off the units of a region rather than listing them, so a row handed
+to a unit in `monsters.ts` reaches the map by itself. Listed instead, the map
+would have quietly dropped the goblin the day he was moved to comparing-numbers
+— he asks neither addition nor subtraction, and a road that only knew those two
+would have had nowhere to put him.
+
 **A card does not say which row it asks.** The row comes with the character, the
 way its hearts do, and the child picks by the picture. Whether that matters is an
 open question, not a settled one: if a session turns into a lottery the child is
@@ -587,6 +609,76 @@ number says «which arithmetic», not «how hard the child will find it». Nothi
 the tables is corrected for it: **C4** absorbs it inside the battle, easing the
 rung down after three misses in a row. If it turns out to need more than that,
 the honest fix is the level table, not a fudge in the roster.
+
+**G9 — the campaign map.** The selection screen was thirty cards in a grid: no
+goal, no movement, and no reason to fight one rather than another. It is
+replaced by a road.
+
+*The map is generated, not written.* `src/game/journey.ts` builds a campaign
+from a seed: five regions stacked bottom to top, one per rung of **C1**,
+thirty-two battles, one region to a screen, scrolled through. Written out by
+hand, thirty-two encounters would be a data file nobody maintains, and they
+would be the same thirty-two every time. The save holds the seed and the list
+of what has been beaten — a handful of bytes — and the road is rebuilt
+identically on every load. When the castle falls a new seed is drawn, which is
+the honest answer to «the child gets through it in a day».
+
+*The road only gets harder, and never gets easier.* Inside a region the squad
+grows, one stack to five, so battles lengthen from twenty questions to a
+hundred. At a region boundary the maths steps up a rung and the squad drops back
+to one. Five peasants and one swordsman are neighbouring steps rather than a
+cliff, and meeting a new rung in a short battle is kinder than meeting it in a
+long one. Both halves are tests, because neither is visible in the config: the
+rung is non-decreasing along the road, and the squad is non-decreasing inside a
+region.
+
+*There is one road, and at the moment that is all there is.* No forks, and no
+choices: the child walks it end to end.
+
+Pockets — dead ends beside the path, optional, worth half again the gold — are
+built and **parked**. Every region asks for none, so the map is road and nothing
+else. The reason to keep the machinery rather than delete it is that the choice
+«fight it or walk past» is the only decision the map can offer, and it will
+probably be wanted back; the reason it is off is that a first road should be a
+road. Putting them back is one number per region, and «the map is all road» in
+`journey.test.ts` fails the moment it happens, which is the moment to think
+about it on purpose.
+
+*The castle is taken in three.* Wall, gate, throne room — seventy questions with
+two save points in the middle, because losing on the fortieth question of a
+single assault is not a finale, it is tears.
+
+*One region fills the window, and the child scrolls.* The map is five screens
+tall. Fitting all forty-eight medallions into one window was tried first and the
+portraits came out too small to be worth looking at — which matters, because the
+picture is the only thing a node says about itself. A screen per region also
+makes arriving somewhere new an event rather than a change of stripe, and it
+gives a one-row region like Хрюкино Поле room for a trail that really wanders.
+The map opens where the child left off; five screens of hunting for your own
+token is a puzzle nobody asked for.
+
+*The grid is a skeleton and is never drawn.* Six columns wide, and vertically a
+region's rows divide its screen between them — so a cell is the same size on
+every region, whether that region owns one row of the grid or two. The grid is
+what guarantees medallions cannot collide. Nodes are then nudged off their cell
+centres by an amount drawn from the same seed and joined by a Catmull-Rom curve,
+so what shows is a trail rather than a table. The nudge is a share of the cell
+and capped at a quarter of it; past half the clearance the guarantee the grid
+was there for is gone, and a test holds the cap.
+
+*No node carries a name.* Forty-eight labels is not something anyone reads, and
+the text came off the opponent cards a fortnight earlier for the same reason:
+the picture is what the child picks by. The squad's composition is a hover away.
+
+**G10 — gold, and the thing wrong with it.** A win pays hearts × level, and a
+pocket pays half again. It accumulates in the profile, it survives a new
+campaign, and **nothing spends it**. That is a counter, and a counter with no
+use stops meaning anything after a week or two.
+
+Recorded as a decision rather than glossed over, because the fix is known and
+was deliberately not built: gold hiring the child's own squad out of the units
+they have beaten. `defeated` already records who those are. When the counter
+goes flat, the shop is one screen away and nothing here has to move.
 
 ### A sketch (not a decision, a starting point for phase 6)
 
@@ -669,3 +761,5 @@ either.
 | 2026-09-01 | **Comparing numbers is back, re-cut to five rungs (G8).** The old form had two, and stopped there because bare numbers stop at a hundred — the numerals do (**T16**), so a three-digit number could be neither said, heard nor judged. Rungs 3–5 climb past that by comparing **sums** instead: an `a ± b` on each side, drawn from levels 1–3 of the arithmetic ladder, always works out in range, so the child names больше/меньше/равно after doing a sum rather than after reading a number the game cannot say. The prompt's two sides became `{terms, ops}` runs (a bare number is the one-term case), which rippled through the two `switch (prompt.kind)` sites and the id (`math:3+2?5-1`, order kept, no sign in it). `ComparisonAnswer` and its three-word grammar are untouched. The equal case on rungs 3–5 is a sum against its own value — `3 + 2 □ 5` — not a second sum tuned to match, which would be «generate and check»; independent sums also land equal by chance, on top of the built-in one-in-six. Un-parked per **G8**: uncommented in `TaskKind`, `RUNGS` and the `createMathExercise` switch, then given to two opponents (the goblin at rungs 1–2, the assassin at 3–4) who ask it and nothing else — the run-on-its-own the methodology wants. 295 tests. Catalogue: [MATH.md](MATH.md). |
 | 2026-09-01 | **Dead exports swept out.** A pass over every exported symbol under `src` turned up seven with no caller anywhere, tests included, and they are gone: `MemoryProfileStorage`, `TASK_KINDS`, the `Locale` type, and `Hint`/`HintKind` together with `SessionObserver.onHintShown` — the one event on the **A4** seam nothing has ever raised, since hints do not exist yet; it goes back on when they do (phase 5, and the roadmap says so). `t.teacher.didNotCatch` went with them, and that one was a judgement call: it was being kept for the voice that comes back, but a line nothing speaks is a line nobody notices going stale, and why it fell silent is written under **T18** where it will actually be read. Eight more lost only their `export` and stayed where they are used — `Bracket`, `PadInput`, `Mic`/`Flash`/`Screen`, `REVIEW_INTERVALS`, `MISTAKES_BEFORE_EASING`, `CORRECT_BEFORE_RESTORING` — because an export is a claim that somebody outside needs it, and none of them had one. **Not swept, and deliberately:** `WebSpeechTts` (the worked example under **O2**), the parked math rows (**G8**), `LAST_LEVEL` (**C1** wants the name to exist so nothing hard-codes the top rung), `Monster.stats` and the review queue. The last two are worth naming apart from the rest: `ReviewQueue` is filled, saved and never read back, so **C3** is wired but not switched on, and `Monster.stats` is King's Bounty reference data no code consumes. Both are unfinished work rather than leftovers, and neither is fixed by deleting it. 273 tests, unchanged. |
 | 2026-09-01 | **`Monster.stats` deleted after all — reversing the entry above.** The `UnitStats` interface, the `stats?` field, its `index.ts` re-export, and the seven combat columns transcribed into every `ROSTER` row are gone; a row is now `[id, level]` and `build` reads nothing else. The earlier call was to keep it as King's Bounty reference data «no code consumes» — but on a second look that argument cuts the other way: data that nothing reads is data nothing keeps honest, `Row` and the `build` destructuring paid the width of it on every line, and the numbers are one search away in the source game if a real use ever appears. This is a plain reversal, not a new fact — «unfinished work» was the wrong label for a table that was never going to be finished from inside this repo. Two tests went with the field (`stats were carried over without loss`, and the `stats` half of `two units of a level get the same battle`); the length of a battle already came from the level alone (**G7**), so nothing about play changes. 294 tests. |
+| 2026-09-01 | **The map replaced the selection screen, and a battle became a squad (G9, G10).** Thirty cards in a grid became a generated campaign: one road up five regions to a castle, thirty-two battles on it and sixteen in optional pockets, drawn from a seed the save carries so the road is rebuilt rather than stored. `Battle` now fights an `Encounter` of up to five stacks front to back, which is a win every kill instead of one at the end, and **G7** is amended with it: 20 / 18 / 16 / 14 / 12 is the hearts on one stack, not the length of a battle, so the level sets difficulty and the squad sets length. `Monster` lost `hearts` altogether and gained `level`, which is how a unit says which region it belongs to now that `stats` is gone. The child's own hearts stopped being six and became one per three and a half questions, floored at four. Gold accumulates and buys nothing yet, which is written down under **G10** rather than pretended about. `PROFILE_VERSION` deliberately **not** bumped: `gold` and `campaign` default in through `fromJSON`, and a bump would have wiped the child's progress. 313 tests. |
+| 2026-09-01 | **Pockets parked and the road left on its own.** The map is thirty-two battles and no side trips: the grid narrowed from six columns to four so the rows fill with road and nothing else, and every region now asks for zero pockets. The machinery stays in `journey.ts` — a pocket is the only choice the map has to offer and will likely be wanted back — and a test pins the state so putting them back has to be deliberate. 1760 questions to the castle, 5060 gold. |
