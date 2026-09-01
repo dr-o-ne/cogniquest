@@ -5,7 +5,7 @@
  *
  *   ROSTER  — every King's Bounty unit and the level it fights at
  *   IMAGES  — pictures. A UNIT WITHOUT A PICTURE NEVER APPEARS IN THE GAME
- *   TUNING  — hand corrections to hearts and difficulty where the maths is off
+ *   TUNING  — hand corrections where the level alone gets a unit wrong
  *
  * To add an opponent: drop a picture into public/monsters/ and add a line to
  * IMAGES. Nothing else is needed — both the length of the battle and the
@@ -33,8 +33,6 @@ export interface Monster {
   readonly tasks: readonly TaskKind[]
   /** A picture from public/monsters/. No picture, and the unit stays hidden. */
   readonly image?: string
-  /** An emoji for when the picture fails to load. */
-  readonly avatar?: string
   /** How many correct answers it takes to win. */
   readonly hearts: number
   /** Which math levels (C1) the tasks are drawn from. */
@@ -213,47 +211,16 @@ const SUBTRACTS: ReadonlySet<string> = new Set([
 
 const TUNING: Record<
   string,
-  { hearts?: number; levels?: number[]; avatar?: string; tasks?: TaskKind[] }
+  { hearts?: number; levels?: number[]; tasks?: TaskKind[] }
 > = {
-  // Her hearts used to be set by hand; the level answers that now, so the
-  // correction is gone.
-  'forest-fairy': { avatar: '🧚' },
-  peasant: { avatar: '🧑‍🌾' },
-  robber: { avatar: '🦹' },
-  swordsman: { avatar: '⚔️' },
-  skeleton: { avatar: '💀' },
-  'skeleton-archer': { avatar: '💀' },
   // Off the addition/subtraction split entirely: the goblin asks comparing
   // numbers, its own row for the length of a battle. Rungs 1–2 here (numbers),
   // and — when `addition-subtraction` comes back — this is also where the whole
   // list would be spelled out for chains.
-  goblin: { avatar: '👺', tasks: ['comparing-numbers'] },
-  zombie: { avatar: '🧟' },
-  archer: { avatar: '🏹' },
-  priest: { avatar: '✝️' },
-  imp: { avatar: '👿' },
-  'ancient-vampire-bat': { avatar: '🧛' },
-  gorgul: { avatar: '🗿' },
-  gobot: { avatar: '🦎' },
-  'adult-gobot': { avatar: '🐊' },
-  'fire-spider': { avatar: '🕷' },
-  'sea-devil': { avatar: '🦑' },
-  pirate: { avatar: '🏴‍☠️' },
-  'ghost-pirate': { avatar: '👻' },
-  'mage-slayer': { avatar: '🗡️' },
-  guardsman: { avatar: '🛡️' },
-  inquisitor: { avatar: '⚖️' },
-  scout: { avatar: '🧝' },
-  'sky-guard': { avatar: '🦅' },
+  goblin: { tasks: ['comparing-numbers'] },
   // The other comparing-numbers opponent, up where the sides are expressions
   // to work out first — rungs 3–4 (levels [3, 4]).
-  assassin: { avatar: '🥷', tasks: ['comparing-numbers'] },
-  archmage: { avatar: '🧙' },
-  cavalryman: { avatar: '🐎' },
-  pyromancer: { avatar: '🔥' },
-  knight: { avatar: '⚔️' },
-  paladin: { avatar: '🌟' },
-  archdemon: { avatar: '😈' },
+  assassin: { tasks: ['comparing-numbers'] },
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -413,7 +380,6 @@ function build(row: Row): Monster {
     // Written as a root path in IMAGES, resolved against wherever the app is
     // actually served from — see src/assets.ts.
     ...(image !== undefined ? { image: publicUrl(image) } : {}),
-    ...(tuned.avatar !== undefined ? { avatar: tuned.avatar } : {}),
     hearts: tuned.hearts ?? base.hearts,
     levels: tuned.levels ?? base.levels,
     color: base.color,
