@@ -476,6 +476,7 @@ back the moment reading (**C2**) needs one.
 | **G1** | Self-sufficient mini-games first; gamification is hung on top later (through **A4**). | Accepted |
 | **G6** | The format is a **Mortal Kombat style battle**: hearts on both sides, fought to a win, a result window. | Accepted |
 | **G7** | A monster's battle comes from its **level**: how many tasks it runs to, and which math rungs they are drawn from. The harder the tasks, the shorter the battle. | Accepted |
+| **G8** | A row coming back takes a **share of the roster**, not a share of every battle: opponents are split between the rows, so one battle is a run of one row. The split is **probation and dissolves** once the row has proved itself. | Accepted |
 | **G2** | The setting: wizard against a little monster / space / something else. | **Open** — phase 6 |
 | **G3** | The cast of teacher characters. | **Open** — the child may pick them |
 | **G4** | A timer on answers: speed bonus / hard limit / no clock. | **Deferred** — taken off the critical path by **A7** |
@@ -531,6 +532,61 @@ included — and nothing uses it for hearts today.
 
 The config is `src/game/monsters.ts`, pure data with no logic. A new opponent is
 one row in the array plus a name in the text pack.
+
+**G8 — why a row comes back across the roster rather than inside every battle.**
+Rows sit parked (see [MATH.md](MATH.md)) and the methodology says how one
+rejoins: given on its own for a while first, because a run of nothing else says
+plainly whether it is understood or merely guessed. The question that leaves open
+is what «a while» is made of, and there were three answers. Subtraction is the
+first row back on this one.
+
+Emptying the pool down to the new row would do it — every opponent asking nothing
+but subtraction for a session or two. It obeys the rule most literally and costs
+a session of addition, which is not much. Putting the row straight into every
+opponent's pool would do it too, and skips the run entirely.
+
+We split the roster instead. **A battle is already a run of one row** — ten to
+twenty tasks of nothing else (**G7**) — so a subtraction opponent gives the rule
+what it asks for, while the child who fights the next one is back on addition
+without a line of config changing. The mix moves up a level: from within a battle
+to across a session.
+
+**The split runs across each level band, never between them.** Every unit level
+on the selection screen offers both rows. Splitting by level instead — the easy
+opponents add, the hard ones subtract — would quietly make «subtraction» a name
+for «a certain difficulty», and **G7** has two dials already; a third one hidden
+inside the choice of row would tangle all three. A list alone cannot hold that,
+since nothing about a roster row says which side it lands on, so a test does:
+«the split covers every band» in `Battle.test.ts`.
+
+**The split is the probation, not the destination — and this is the part to
+remember.** It contradicts a standing rule of the methodology, which says a task
+is drawn afresh for every question precisely so the child cannot settle into one
+operation and stop reading (see «Mixed, not blocked» in [MATH.md](MATH.md)).
+Inside one battle they now can. That is the price of the run, paid on purpose and
+only for as long as the run is worth having: when a row has shown it is
+understood rather than guessed, it joins every opponent's pool, the split
+dissolves, and the rule holds again at the level it is written at. Left standing
+past that point, this decision turns into blocks wearing the costume of variety —
+so it is a decision with an end, not a permanent arrangement.
+
+Two consequences worth stating rather than discovering.
+
+**A card does not say which row it asks.** The row comes with the character, the
+way its hearts do, and the child picks by the picture. Whether that matters is an
+open question, not a settled one: if a session turns into a lottery the child is
+frustrated by, the cheap fix is a `+` or `−` on the card. That is a sign, not the
+sentence of `battleHints` that came off the cards on 2026-09-01 — the objection
+then was to a label repeating what the card already showed, and the row is not
+something the card shows.
+
+**A subtraction opponent is harder than an addition one at the same level.** The
+rungs are shared — one generator, one table, `13−6` sitting on the same rung as
+`8+5` — but borrowing is harder than carrying for a six-year-old, and the level
+number says «which arithmetic», not «how hard the child will find it». Nothing in
+the tables is corrected for it: **C4** absorbs it inside the battle, easing the
+rung down after three misses in a row. If it turns out to need more than that,
+the honest fix is the level table, not a fudge in the roster.
 
 ### A sketch (not a decision, a starting point for phase 6)
 
@@ -609,3 +665,4 @@ either.
 | 2026-09-01 | **A battle's length comes from the level, not from King's Bounty health (G7).** Twenty tasks at level 1, then 18, 16, 12, 10 — the easy rungs are the long ones, because easy tasks are quick and want repeating, and the hard rungs are short, because two-digit carrying is slow. Health set the hearts before, on a log scale, which made the hardest opponent the longest one as well: thirty-five carries for an ancient ent against six small sums for a peasant. `heartsFromHealth` is gone with it, and `HEARTS_MIN`/`HEARTS_MAX` are now read off the table rather than written down beside it. The fairy loses her hand-set hearts — the reason for them was that she has no stats, and stats no longer decide. Health stays in the roster as reference data, and stays out of the battle. |
 | 2026-09-01 | **The teacher went quiet, on purpose (T12, O2).** Every spoken line — the question read out, «I did not catch that», the answer after a mistake — goes to `SilentTeacher`, an implementation of the `TextToSpeech` port that drops what it is given. The voice is being replaced, and unplugging it is one line where tearing it out would have been the loop, the lines in the text pack and the port. `WebSpeechTts` stays in the tree, unused, as the worked example of what an implementation looks like; `tts.prepare()` goes with it, since a mute teacher has no voices to wait for. Nothing else changes: the child still answers out loud (P9), the question is still on the screen, and the loop still asks for every line it always asked for. |
 | 2026-09-01 | **The pad came out of hiding, and the voice stopped answering (T18, replacing T5).** Recognition is slow and sometimes wrong, and **T5** turned both facts into a punishment: the answer was whatever the recogniser decided, scored the moment it decided it. So the two jobs are split. The pad is on screen for every task; the microphone is live from the first moment and fills the **same field** the keys do; nothing is sent until «Атака» is pressed. A mishearing is now something to look at and erase rather than a lost heart, and a miss is not even an attempt — the loop listens again with the question still standing, so **C5** has nothing left to forgive and `unrecognised` stops reaching the session from a battle. The draft moved up into `useBattle` because two things write to it, `Promise.race` between voice and keyboard is gone (**A3** amended), and a microphone that dies now costs the mic line rather than the battle. Comparisons follow the same rule for the sake of having one rule: picking a sign selects it, «Атака» sends it. The price is the one **P9** named — buttons in permanent view are the easy way, and it is now available; written down under **T18** rather than glossed over, to be watched on the child. |
+| 2026-09-01 | **Subtraction is back, and G8 says how any parked row comes back.** The row needed no design at all: it shares one table and one generator with addition — `generateProblem(level, random, '-')` — so the two are one ladder read two ways, built and tested at every rung, and «the same difficulty as addition» turned out to be a property of the code rather than something to arrange. Switching it on was four uncommented lines in `kinds.ts` and no import, which is why it came back before the other three. What needed deciding was how a row rejoins play. Not by emptying every pool down to it for a session, and not by joining every pool at once, but by **taking a share of the roster**: a battle is already ten to twenty tasks of one row, so a subtraction opponent is the run-on-its-own the methodology asks for, while the next opponent is back on addition. Fourteen of the thirty opponents on the selection screen ask it, split inside each level band and never between them — otherwise the choice of row becomes a third difficulty dial behind **G7**'s two — and a test holds that, since nothing about a roster row says which side it lands on. **The split is temporary by design**: it contradicts «mixed, not blocked», inside a battle the child can settle into the operation, and that price is paid only until the row has shown it is understood, whereupon both rows go into every pool and the split dissolves. Two things to watch: a card does not say which row it asks (open — a `+`/`−` sign is the cheap fix), and a subtraction opponent is harder than an addition one at the same level, which **C4** absorbs inside the battle. Catalogue: [MATH.md](MATH.md). |

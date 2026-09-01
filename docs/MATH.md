@@ -31,7 +31,7 @@ says five.
 | Type | 1 | 2 | 3 | 4 | 5 |
 |---|:-:|:-:|:-:|:-:|:-:|
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Subtraction | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
+| Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Addition + subtraction | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
 | Missing number `□+2=5` | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
 | Comparing numbers `5 □ 7` | ⏸ | ⏸ | — | — | — |
@@ -47,12 +47,19 @@ says five.
 | Measuring | ✖ | ✖ | ✖ | ✖ | ✖ |
 | Patterns | ☐ | ☐ | ☐ | — | — |
 
-**Only addition is asked right now** — that is what ⏸ means on the four rows
-under it. What each of them asks, and by what rules, is written down below and
-still holds: nothing has been withdrawn or rethought. They are simply not drawn
-while they go back one row at a time, each given on its own long enough to say
-whether it works before the next joins it. A ⏸ is a row waiting its turn, and
-the only cell that changes when its turn comes is the tick.
+**Addition and subtraction are asked; three rows are still parked** — that is
+what ⏸ means. What each of them asks, and by what rules, is written down below
+and still holds: nothing has been withdrawn or rethought. They are simply not
+drawn while they go back one row at a time, each given on its own long enough to
+say whether it works before the next joins it. A ⏸ is a row waiting its turn,
+and the only cell that changes when its turn comes is the tick.
+
+**Subtraction came back first because it was the cheapest of the four.** It
+shares one table below with addition, and one generator behind that table, so
+there was no methodology to write and no rung to re-cut: the row is the same five
+rungs read backwards, built and tested at every one of them. What had to be
+decided was not what it asks but how it comes back — a question for the game
+rather than for this document, answered by **G8** in [DECISIONS.md](DECISIONS.md).
 
 Our rungs are not always the grid's. It asks for three numbers at level 3,
 where we put two-digit-without-carrying, so that each rung introduces one
@@ -109,6 +116,17 @@ rung, and «zero» became an answer worth guessing.
 
 One table for both rows: subtraction is the same rung read backwards, not a
 ladder of its own.
+
+That is not a saving in paper, it is what keeps the two rows in step. Two tables
+would be two ladders to re-cut together, and the missing-number row has already
+shown how that ends — it was granted a ladder of its own and fell out of step at
+the first re-cut. One table means the level number says the same thing on both
+rows by construction, so «subtraction at the same difficulty as addition» needs
+nothing built in order to be true.
+
+It does not mean the two are equally hard for a child. Borrowing is heavier than
+carrying, and `13−6` costs more than `8+5` on the rung they share. A level says
+which arithmetic, not how hard it will feel — see **G8**.
 
 | Level | What is asked | Answers | Example |
 |---|---|---|---|
@@ -318,9 +336,29 @@ first, a run of nothing else says plainly whether it is understood or merely
 guessed; only then does it join the draw. Which rows are mixed together in
 practice is a question for the game, not for the methodology.
 
-Which is where the ⏸ rows stand today: the mix has been emptied back to
-addition, and each row rejoins the draw by that same rule — asked on its own
-first, then mixed in.
+Which is where the ⏸ rows stand today: the mix was emptied back to addition, and
+each row rejoins by that same rule — asked on its own first, then mixed in.
+
+**What «on its own» is made of is the game's business, and the game answers it
+with the roster.** A battle is already a run of one row — ten to twenty tasks of
+nothing else — so a row comes back on a share of the opponents rather than in
+every opponent's pool. The child then meets both rows in a session and one row
+in a battle, and the rule this document asks for is satisfied a level down from
+where it is written: **G8** in [DECISIONS.md](DECISIONS.md).
+
+**And the split is the probation, not the destination.** It has to be said
+plainly, because a roster split and the rule at the top of this section pull
+against each other: inside one battle the child does meet a block of one row, and
+does get to settle into the operation. That is the cost of the run, knowingly
+paid, and it is paid only while the run is worth having. Once a row has shown it
+is understood rather than guessed, it goes into every opponent's pool, the split
+that carried it dissolves, and «drawn afresh for every question» is true again —
+of the question, not merely of the session. A split left standing after that
+would be blocks dressed up as variety.
+
+The share is taken across each level band and never between them. A row that
+belonged to the easy opponents would turn into a name for a difficulty, and the
+difficulty is what the rungs are for.
 
 A row is drawn only at a level it actually has. Comparing numbers has two rungs,
 so above level 2 it is simply not asked — not a gap to fill later, but the end

@@ -164,11 +164,11 @@ const IMAGES: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * What every opponent asks unless TUNING overrides it.
+ * What an opponent asks unless it is on the other side of the split, or TUNING
+ * overrides it outright.
  *
- * Addition alone at the moment. The other rows are parked in `core/math/kinds`
- * while they are put back one at a time — the lines below come back with the
- * kinds themselves, and until then they would not compile.
+ * Addition alone at the moment. The rows still parked in `core/math/kinds` are
+ * listed below and would not compile until they come back.
  *
  * Chains (`addition-subtraction`) were never in this default even so: they need
  * a two-digit-carrying head for level 4, so they belong to opponents chosen for
@@ -176,10 +176,53 @@ const IMAGES: Record<string, string> = {
  */
 const DEFAULT_TASKS: readonly TaskKind[] = [
   'addition',
-  // 'subtraction',
   // 'missing-number',
   // 'comparing-numbers',
 ]
+
+/** The other side of the split (G8). One row, nothing mixed into it. */
+const SUBTRACTION_TASKS: readonly TaskKind[] = ['subtraction']
+
+/**
+ * Which opponents are on it (**G8**).
+ *
+ * A row comes back on a share of the roster rather than in every pool, because
+ * a battle is already a run of one row — ten to twenty tasks of nothing else —
+ * and that is the run the methodology asks for before a row joins the draw. The
+ * child meets both rows in a session and one row in a battle.
+ *
+ * **The share is taken inside each level band and never between them.** Were
+ * the subtraction opponents the hard ones, «subtraction» would quietly become a
+ * name for a difficulty, and **G7** has two dials already. «The split covers
+ * every band» in Battle.test.ts holds it, so a new opponent cannot tilt a band
+ * unnoticed — a list on its own could not, since nothing about a roster row
+ * says which side it lands on.
+ *
+ * A list and not a rule, deliberately. Faction was the tempting rule — the
+ * undead and the demons take away — and it does not divide: at level 2 they are
+ * two opponents out of ten. A rule bent until the numbers work is worse than a
+ * list that says what it is.
+ */
+const SUBTRACTS: ReadonlySet<string> = new Set([
+  // level 1
+  'robber',
+  'skeleton',
+  'skeleton-archer',
+  // level 2
+  'zombie',
+  'imp',
+  'pirate',
+  'swordsman',
+  'fire-spider',
+  // level 3
+  'gorgul',
+  'inquisitor',
+  'sky-guard',
+  // level 4
+  'archmage',
+  'cavalryman',
+  'paladin',
+])
 
 const TUNING: Record<
   string,
@@ -420,7 +463,7 @@ function build(row: Row): Monster {
     // Falling back to the id keeps a missing translation visible instead of
     // blank. A test makes sure it never actually comes to that.
     name: t.monsters[id] ?? id,
-    tasks: tuned.tasks ?? DEFAULT_TASKS,
+    tasks: tuned.tasks ?? (SUBTRACTS.has(id) ? SUBTRACTION_TASKS : DEFAULT_TASKS),
     // Written as a root path in IMAGES, resolved against wherever the app is
     // actually served from — see src/assets.ts.
     ...(image !== undefined ? { image: publicUrl(image) } : {}),

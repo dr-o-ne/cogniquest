@@ -20,17 +20,21 @@ import { MATH_LEVELS } from './levels'
  * join this union as they land, and every switch over it stops compiling until
  * it says what to do with them.
  *
- * **Only addition is asked at the moment.** The other four rows are written and
- * still under test — their generators, their rules and their test files are
- * untouched — but parked here while they are put back one at a time. Parked,
- * not deleted: a row is commented out in exactly four places, this union,
- * `TASK_KINDS`, `RUNGS` and the switch at the foot of the file, plus its import
- * at the top. Uncomment those and the row is playable again, along with the one
- * line of `DEFAULT_TASKS` in game/monsters.ts that offers it to an opponent.
+ * **Addition and subtraction are asked; the other three rows are parked.** They
+ * are written and still under test — their generators, their rules and their
+ * test files are untouched — but not drawn while they go back one at a time.
+ * Parked, not deleted: a row is commented out in exactly four places, this
+ * union, `TASK_KINDS`, `RUNGS` and the switch at the foot of the file, plus its
+ * import at the top. Uncomment those and the row is playable again, along with
+ * whatever in game/monsters.ts offers it to an opponent.
+ *
+ * Subtraction needed no import of its own, which is why it came back first: it
+ * shares `generateProblem` with addition and passes it a different operation.
+ * One ladder read two ways rather than two ladders — see docs/MATH.md.
  */
 export type TaskKind =
   | 'addition'
-// | 'subtraction'
+  | 'subtraction'
 // | 'addition-subtraction'
 // | 'missing-number'
 // | 'comparing-numbers'
@@ -38,7 +42,7 @@ export type TaskKind =
 /** Every kind that exists today, for defaults and for tests. */
 export const TASK_KINDS: readonly TaskKind[] = [
   'addition',
-  // 'subtraction',
+  'subtraction',
   // 'addition-subtraction',
   // 'missing-number',
   // 'comparing-numbers',
@@ -55,7 +59,7 @@ export const TASK_KINDS: readonly TaskKind[] = [
  */
 const RUNGS: Record<TaskKind, readonly number[]> = {
   addition: MATH_LEVELS,
-  // subtraction: MATH_LEVELS,
+  subtraction: MATH_LEVELS,
   // 'addition-subtraction': MATH_LEVELS,
   // Rides the addition/subtraction ladder — a base problem for the level with
   // one operand hidden — so it reaches every rung they do.
@@ -89,8 +93,8 @@ export function createMathExercise(kind: TaskKind, levelId: number, random: Rand
     case 'addition':
       return toExercise(generateProblem(levelId, random, '+'), levelId)
 
-    // case 'subtraction':
-    //   return toExercise(generateProblem(levelId, random, '-'), levelId)
+    case 'subtraction':
+      return toExercise(generateProblem(levelId, random, '-'), levelId)
 
     // case 'addition-subtraction':
     //   return createChainExercise(levelId, random)

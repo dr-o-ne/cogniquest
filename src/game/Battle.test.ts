@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Exercise } from '@/core/exercises'
-import { ArithmeticAnswer, taskChoices } from '@/core/math'
+import { ArithmeticAnswer, taskChoices, type TaskKind } from '@/core/math'
 import type { AnswerResult } from '@/core/session'
 import { t } from '@/locale'
 import { Battle } from './Battle'
@@ -180,6 +180,56 @@ describe('the monster config', () => {
       const shown = availableMonsters()
       for (let i = 1; i < shown.length; i++) {
         expect(Math.max(...shown[i]!.levels)).toBeGreaterThanOrEqual(Math.max(...shown[i - 1]!.levels))
+      }
+    })
+  })
+
+  /**
+   * G8: a row comes back on a share of the roster, and the share is taken
+   * inside each level band rather than between them.
+   *
+   * This is the half of the decision a list cannot hold on its own. Adding an
+   * opponent is one row in an array, and nothing about that row says which side
+   * of the split it lands on — so a band can tilt, or empty out altogether,
+   * without anybody meaning it to. Then «subtraction» starts to mean «the hard
+   * ones», which is the one thing G8 says it must not mean.
+   */
+  describe('the split covers every band', () => {
+    /** Shown opponents grouped by the rung they top out at. */
+    const bands = () => {
+      const byLevel = new Map<number, Monster[]>()
+      for (const monster of availableMonsters()) {
+        const top = Math.max(...monster.levels)
+        byLevel.set(top, [...(byLevel.get(top) ?? []), monster])
+      }
+      return byLevel
+    }
+
+    const asking = (units: readonly Monster[], kind: TaskKind) =>
+      units.filter((monster) => monster.tasks.includes(kind))
+
+    it('both rows are on the selection screen at all', () => {
+      const shown = availableMonsters()
+      expect(asking(shown, 'addition').length).toBeGreaterThan(0)
+      expect(asking(shown, 'subtraction').length).toBeGreaterThan(0)
+    })
+
+    it('every band offers both rows', () => {
+      for (const [level, units] of bands()) {
+        expect(asking(units, 'addition').length, `no addition at level ${level}`).toBeGreaterThan(0)
+        expect(asking(units, 'subtraction').length, `no subtraction at level ${level}`).toBeGreaterThan(0)
+      }
+    })
+
+    it('neither row is a token presence in a band', () => {
+      // A third, floored, and never less than one: a band of six wants two of
+      // each, a band of ten wants three. One opponent out of ten is a row the
+      // child meets by accident rather than one they are being taught.
+      for (const [level, units] of bands()) {
+        const least = Math.max(1, Math.floor(units.length / 3))
+        for (const kind of ['addition', 'subtraction'] as const) {
+          expect(asking(units, kind).length, `${kind} at level ${level}`).toBeGreaterThanOrEqual(least)
+        }
       }
     })
   })
