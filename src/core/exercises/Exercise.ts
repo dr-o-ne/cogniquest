@@ -45,10 +45,16 @@ export type ExercisePrompt =
       readonly blank: number
     }
   /**
-   * «5 □ 7» — two numbers with the sign missing between them. The child names
-   * the sign, so this is the first prompt whose answer is not a number.
+   * «5 □ 7», and higher up «3 + 2 □ 5 − 1» — two sides with the sign missing
+   * between them. The child names the sign, so this is the first prompt whose
+   * answer is not a number. Each side is a `terms`/`ops` run exactly as for
+   * `arithmetic`; a bare number is the one-term, zero-op case.
    */
-  | { readonly kind: 'comparison'; readonly left: number; readonly right: number }
+  | {
+      readonly kind: 'comparison'
+      readonly left: { readonly terms: readonly number[]; readonly ops: readonly MathOp[] }
+      readonly right: { readonly terms: readonly number[]; readonly ops: readonly MathOp[] }
+    }
 
 /**
  * One exercise type per subject, and every layer above written against it (A2).

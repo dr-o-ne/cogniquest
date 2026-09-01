@@ -236,12 +236,11 @@ const TUNING: Record<
   swordsman: { avatar: '⚔️' },
   skeleton: { avatar: '💀' },
   'skeleton-archer': { avatar: '💀' },
-  // The one opponent that also asks chains — hence the whole list spelled out.
-  // Parked with the row itself; back when `addition-subtraction` is.
-  goblin: {
-    avatar: '👺',
-    // tasks: [...DEFAULT_TASKS, 'addition-subtraction'],
-  },
+  // Off the addition/subtraction split entirely: the goblin asks comparing
+  // numbers, its own row for the length of a battle. Rungs 1–2 here (numbers),
+  // and — when `addition-subtraction` comes back — this is also where the whole
+  // list would be spelled out for chains.
+  goblin: { avatar: '👺', tasks: ['comparing-numbers'] },
   zombie: { avatar: '🧟' },
   archer: { avatar: '🏹' },
   priest: { avatar: '✝️' },
@@ -259,7 +258,9 @@ const TUNING: Record<
   inquisitor: { avatar: '⚖️' },
   scout: { avatar: '🧝' },
   'sky-guard': { avatar: '🦅' },
-  assassin: { avatar: '🥷' },
+  // The other comparing-numbers opponent, up where the sides are expressions
+  // to work out first — rungs 3–4 (levels [3, 4]).
+  assassin: { avatar: '🥷', tasks: ['comparing-numbers'] },
   archmage: { avatar: '🧙' },
   cavalryman: { avatar: '🐎' },
   pyromancer: { avatar: '🔥' },

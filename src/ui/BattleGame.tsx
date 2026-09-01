@@ -375,21 +375,39 @@ function Expression({ exercise }: { exercise: Exercise }) {
       )
     }
 
-    case 'comparison':
+    case 'comparison': {
+      // «5 □ 7» stays big; «3 + 2 □ 5 − 1» is set smaller so both sides fit.
+      const long = prompt.left.ops.length > 0 || prompt.right.ops.length > 0
+
       return (
-        <div className="expression">
-          <span>{prompt.left}</span>
+        <div className={long ? 'expression expression--long' : 'expression'}>
+          <TermRun {...prompt.left} />
           {/* An empty box rather than a «□»: drawn in CSS it is the same size
               whatever font the machine has, and there is no glyph to go
               missing at eight times the body text. */}
           <span className="expression__box" />
-          <span>{prompt.right}</span>
+          <TermRun {...prompt.right} />
         </div>
       )
+    }
 
     default:
       return assertNever(prompt, 'exercise prompt')
   }
+}
+
+/** One side of a comparison — a bare number, or a small sum like «3 + 2». */
+function TermRun({ terms, ops }: { terms: readonly number[]; ops: readonly MathOp[] }) {
+  return (
+    <span className="expression__run">
+      {terms.map((term, i) => (
+        <Fragment key={i}>
+          {i > 0 && <span className="expression__op">{sign(ops[i - 1]!)}</span>}
+          <span>{term}</span>
+        </Fragment>
+      ))}
+    </span>
+  )
 }
 
 /**

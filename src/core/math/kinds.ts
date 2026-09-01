@@ -3,8 +3,8 @@ import { assertNever } from '../exhaustive'
 import type { Random } from '../random'
 // Parked along with the rows they build — see the note on `TaskKind` below.
 // import { createChainExercise } from './chains'
-// import { COMPARISON_LEVELS, createComparisonExercise } from './comparison'
 // import { createEquationExercise } from './equations'
+import { COMPARISON_LEVELS, createComparisonExercise } from './comparison'
 import { generateProblem, toExercise } from './generator'
 import { MATH_LEVELS } from './levels'
 
@@ -20,13 +20,13 @@ import { MATH_LEVELS } from './levels'
  * join this union as they land, and every switch over it stops compiling until
  * it says what to do with them.
  *
- * **Addition and subtraction are asked; the other three rows are parked.** They
- * are written and still under test — their generators, their rules and their
- * test files are untouched — but not drawn while they go back one at a time.
- * Parked, not deleted: a row is commented out in exactly three places, this
- * union, `RUNGS` and the switch at the foot of the file, plus its import at the
- * top. Uncomment those and the row is playable again, along with whatever in
- * game/monsters.ts offers it to an opponent.
+ * **Addition, subtraction and comparing numbers are asked; the other two rows
+ * are parked.** They are written and still under test — their generators, their
+ * rules and their test files are untouched — but not drawn while they go back
+ * one at a time. Parked, not deleted: a row is commented out in exactly three
+ * places, this union, `RUNGS` and the switch at the foot of the file, plus its
+ * import at the top. Uncomment those and the row is playable again, along with
+ * whatever in game/monsters.ts offers it to an opponent.
  *
  * Subtraction needed no import of its own, which is why it came back first: it
  * shares `generateProblem` with addition and passes it a different operation.
@@ -35,27 +35,28 @@ import { MATH_LEVELS } from './levels'
 export type TaskKind =
   | 'addition'
   | 'subtraction'
+  | 'comparing-numbers'
 // | 'addition-subtraction'
 // | 'missing-number'
-// | 'comparing-numbers'
 
 /**
  * Which levels each kind actually has a rung on.
  *
- * Not every row reaches every level — comparing numbers stops at two, because
- * that is where the row itself stops (see comparison.ts) — and a kind drawn at
- * a level it does not reach throws in the middle of a battle, which is the
- * worst place to find out. Kept as a table, and paired with the levels before a
- * question is drawn, so that never happens.
+ * Not every row need reach every level — a kind drawn at a level it does not
+ * reach throws in the middle of a battle, which is the worst place to find out.
+ * Kept as a table, and paired with the levels before a question is drawn, so
+ * that never happens. Comparing numbers now does run the whole ladder — rungs
+ * 3–5 compare expressions, so the hundred wall no longer stops it (see
+ * comparison.ts) — but the table stays the mechanism.
  */
 const RUNGS: Record<TaskKind, readonly number[]> = {
   addition: MATH_LEVELS,
   subtraction: MATH_LEVELS,
+  'comparing-numbers': COMPARISON_LEVELS,
   // 'addition-subtraction': MATH_LEVELS,
   // Rides the addition/subtraction ladder — a base problem for the level with
   // one operand hidden — so it reaches every rung they do.
   // 'missing-number': MATH_LEVELS,
-  // 'comparing-numbers': COMPARISON_LEVELS,
 }
 
 export function levelsFor(kind: TaskKind): readonly number[] {
@@ -87,14 +88,14 @@ export function createMathExercise(kind: TaskKind, levelId: number, random: Rand
     case 'subtraction':
       return toExercise(generateProblem(levelId, random, '-'), levelId)
 
+    case 'comparing-numbers':
+      return createComparisonExercise(levelId, random)
+
     // case 'addition-subtraction':
     //   return createChainExercise(levelId, random)
 
     // case 'missing-number':
     //   return createEquationExercise(levelId, random)
-
-    // case 'comparing-numbers':
-    //   return createComparisonExercise(levelId, random)
 
     default:
       return assertNever(kind, 'kind of task')

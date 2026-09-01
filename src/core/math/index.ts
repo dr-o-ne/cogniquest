@@ -12,8 +12,10 @@ export {
 export {
   COMPARISON_LEVELS,
   createComparisonExercise,
+  describeSide,
   generateComparison,
   type ComparisonProblem,
+  type ComparisonSide,
 } from './comparison'
 export {
   createEquationExercise,

@@ -398,6 +398,14 @@ img.avatar {
   color: var(--muted);
 }
 
+/* One side of a comparison: its own numbers and signs sit closer together than
+   the gap around the box that separates the two sides. */
+.expression__run {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .mic-state {
   margin: 0;
   min-height: 1.6rem;

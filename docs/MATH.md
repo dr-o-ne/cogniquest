@@ -34,7 +34,7 @@ says five.
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Addition + subtraction | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
 | Missing number `□+2=5` | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
-| Comparing numbers `5 □ 7` | ⏸ | ⏸ | — | — | — |
+| Comparing numbers `5 □ 7` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Increase / decrease by | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Making a number (5 = 2 + □) | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -47,12 +47,13 @@ says five.
 | Measuring | ✖ | ✖ | ✖ | ✖ | ✖ |
 | Patterns | ☐ | ☐ | ☐ | — | — |
 
-**Addition and subtraction are asked; three rows are still parked** — that is
-what ⏸ means. What each of them asks, and by what rules, is written down below
-and still holds: nothing has been withdrawn or rethought. They are simply not
-drawn while they go back one row at a time, each given on its own long enough to
-say whether it works before the next joins it. A ⏸ is a row waiting its turn,
-and the only cell that changes when its turn comes is the tick.
+**Addition, subtraction and comparing numbers are asked; two rows are still
+parked** — that is what ⏸ means. What each of them asks, and by what rules, is
+written down below and still holds: nothing has been withdrawn or rethought.
+They are simply not drawn while they go back one row at a time, each given on
+its own long enough to say whether it works before the next joins it. A ⏸ is a
+row waiting its turn, and the only cell that changes when its turn comes is the
+tick.
 
 **Subtraction came back first because it was the cheapest of the four.** It
 shares one table below with addition, and one generator behind that table, so
@@ -61,13 +62,20 @@ rungs read backwards, built and tested at every one of them. What had to be
 decided was not what it asks but how it comes back — a question for the game
 rather than for this document, answered by **G8** in [DECISIONS.md](DECISIONS.md).
 
+**Comparing numbers came back second, re-cut to a full five rungs.** The old
+two-rung form stopped where the numerals do; the new one climbs past that by
+comparing sums instead of bare numbers from level 3 on — `13 − 6 □ 30 + 40` —
+so nothing over a hundred ever has to be named, only worked out. Its two
+opponents ask it and nothing else, the run the methodology asks for.
+
 Our rungs are not always the grid's. It asks for three numbers at level 3,
 where we put two-digit-without-carrying, so that each rung introduces one
 difficulty instead of three.
 
-Nor does every row run the whole width. Comparing numbers stops at two rungs
-because the row itself does — the dashes there mean «nothing left to ask», not
-«not written yet».
+Comparing numbers used to stop at two rungs, where the numerals run out. It now
+runs the full width: rungs 3–5 compare sums rather than bare numbers, so the
+child works each side out and names a word without ever meeting a number over a
+hundred.
 
 The mixed row starts where the other two do, but not with one operation: its
 first rung is three small numbers. «One action» would be `9 − 6`, which is what
@@ -244,21 +252,25 @@ did not already ask.
 
 ## Comparing numbers
 
-| Level | What is asked | Example |
+| Level | What is compared | Example |
 |---|---|---|
-| 1 | two numbers within ten | `3 □ 8` |
+| 1 | two numbers up to twenty | `3 □ 18` |
 | 2 | two-digit numbers | `19 □ 21` |
+| 3 | two sums within five | `3 + 2 □ 5 − 1` |
+| 4 | two sums within ten | `7 + 3 □ 9 − 4` |
+| 5 | two sums that work the ten | `13 − 6 □ 30 + 40` |
 
 The answer is a word — больше, меньше or равно — read left to right: in
 `5 □ 7` the five is the one that is меньше.
 
-**Two rungs is the whole row.** Its difficulty is how far into a number the
-child has to look, and there are only two answers to that here: at one digit
-there is nothing to look past, at two there is. The third would be three-digit
-numbers, and the number words stop at a hundred — «сто двадцать» is outside the
-vocabulary the game has. So levels 3–5 are marked «not asked» rather than «not
-written yet». Comparing whole expressions — `5+3 □ 4+4` — would climb further,
-but that is a different question and would want a row of its own.
+**Rungs 1–2 compare bare numbers; 3–5 compare sums.** The difficulty on the
+first two is how far into a number the child has to look — nothing past the
+units at one digit, the tens at two. That is as far as bare numbers go, because
+the numerals stop at a hundred (a three-digit number can be neither said nor
+heard nor judged). Rungs 3–5 carry on from there by putting an `a ± b` on each
+side instead: drawn from levels 1, 2 and 3 of the arithmetic ladder, they
+always work out inside the range, so the child names a word after doing a sum,
+never after reading a number the game cannot say.
 
 **Level 2 exists to catch one mistake.** Nine is more than one, so nineteen
 must be more than twenty-one. A problem where the units happen to agree with
@@ -273,7 +285,11 @@ nothing at all, and nothing is what that shortcut deserves.
 
 **«Равно» is one answer in six.** All three words are named in every question,
 so one that never came up would make the offer a lie. A third would be too
-many: two numbers that are the same are the easiest of the three to see.
+many: two sides that are the same are the easiest of the three to see. On rungs
+3–5 the equal case is built as a sum against its own value — `3 + 2 □ 5` —
+rather than a second sum tuned to match, which would be «generate and check»;
+two independent sums also land equal by chance now and then, on top of the one
+in six, and that is fine.
 
 **The first row not answered with a number**, and one thing follows from that
 which no other row has to worry about: **three answers can be guessed.** One
@@ -360,6 +376,6 @@ The share is taken across each level band and never between them. A row that
 belonged to the easy opponents would turn into a name for a difficulty, and the
 difficulty is what the rungs are for.
 
-A row is drawn only at a level it actually has. Comparing numbers has two rungs,
-so above level 2 it is simply not asked — not a gap to fill later, but the end
-of that row.
+A row is drawn only at a level it actually has. Comparing numbers now runs all
+five rungs, so an opponent that asks it compares at whatever levels its own band
+reaches — bare numbers low down, sums higher up.

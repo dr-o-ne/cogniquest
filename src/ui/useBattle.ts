@@ -159,8 +159,20 @@ function questionText(exercise: Exercise): string {
       return words.join(' ')
     }
 
-    case 'comparison':
-      return t.teacher.compare(numberToWords(prompt.left), numberToWords(prompt.right))
+    // «Сравни. три плюс два и пять. Больше, меньше или равно?» — each side read
+    // as its own little sum, or just a number when that is all it is.
+    case 'comparison': {
+      const say = (side: { terms: readonly number[]; ops: readonly MathOp[] }) =>
+        side.terms
+          .reduce<string[]>((said, term, i) => {
+            if (i > 0) said.push(spoken(side.ops[i - 1]!))
+            said.push(numberToWords(term))
+            return said
+          }, [])
+          .join(' ')
+
+      return t.teacher.compare(say(prompt.left), say(prompt.right))
+    }
 
     default:
       return assertNever(prompt, 'exercise prompt')
@@ -188,7 +200,12 @@ function spokenAnswer(exercise: Exercise): string | null {
     }
 
     case 'comparison':
-      return comparisonWord(compare(prompt.left, prompt.right))
+      return comparisonWord(
+        compare(
+          evaluate(prompt.left.terms, prompt.left.ops),
+          evaluate(prompt.right.terms, prompt.right.ops),
+        ),
+      )
 
     default:
       return assertNever(prompt, 'exercise prompt')
