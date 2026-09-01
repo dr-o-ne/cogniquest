@@ -160,7 +160,7 @@ describe('the monster config', () => {
     it('picture-less units are in the roster but never in the game', () => {
       const shown = new Set(availableMonsters().map((monster) => monster.id))
       expect(MONSTERS.length).toBeGreaterThan(shown.size)
-      expect(shown.has('black-dragon')).toBe(false)
+      expect(shown.has('bone-dragon')).toBe(false)
     })
 
     it('ordered from easy to hard', () => {

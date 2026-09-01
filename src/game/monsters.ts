@@ -129,6 +129,10 @@ const IMAGES: Record<string, string> = {
   'royal-griffin': '/monsters/royal-griffin.webp',
   'royal-thorn': '/monsters/royal-thorn.webp',
   archdemon: '/monsters/archdemon.webp',
+  giant: '/monsters/giant.webp',
+  'lava-golem': '/monsters/lava-golem.webp',
+  'emerald-dragon': '/monsters/emerald-dragon.webp',
+  'black-dragon': '/monsters/black-dragon.webp',
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -171,10 +175,9 @@ export const ASKS: Record<number, Record<TaskKind, readonly string[]>> = {
     'comparing-numbers': ['assassin', 'paladin', 'royal-griffin'],
   },
   5: {
-    // One opponent, so one row — «even» here can only mean 0 or 1 each.
-    addition: ['archdemon'],
-    subtraction: [],
-    'comparing-numbers': [],
+    addition: ['archdemon', 'giant'],
+    subtraction: ['black-dragon', 'emerald-dragon'],
+    'comparing-numbers': ['lava-golem'],
   },
 }
 
