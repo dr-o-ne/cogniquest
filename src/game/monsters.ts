@@ -28,6 +28,16 @@ export interface Monster {
   readonly tasks: readonly TaskKind[]
   /** A picture from public/monsters/. No picture, and the unit stays hidden. */
   readonly image?: string
+  /**
+   * The unit's King's Bounty level, 1–5, which is what the card shows the child
+   * as its strength (`t.strength`).
+   *
+   * It happens to equal `Math.max(...levels)` — BY_LEVEL is cut so that a
+   * unit's top rung is its level — and a test holds that. Carried as a field of
+   * its own all the same: the child now reads this number off the screen, and a
+   * number on the screen must not depend on two tables agreeing by accident.
+   */
+  readonly level: number
   /** How many correct answers it takes to win. */
   readonly hearts: number
   /** Which math levels (C1) the tasks are drawn from. */
@@ -61,13 +71,28 @@ export const PLAYER_HEARTS = 6
  *
  * Hearts fall as the rungs rise — twenty bonds within five is a warm-up, twenty
  * two-digit carries is an evening's work.
+ *
+ * **The colours are one ramp, and that is deliberate.** They used to be five
+ * unrelated hues — green, teal, blue, magenta, red — chosen to be told apart at
+ * a glance, which is the right choice when a colour is only a name. It is the
+ * wrong one now the card prints «Слабый» in that same colour: a ramp from green
+ * to brick says «harder» by itself, and five unrelated hues would have said
+ * «different» while the word beside them said «harder». The cost is that
+ * neighbouring levels are now closer to each other than they were, which is
+ * what the word and the rank are there to settle.
+ *
+ * All five are kept to a middle lightness, and level 5 is a brick rather than
+ * the near-black brown the ramp wants to end on: these are drawn as **text** —
+ * the rank and the strength label on a selection card — over a background that
+ * is off-white in one theme and near-black in the other, and a colour dark
+ * enough to read on the first disappears into the second.
  */
 const BY_LEVEL: Record<number, { hearts: number; levels: number[]; color: string }> = {
-  1: { hearts: 20, levels: [1], color: '#7cb342' },
-  2: { hearts: 18, levels: [1, 2], color: '#4aa3a0' },
-  3: { hearts: 16, levels: [2, 3], color: '#4a7de0' },
-  4: { hearts: 12, levels: [3, 4], color: '#a0417a' },
-  5: { hearts: 10, levels: [4, 5], color: '#c0392b' },
+  1: { hearts: 20, levels: [1], color: '#3f9e4d' },
+  2: { hearts: 18, levels: [1, 2], color: '#a67c00' },
+  3: { hearts: 16, levels: [2, 3], color: '#c2620c' },
+  4: { hearts: 12, levels: [3, 4], color: '#cf3a3a' },
+  5: { hearts: 10, levels: [4, 5], color: '#8f4028' },
 }
 
 /**
@@ -369,6 +394,7 @@ function build(row: Row): Monster {
     // Written as a root path in IMAGES, resolved against wherever the app is
     // actually served from — see src/assets.ts.
     ...(image !== undefined ? { image: publicUrl(image) } : {}),
+    level,
     hearts: tuned.hearts ?? base.hearts,
     levels: tuned.levels ?? base.levels,
     color: base.color,

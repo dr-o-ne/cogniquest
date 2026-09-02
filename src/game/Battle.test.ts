@@ -33,7 +33,7 @@ function feed(battle: Battle, verdict: AnswerResult['verdict'], times: number) {
 }
 
 function unit(id: string, hearts: number, tasks: readonly TaskKind[] = ['addition']): Monster {
-  return { id, tasks, name: id, hearts, levels: [1], color: '#000' }
+  return { id, tasks, name: id, level: 1, hearts, levels: [1], color: '#000' }
 }
 
 const dummy = unit('test', 3)
@@ -269,6 +269,37 @@ describe('the monster config', () => {
       expect(t.monsters[monster.id], `no name for ${monster.id}`).toBeDefined()
       expect(monster.name).not.toBe(monster.id)
     }
+  })
+
+  it('a unit carries its level, and it agrees with its top rung', () => {
+    // BY_LEVEL is cut so that a unit's top rung is its level, and plenty of
+    // code reads the band that way. The card now prints the level for the
+    // child, so the two must not drift apart quietly: give level 3 the rungs
+    // [2, 3, 4] and every card in the band would relabel itself.
+    for (const monster of MONSTERS) {
+      expect(Math.max(...monster.levels), `${monster.id} is labelled off its rungs`).toBe(
+        monster.level,
+      )
+    }
+  })
+
+  it('every level the roster uses has a strength in the text pack', () => {
+    // The card falls back to a bare number for a level with no wording, which
+    // keeps a new rung visible rather than blank — but no unit may need it.
+    for (const level of new Set(MONSTERS.map((monster) => monster.level))) {
+      expect(t.strength[level], `no strength for level ${level}`).toBeDefined()
+      expect(t.strength[level]!.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('the strength ramp runs the whole ladder, one wording per rung', () => {
+    const levels = Object.keys(t.strength).map(Number).sort((a, b) => a - b)
+    expect(levels).toEqual([1, 2, 3, 4, 5])
+
+    // Two rungs sharing a word would make the ramp say less than it looks like
+    // it says — and the word is now the whole of the label.
+    const names = levels.map((level) => t.strength[level]!)
+    expect(new Set(names).size).toBe(names.length)
   })
 
   it('every unit has a question it can actually be asked', () => {

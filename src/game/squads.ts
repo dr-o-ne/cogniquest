@@ -27,9 +27,15 @@ export interface Squad {
   readonly shuffle: boolean
   /** Every heart of every member: the length of the battle. */
   readonly hearts: number
+  /**
+   * The strongest member's level, which is what the card shows as the squad's
+   * own strength — a group is as hard as the hardest thing in it, and the
+   * average would promise a mixed group is easier than its worst member.
+   */
+  readonly level: number
   /** Which math levels (C1) the battle can draw from, across all the members. */
   readonly levels: readonly number[]
-  /** The card's colour, taken from the member that tops out highest. */
+  /** The card's colour: the strongest member's, so it matches `level`. */
   readonly color: string
 }
 
@@ -39,8 +45,9 @@ interface Lineup {
   readonly members: readonly string[]
 }
 
-/** The rung a unit tops out at, which is also its level band in ASKS. */
-const top = (monster: Monster) => Math.max(...monster.levels)
+/** The strongest of them — the one whose level and colour the squad takes. */
+const strongest = (monsters: readonly Monster[]): Monster =>
+  monsters.reduce((hardest, monster) => (monster.level >= hardest.level ? monster : hardest))
 
 // ─────────────────────────────────────────────────────────────────────────
 // LINEUPS — who stands with whom. Easiest first, the way the roster is
@@ -94,6 +101,8 @@ function build(lineup: Lineup): Squad {
     }
   }
 
+  const worst = strongest(monsters)
+
   return {
     id: lineup.id,
     // Falling back to the id keeps a missing translation visible instead of
@@ -102,9 +111,9 @@ function build(lineup: Lineup): Squad {
     monsters,
     shuffle: lineup.shuffle,
     hearts: monsters.reduce((sum, monster) => sum + monster.hearts, 0),
+    level: worst.level,
     levels: [...new Set(monsters.flatMap((monster) => monster.levels))].sort((a, b) => a - b),
-    color: monsters.reduce((hardest, monster) => (top(monster) >= top(hardest) ? monster : hardest))
-      .color,
+    color: worst.color,
   }
 }
 

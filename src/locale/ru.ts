@@ -150,6 +150,31 @@ export const ru = {
   },
 
   /**
+   * How strong an opponent is, by its level (1–5), as the card says it.
+   *
+   * This is the one thing on a selection card that names the difficulty out
+   * loud. It took over from the row of hearts, which named the *length* — and
+   * length runs the other way (**G7**), so «Непобедимый» is also the shortest
+   * battle on the screen. That is not a slip: the card now says how hard, and
+   * says nothing about how long.
+   *
+   * A word and nothing else. Each of these was drawn with a coloured circle in
+   * front of it — 🟢 through 🟤 — and it went: the word is already printed in
+   * the level's colour, on a card framed in that same colour, so the circle was
+   * the third copy of one fact and the widest of the three.
+   *
+   * The colour is not here. It is the card's own colour, and it lives with the
+   * rest of what a level is worth, in `BY_LEVEL`.
+   */
+  strength: {
+    1: 'Слабый',
+    2: 'Равный',
+    3: 'Сильный',
+    4: 'Очень сильный',
+    5: 'Непобедимый',
+  } as Record<number, string>,
+
+  /**
    * Math levels (C1). Debug and the parent screen, never shown to the child.
    *
    * Five entries today; the ladder grows upwards, and a rung with no line here

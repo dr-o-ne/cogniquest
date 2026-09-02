@@ -111,12 +111,28 @@ describe('the ready-made squads', () => {
       expect(squadById('motley-band').hearts).toBe(70)
     })
 
-    it('the colour comes from the member that tops out highest', () => {
+    it('the level and the colour come from the strongest member', () => {
       for (const squad of SQUADS) {
-        const hardest = squad.monsters.reduce((worst, monster) =>
-          Math.max(...monster.levels) >= Math.max(...worst.levels) ? monster : worst,
-        )
-        expect(squad.color).toBe(hardest.color)
+        const levels = squad.monsters.map((monster) => monster.level)
+        expect(squad.level, squad.id).toBe(Math.max(...levels))
+
+        const hardest = squad.monsters.find((monster) => monster.level === squad.level)!
+        expect(squad.color, squad.id).toBe(hardest.color)
+      }
+    })
+
+    it('a mixed group is as strong as its worst member, not its average', () => {
+      // Bands 1, 2, 3 and 3. An average would call it a level 2 fight and
+      // promise the child something easier than the two members they will
+      // actually meet.
+      const motley = squadById('motley-band')
+      expect(motley.monsters.map((monster) => monster.level)).toEqual([1, 2, 3, 3])
+      expect(motley.level).toBe(3)
+    })
+
+    it('the level of every squad has a strength in the text pack', () => {
+      for (const squad of SQUADS) {
+        expect(t.strength[squad.level], `no strength for ${squad.id}`).toBeDefined()
       }
     })
 

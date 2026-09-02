@@ -149,7 +149,7 @@ function SelectScreen({
           <SquadCard
             key={squad.id}
             squad={squad}
-            beaten={state.squadsBeaten[squad.id] ?? 0}
+            beaten={(state.squadsBeaten[squad.id] ?? 0) > 0}
             onFight={onFight}
           />
         ))}
@@ -158,21 +158,20 @@ function SelectScreen({
       <h2 className="roster__title">{t.select.duelsTitle}</h2>
       <div className="roster">
         {availableMonsters().map((monster) => {
-          const beaten = state.defeated[monster.id] ?? 0
+          // Beaten ones are struck through, and can still be played. How many
+          // times over is kept in the profile and no longer shown: the diagonal
+          // says the thing the child acts on, and a tally in the corner was
+          // competing with the strength for the same corner.
+          const beaten = (state.defeated[monster.id] ?? 0) > 0
 
           return (
             <button
               key={monster.id}
-              className={beaten > 0 ? 'card card--beaten' : 'card'}
+              className={beaten ? 'card card--beaten' : 'card'}
               style={{ '--card': monster.color } as React.CSSProperties}
               onClick={() => onFight({ kind: 'duel', monster })}
             >
-              {/* Beaten ones are struck through, but can still be played */}
-              {beaten > 0 && (
-                <span className="card__badge" title={t.select.wins(beaten)}>
-                  ✔{beaten > 1 && <span className="card__times">{beaten}</span>}
-                </span>
-              )}
+              <CardTop level={monster.level} />
               <MonsterAvatar monster={monster} size="card" />
               <span className="card__name">{monster.name}</span>
             </button>
@@ -198,12 +197,16 @@ function SquadCard({
   onFight,
 }: {
   squad: Squad
-  /** How many times this squad has been beaten. Struck through like a monster. */
-  beaten: number
+  /**
+   * Whether this squad has been beaten — struck through like a monster, and
+   * still playable. It is the squad's own tally and not its members': a child
+   * who beat every one of them separately has not beaten the group.
+   */
+  beaten: boolean
   onFight: (opposition: Opposition) => void
 }) {
   const classes = ['card', 'card--squad']
-  if (beaten > 0) classes.push('card--beaten')
+  if (beaten) classes.push('card--beaten')
 
   return (
     <button
@@ -211,15 +214,9 @@ function SquadCard({
       style={{ '--card': squad.color } as React.CSSProperties}
       onClick={() => onFight({ kind: 'squad', squad })}
     >
-      {/* Beaten squads are struck through and still playable, exactly as the
-          monsters are — and it is the squad's own tally, not its members'. A
-          child who beat every one of them separately has not beaten the
-          group. */}
-      {beaten > 0 && (
-        <span className="card__badge" title={t.select.wins(beaten)}>
-          ✔{beaten > 1 && <span className="card__times">{beaten}</span>}
-        </span>
-      )}
+      {/* The strongest member's level, not an average: a group is as hard as
+          the hardest thing in it. */}
+      <CardTop level={squad.level} />
       <span className="card__faces">
         {/* Keyed by slot: the same monster may stand in a squad twice. */}
         {squad.monsters.map((monster, slot) => (
@@ -232,6 +229,45 @@ function SquadCard({
       </span>
     </button>
   )
+}
+
+/**
+ * What the card says about difficulty, in its two top corners: the level as a
+ * rank on the left, the way a playing card carries one, and the same level as a
+ * word on the right.
+ *
+ * A flow row rather than two absolutely positioned corners, because «Очень
+ * сильный» takes most of an eleven-rem card's width — pinned to the corner it
+ * would lie across the picture. As a row it also cannot change the card's
+ * height, which is what keeps the roster even.
+ */
+function CardTop({ level }: { level: number }) {
+  return (
+    <span className="card__top">
+      <span className="card__level">{level}</span>
+      <Strength level={level} />
+    </span>
+  )
+}
+
+/**
+ * How hard this opponent is, in a word — the one thing on a selection card that
+ * names the difficulty out loud.
+ *
+ * It took the place of the row of hearts, which named the length instead, and
+ * length runs the other way (**G7**): «Непобедимый» is the shortest battle on
+ * the screen. So the two are not interchangeable, and the card now answers «how
+ * hard» rather than «how long».
+ *
+ * Drawn in the card's own colour, which is the level's colour — so the word and
+ * the frame are one statement said twice, not two facts.
+ */
+function Strength({ level }: { level: number }) {
+  // A rung with no wording falls back to its number rather than to nothing, the
+  // same way a missing monster name falls back to its id: next to the pill that
+  // already shows the number it reads as obviously unfinished, which is the
+  // point. A test holds that it never comes to that for a level in use.
+  return <span className="card__strength">{t.strength[level] ?? level}</span>
 }
 
 function FightScreen({

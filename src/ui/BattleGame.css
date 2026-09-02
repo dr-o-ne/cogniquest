@@ -102,8 +102,21 @@
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
+  /* Held at 11rem, and the width is measured rather than judged: the top row
+     needs 134px for the rank beside «Очень сильный», the longest wording there
+     is, and 11rem leaves 150 — 16 to spare, which is room enough for a machine
+     that falls back on a wider font than Segoe UI.
+
+     It briefly went to 11.5rem, when the wording still carried a coloured
+     circle in front of it and wanted 141px of the 140 there were. The circle
+     went; the width came back with it. Worth keeping at 11: a whole rem more
+     costs a column at 1280px, which is two extra rows of forty-eight to scroll
+     past. */
   width: 11rem;
-  padding: 1.25rem 1rem;
+  /* Tighter than it was (1.25rem/1rem), and the width it gives back goes to the
+     picture. There is nothing at the edges that needs the air: the rank and the
+     wording are a single line across the top, and the name is centred. */
+  padding: 0.85rem 0.7rem;
   border: 2px solid color-mix(in srgb, var(--card) 40%, transparent);
   border-radius: 18px;
   background: color-mix(in srgb, var(--card) 8%, var(--bg));
@@ -120,9 +133,16 @@
 
 /* Wider than a monster's card because it lines up four faces, and marked out by
    a heavier border, because the difference between «one opponent» and «four at
-   once» must not rest on reading the name. */
+   once» must not rest on reading the name.
+
+   A rem wider than it was, and that fixes a real overflow rather than making
+   room for something new: four square face boxes plus their gaps wanted 213px
+   and 15rem gave the content box 202, so they had been sitting on the frame.
+   Shaping the faces to the pictures took most of that back, and the rest is
+   this rem — measured at 215px wanted against 228 — and all four squad cards
+   still fit one row of a 1280px window. */
 .card--squad {
-  width: 15rem;
+  width: 16rem;
   border-width: 3px;
   border-color: color-mix(in srgb, var(--card) 65%, transparent);
   background: color-mix(in srgb, var(--card) 13%, var(--bg));
@@ -172,12 +192,19 @@
   font-size: 2.6rem;
 }
 
-/* A fifth larger than it was: the card lost its line of text, and the picture
-   is what the child actually picks by. */
+/* The picture is what the child actually picks by, and everything else on the
+   card — the rank, the wording, the name — is a caption to it. So it is given
+   the room: nearly twice the height it had.
+
+   Shaped to the pictures rather than square. Every one of the forty-eight is a
+   portrait of about 120×153, and a square box drew them letterboxed with the
+   backing plate showing down both sides — at this size that grey frame was the
+   first thing you saw. The ratio here is that of the files; the two odd ones out
+   are within two per cent and letterbox by a hair. */
 .avatar--card {
-  width: 5.4rem;
-  height: 5.4rem;
-  font-size: 4.2rem;
+  height: 9.5rem;
+  aspect-ratio: 40 / 51;
+  font-size: 6rem;
 }
 
 .avatar--popup {
@@ -193,12 +220,14 @@
   font-size: 1.1rem;
 }
 
-/* One member on a squad card. Four of them across 15rem, and still large enough
-   to be told apart — that is what the child picks by. */
+/* One member on a squad card. Four of them across, and still large enough to be
+   told apart — that is what the child picks by, here as much as on a monster's
+   card. Shaped to the pictures for the same reason the card avatar is, and no
+   larger than this: four is the widest a squad gets, and it has to fit one line. */
 .avatar--face {
-  width: 3.1rem;
-  height: 3.1rem;
-  font-size: 2.2rem;
+  height: 4rem;
+  aspect-ratio: 40 / 51;
+  font-size: 2.6rem;
 }
 
 /* A picture needs a backing plate: with a transparent png, a dark outline is
@@ -208,12 +237,79 @@ img.avatar {
   background: color-mix(in srgb, var(--fg) 6%, transparent);
 }
 
+/* Two lines' worth of room, whatever the name is.
+
+   Thirteen of the forty-eight wrap and the rest do not, so without the reserve
+   a card comes out 188px or 214px tall depending on its name: the roster looks
+   ragged and the strength line below sits at two different heights. Measured
+   across the whole roster — nothing on it needs a third line — and set as a
+   min-height rather than a height, so a longer name added later grows the row
+   instead of overlapping it. */
 .card__name {
+  display: grid;
+  place-items: center;
+  min-height: 2lh;
   font-size: 1.2rem;
   font-weight: 700;
+  text-align: center;
 }
 
-/* Beaten: struck through diagonally, but still playable */
+/* The two things the card says about difficulty, in its top corners: the level
+   as a number on the left, the same level as a word on the right. */
+.card__top {
+  display: flex;
+  /* Baselines, not centres: the rank is more than twice the wording's size, and
+     sitting them on one baseline is what makes the pair read as one line in a
+     card's corner rather than as a big thing with a small thing beside it. */
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem;
+  width: 100%;
+}
+
+/* The level as a number, set big and bare like the rank in the corner of a
+   playing card — which is what it is.
+
+   It had a small pill around it, and the pill went with the size: a border and
+   a fill around a 1.7rem digit reads as a token to press, and at this weight
+   the digit needs no help being a rank. The risk the pill was guarding against
+   is real — this is a screen the child arrives at from doing arithmetic, and a
+   bare number could be read as one — and what answers it now is the position
+   and the company: nothing sits in the corner of a card, and the word beside it
+   says what the number counts. */
+.card__level {
+  color: color-mix(in srgb, var(--card) 72%, var(--fg));
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* How hard the opponent is, in the level's own colour — the same colour the
+   frame is drawn in, so the word and the card agree.
+
+   Pulled towards the text colour rather than used neat, which is what makes it
+   legible in both themes: neat, the green is thin on off-white and the level 5
+   brick is nearly invisible on near-black. It carries more of that job than it
+   used to — there was a coloured circle in front of it, which showed the true
+   hue whatever the background, and it went for being the third copy of one
+   fact. Hence 72% and not less. */
+.card__strength {
+  color: color-mix(in srgb, var(--card) 72%, var(--fg));
+  font-size: 0.95rem;
+  font-weight: 600;
+  /* Never wrapped: it sits in a row with the level pill, and a second line
+     would push the picture down on some cards and not others — which is the
+     unevenness the name's reserve above exists to prevent. Measured to fit the
+     narrowest card at its longest wording, with room to spare for a machine
+     that has to fall back on a wider font than Segoe UI. */
+  white-space: nowrap;
+}
+
+/* Beaten: struck through diagonally, but still playable. The diagonal is the
+   whole of it — there was a ✔ with a count in the top-right corner, and it went
+   when the strength took that corner: the line already says the thing the child
+   acts on, and how many times over is a statistic, not a choice. */
 .card--beaten {
   opacity: 0.62;
 }
@@ -235,22 +331,6 @@ img.avatar {
     var(--card) calc(50% + 2px),
     transparent calc(50% + 2px)
   );
-}
-
-.card__badge {
-  position: absolute;
-  top: 0.4rem;
-  right: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.1rem;
-  color: var(--card);
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-.card__times {
-  font-size: 0.7rem;
 }
 
 /* Start over — at the top of the selection screen */
@@ -840,3 +920,4 @@ img.avatar {
   font-size: 0.85rem;
   color: var(--muted);
 }
+
