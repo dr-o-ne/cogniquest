@@ -1,8 +1,9 @@
 # CogniQuest
 
 A learning game for a 6–7 year old: **math** (addition and subtraction up to
-100) and **reading by syllables**. Answers are given **out loud**. Runs on a PC
-entirely offline.
+100) and **reading by syllables**. Answers are given **out loud** — the
+microphone is live from the first moment, with a pad on screen for what it
+mishears. Runs on a PC entirely offline.
 
 The interface is in Russian; the code, the comments and the docs are in English.
 
@@ -11,6 +12,10 @@ The interface is in Russian; the code, the comments and the docs are in English.
 Phases 0–3 are done: the learning core, voice input, and a playable battle the
 child has fought through by voice and asked to play again. Reading (phase 4) is
 next.
+
+**The teacher is mute at the moment**, and on purpose: the synthesised voice was
+unplugged while it is replaced, so no line is read aloud. See **T12** and **O2**
+in [docs/DECISIONS.md](docs/DECISIONS.md).
 
 What comes next — [docs/ROADMAP.md](docs/ROADMAP.md). Why it was done this way —
 [docs/DECISIONS.md](docs/DECISIONS.md). What the child is asked in math, level by
@@ -61,8 +66,8 @@ public\models\  the speech recognition model — not kept in git, see below
 public\monsters\ opponent pictures
 ```
 
-Planned and not created yet: `src\theme\` (phase 5/6), `src\core\reading\`
-(phase 4), `electron\` (phase 7). See **A9** in
+Planned and not created yet: `src\theme\`, `src\core\reading\`, `electron\` —
+which phase each belongs to is under **A9** in
 [docs/DECISIONS.md](docs/DECISIONS.md).
 
 The main rule: **`src/core` knows nothing of the outside world.** It declares
@@ -97,5 +102,8 @@ The Vosk model weighs tens of megabytes and is not committed (see
 
 ## Stack
 
-TypeScript · Vite · React · Vitest · vosk-browser (recognition) · Web Speech API
-(synthesis) · Electron (packaging)
+TypeScript · Vite · React · Vitest · vosk-browser (recognition) · Electron
+(packaging)
+
+Synthesis is written against the Web Speech API and is not running: the teacher
+goes through a silent implementation of the same port (**T12**).
