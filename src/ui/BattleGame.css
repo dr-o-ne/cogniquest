@@ -855,9 +855,13 @@ img.avatar {
   font-variant-numeric: tabular-nums;
 }
 
-/* The whole, the given part and the blank all sit in the same thin solid
-   frame, so the bond reads as one whole broken into two of a kind. */
-.composition__whole,
+/* The whole leads, larger and unframed — it is the thing being taken apart. */
+.composition__whole {
+  font-size: 1.4em;
+}
+
+/* The given part and the blank sit in the same thin solid frame, so the two
+   parts read as one whole broken into two of a kind. */
 .composition__part,
 .composition .expression__blank {
   display: inline-flex;
