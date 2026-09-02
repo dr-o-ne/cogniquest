@@ -560,7 +560,14 @@ function Expression({ exercise }: { exercise: Exercise }) {
       )
     }
 
-    case 'composition':
+    case 'composition': {
+      const cell = (part: number | null) =>
+        part === null ? (
+          <span className="expression__blank">?</span>
+        ) : (
+          <span className="composition__part">{part}</span>
+        )
+
       return (
         <div className="composition">
           <span className="composition__whole">{prompt.whole}</span>
@@ -570,20 +577,16 @@ function Expression({ exercise }: { exercise: Exercise }) {
             <line x1="50" y1="2" x2="12" y2="38" />
             <line x1="50" y1="2" x2="88" y2="38" />
           </svg>
+          {/* Equal-width slots on either side of «И», so «И» sits on the centre
+              of the row and thus straight under the whole above. */}
           <div className="composition__parts">
-            {prompt.parts.map((part, i) => (
-              <Fragment key={i}>
-                {i > 0 && <span className="composition__and">{t.compose.and}</span>}
-                {part === null ? (
-                  <span className="expression__blank">?</span>
-                ) : (
-                  <span className="composition__part">{part}</span>
-                )}
-              </Fragment>
-            ))}
+            <span className="composition__slot composition__slot--left">{cell(prompt.parts[0])}</span>
+            <span className="composition__and">{t.compose.and}</span>
+            <span className="composition__slot composition__slot--right">{cell(prompt.parts[1])}</span>
           </div>
         </div>
       )
+    }
 
     default:
       return assertNever(prompt, 'exercise prompt')

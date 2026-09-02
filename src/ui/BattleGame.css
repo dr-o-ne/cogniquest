@@ -855,8 +855,22 @@ img.avatar {
   font-variant-numeric: tabular-nums;
 }
 
-.composition__whole {
-  color: var(--fg);
+/* The whole, the given part and the blank all sit in the same thin solid
+   frame, so the bond reads as one whole broken into two of a kind. */
+.composition__whole,
+.composition__part,
+.composition .expression__blank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15em;
+  padding: 0.05em 0.18em;
+  border: 0.05em solid var(--fg);
+  border-radius: 0.1em;
+}
+
+.composition .expression__blank {
+  color: var(--muted);
 }
 
 .composition__fork {
@@ -868,10 +882,28 @@ img.avatar {
   fill: none;
 }
 
+/* «И» sits between two equal-width slots, so it lands on the centre of the row
+   — and the row is centred under the whole, which puts «И» straight below it.
+   A definite width gives the slots something to split evenly; 6em clears «99»
+   on either side at this font. */
 .composition__parts {
   display: flex;
   align-items: center;
-  gap: 0.5em;
+  width: 6em;
+  gap: 0.3em;
+}
+
+.composition__slot {
+  flex: 1;
+  display: flex;
+}
+
+.composition__slot--left {
+  justify-content: flex-end;
+}
+
+.composition__slot--right {
+  justify-content: flex-start;
 }
 
 .composition__and {
