@@ -175,11 +175,6 @@ function SelectScreen({
               )}
               <MonsterAvatar monster={monster} size="card" />
               <span className="card__name">{monster.name}</span>
-              {/* Every last heart: how many there are IS the main difference
-                  between monsters, so that number must not be abbreviated. */}
-              <span className="card__hearts" style={{ fontSize: `${heartSize(monster.hearts)}rem` }}>
-                {'❤'.repeat(monster.hearts)}
-              </span>
             </button>
           )
         })}
@@ -191,13 +186,11 @@ function SelectScreen({
 }
 
 /**
- * One ready-made squad, as a card the size of two roster cards.
+ * One ready-made squad, as a wider card carrying the faces of its members.
  *
- * It carries the three things that decide what the battle is: the faces, so the
- * child picks the way they pick a monster; how it takes turns, because that
- * changes the battle more than anything else on the card; and every heart of
- * every member, since the total is now the length of the battle and there is no
- * other way to see that a group of four is four times the sitting.
+ * The faces are what the child picks by, the same as on a monster's card. The
+ * mode is the one thing spelled out in words, because it changes the battle more
+ * than anything else here and there is nothing to show it with.
  */
 function SquadCard({
   squad,
@@ -236,9 +229,6 @@ function SquadCard({
       <span className="card__name">{squad.name}</span>
       <span className="card__mode">
         {squad.shuffle ? t.select.squadShuffled : t.select.squadInTurn}
-      </span>
-      <span className="card__hearts" style={{ fontSize: `${heartSize(squad.hearts)}rem` }}>
-        {'❤'.repeat(squad.hearts)}
       </span>
     </button>
   )
@@ -329,15 +319,8 @@ function FightScreen({
   )
 }
 
-/**
- * The more hearts, the smaller they get — a long battle would break the layout.
- *
- * The bottom rung is for a squad card, where the count is every heart of every
- * member and runs to seventy (**G9**). Still drawn one by one: seventy of them
- * filling the card is exactly the fact the child needs off that card.
- */
+/** The more hearts, the smaller they get — a long battle would break the layout. */
 function heartSize(count: number): number {
-  if (count > 48) return 0.45
   if (count > 30) return 0.55
   if (count > 12) return 0.72
   return 1

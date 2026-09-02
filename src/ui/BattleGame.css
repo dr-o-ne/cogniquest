@@ -118,9 +118,9 @@
   border-color: var(--card);
 }
 
-/* A squad card holds two to four faces and up to seventy hearts, so it is wider
-   than a monster's — and marked out by a heavier border, because the difference
-   between «one opponent» and «four at once» must not rest on reading the name. */
+/* Wider than a monster's card because it lines up four faces, and marked out by
+   a heavier border, because the difference between «one opponent» and «four at
+   once» must not rest on reading the name. */
 .card--squad {
   width: 15rem;
   border-width: 3px;
@@ -211,15 +211,6 @@ img.avatar {
 .card__name {
   font-size: 1.2rem;
   font-weight: 700;
-}
-
-.card__hearts {
-  line-height: 1.2;
-  color: #d64545;
-  letter-spacing: -1px;
-  /* Twenty hearts will not fit one line — wrap them, but keep them centred */
-  overflow-wrap: anywhere;
-  text-align: center;
 }
 
 /* Beaten: struck through diagonally, but still playable */

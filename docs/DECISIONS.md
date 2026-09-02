@@ -483,12 +483,12 @@ so it is a decision with an end, not a permanent arrangement.
 Two consequences worth stating rather than discovering.
 
 **A card does not say which row it asks.** The row comes with the character, the
-way its hearts do, and the child picks by the picture. Whether that matters is an
-open question, not a settled one: if a session turns into a lottery the child is
-frustrated by, the cheap fix is a `+` or `−` on the card. That is a sign, not the
-sentence of `battleHints` that came off the cards on 2026-09-01 — the objection
-then was to a label repeating what the card already showed, and the row is not
-something the card shows.
+way its length and its rungs do, and the child picks by the picture. Whether that
+matters is an open question, not a settled one: if a session turns into a lottery
+the child is frustrated by, the cheap fix is a `+` or `−` on the card. That is a
+sign, not the sentence of `battleHints` that came off the cards on 2026-09-01 —
+the objection then was to a label repeating what the card already showed, and the
+row is not something the card shows.
 
 **A subtraction opponent is harder than an addition one at the same level.** The
 rungs are shared — one generator, one table, `13−6` sitting on the same rung as
@@ -628,4 +628,5 @@ actually did is in `git log`, which says it better.
 | 2026-09-02 | **One table deals the rows out, and the shares inside a band are equal (G8).** `ASKS` replaces the three places that used to say which row an opponent asks — a default, a two-way split, and an exception table — which read well enough for two rows and stopped reading at three. Grouped by band, because the band is what has to come out even; typed as a full record per band, so a row coming off the parking bay cannot compile until every band has said what it gives it. The evenness rule counts piles rather than naming rows, so it survives the next row coming back, and `build` throws for a unit with a picture and no pile. |
 | 2026-09-02 | **King's Bounty level 5 opened.** Four opponents join the archdemon, so band 5 is five, split evenly by the `ASKS` rule. The «level 5 sums are a wall» worry that had kept them off is being run rather than designed around; if it bites, the fix is `ASKS`, not the roster. 48 opponents on the selection screen. |
 | 2026-09-02 | **A battle takes on up to five opponents at once (G9).** Four squads in the config, all shuffled. A builder on the selection screen was tried and reversed the same day — a mix of rows is what makes a squad worth fighting, and it is not visible on a card. Hearts deliberately not divided by the squad's size, so the groups run 40–70 tasks against **P7**; that is the part to watch on the child. `Profile` split «Побед» from its per-opponent tally, since a win over four is one victory. |
+| 2026-09-02 | **The hearts came off the selection cards**, reversing «how many there are IS the main difference between monsters, so that number must not be abbreviated». That was true of one card and false of forty-eight plus four squads: ten to twenty hearts each, and forty to seventy on a squad, read as red noise between the child and the picture they were choosing by. The cost is real — a card no longer says how long the battle is (**G7**), and only the colour hints at the rungs. The hearts are drawn one by one where they are actually counted, which is the battle. |
 | 2026-09-02 | **This document trimmed to the rule above** — 57 KB to 40. Out went the folder tree (**A9**) and the install line, both of which the [README](../README.md) already carried, the tree in a copy that still had the project at a path it left months ago; the mechanics of how **A1** is enforced, same reason; and a changelog that had grown from a record of decisions into a prose retelling of `git log`, now one line an entry. Nothing was struck through and nothing was dropped: 53 decision IDs before, 53 after, every status and every **Why** with them. |
