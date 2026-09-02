@@ -531,11 +531,26 @@ while squads were assembled by hand the length was theirs, and now we write it.
 That is the one thing here to watch on the child. If it bites, the fix is a cap
 on a squad's total beside its lineup, not a fudge in `BY_LEVEL`.
 
-**Beating every member is not beating the group.** A squad card is struck through
-for a tally of its own, and the tempting shortcut — deriving it from whether all
-its members have been beaten — is wrong: four duels are four battles and no group
+**Beating every member is not beating the group.** A squad is struck through for
+a tally of its own, and the tempting shortcut — deriving it from whether all its
+members have been beaten — is wrong: four duels are four battles and no group
 faced. Which also splits «Побед» from the per-opponent tally it used to be summed
 out of, since a win over four opponents is one victory.
+
+**A squad is drawn as a hand of the roster's own cards, and nothing else.** It
+was a wide card of its own with the members shrunk to portraits inside it, which
+made it a card of cards — a thing that has to be explained before it is read. A
+hand explains itself: these are several opponents, each is the card the child
+would meet that opponent on alone, at the size they meet it, and the fan shows
+how many. The rank sits in the top-left corner of a card, so a closed hand still
+reads out every member's level down its left edge.
+
+Everything the frame used to carry went with it — the group's name, its own
+strength, the word for how it takes turns. That is a deliberate loss and one of
+its parts is worth naming: **a gauntlet squad would now look exactly like a
+shuffled one.** All four are shuffled today so nothing is hidden, but the day a
+lineup sets `shuffle: false`, the screen will have no way of saying so, and the
+wording will have to come back in some form.
 
 **A card still does not say which row it asks**, and a squad makes that matter
 more rather than less: picking one is now how the child picks a mix of rows, and
@@ -632,4 +647,5 @@ actually did is in `git log`, which says it better.
 | 2026-09-02 | **Making a number added (состав числа)** — a new row, not a returning one, and the first with a visual of its own: a whole with two lines fanning down to two boxes joined by «И», one box the blank. Four rungs, not five (place value ends at two digits): bonds within five, within ten, `10 + n`, `tens + n`. Its own splitter rather than the addition ladder — a bond has no operation on the page, and `missing-number` riding addition does not carry over. Answer is a number, so the judge and grammar are addition's. New `composition` prompt kind through the four `switch (prompt.kind)` sites, `making-a-number` live in `kinds.ts` (not parked), a pile in every `ASKS` band carved even, and the two four-member squads gained a bond member so they still mix every row. Missing number and chains stay parked. 356 tests. |
 | 2026-09-02 | **A card says how hard the opponent is** — the level as a rank in the top-left corner, the way a playing card carries one, and «Слабый» … «Непобедимый» in the top-right. That is the dial the hearts never showed: they named the *length*, and length runs the other way (**G7**), so the shortest battle on the screen is the one labelled invincible. A squad takes its strongest member's level, not an average, which would promise a mixed group is easier than the worst thing in it. Three knock-on decisions: the five level colours became **one ramp** green→brick, since five unrelated hues would have said «different» while the word beside them said «harder» — the price is that neighbouring levels are closer to each other than they were. The level moved onto `Monster` as a field: it equals the top rung by how `BY_LEVEL` is cut, and a number the child reads off the screen must not depend on two tables agreeing by accident. And the wording went through a coloured circle (🟢…🟤) and a pill around the rank before losing both: printed in the level's colour on a card framed in it, the circle was a third copy of one fact and the widest of the three, and a border around a 1.7rem digit reads as a button. |
 | 2026-09-02 | **Missing number un-parked, on a two-rung ladder of its own.** Level 2 is «within five», level 3 «within ten»; level 1 is left off (turning `2+3` round is a level-2 move, not a level-1 one) and levels 4–5 wait on the evidence from these two. `equations.ts` stops riding the addition ladder — «within five/ten» said outright rather than borrowed from a generator re-cut for something else. The `equation` prompt and its `switch (prompt.kind)` arms were already carried from the first time this row was live, so the UI did not move. In `ASKS` the row is a full key in every band, empty in the two (1 and 5) whose pool reaches neither rung; the even-split test learned to skip a pile a band has no rung for rather than demand it be non-empty. Band 4 does reach rung 3, so a few KB-4 opponents ask it there, «до десяти» and never higher. `addition + subtraction` is now the only parked row. 349 tests. |
+| 2026-09-02 | **A squad became a fanned hand of the roster's own cards**, at the roster's own size, with no frame and no caption — it had been a wide card holding the members as small portraits, which is a card of cards. The frame's contents went with it: the group's name (kept as the button's accessible name), its own strength, and the word for how it takes turns — so **a gauntlet squad would now be indistinguishable from a shuffled one**, which costs nothing while all four are shuffled and will have to be answered the day one is not. Under the pointer the hand opens until every card can be read; the opening is a transform and not a change of the overlap, because the overlap is a margin and opening with it would re-lay-out the row and shove the neighbouring hands aside every time the pointer crossed one. Three things the measurements caught that nothing else would have: a turned card reaches past the box it occupies in layout, so hands laid out 16px apart were drawing on top of each other; the room for that turn has to grow with the hand, or the beaten diagonal — drawn across the button — overshoots a hand of two; and an opened hand of four reaches a hundred pixels past its button, which is about all a 1280px row has to spare, hence the spread it settled at and a `clip` on the row rather than a sideways scrollbar. |
 | 2026-09-02 | **This document trimmed to the rule above** — 57 KB to 40. Out went the folder tree (**A9**) and the install line, both of which the [README](../README.md) already carried, the tree in a copy that still had the project at a path it left months ago; the mechanics of how **A1** is enforced, same reason; and a changelog that had grown from a record of decisions into a prose retelling of `git log`, now one line an entry. Nothing was struck through and nothing was dropped: 53 decision IDs before, 53 after, every status and every **Why** with them. |

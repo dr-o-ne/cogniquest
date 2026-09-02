@@ -83,6 +83,15 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
+  /* A hand opening under the pointer grows sideways over its neighbours (see
+     `.hand:hover`), and one at the end of a row reaches a hundred pixels past
+     its own box — a few more than a 1280px window has to spare. Clipped here
+     rather than on the screen, which holds things positioned against the
+     viewport (the corner button, the result popup) that have no business being
+     mixed up in this. `clip` rather than `hidden` so the row never becomes a
+     scroll container; the vertical axis stays visible, and it has to — the
+     cards lift above their row. */
+  overflow-x: clip;
 }
 
 /* The heading over each half of the screen: the squads, then the duels. Quiet —
@@ -131,37 +140,174 @@
   border-color: var(--card);
 }
 
-/* Wider than a monster's card because it lines up four faces, and marked out by
-   a heavier border, because the difference between «one opponent» and «four at
-   once» must not rest on reading the name.
-
-   A rem wider than it was, and that fixes a real overflow rather than making
-   room for something new: four square face boxes plus their gaps wanted 213px
-   and 15rem gave the content box 202, so they had been sitting on the frame.
-   Shaping the faces to the pictures took most of that back, and the rest is
-   this rem — measured at 215px wanted against 228 — and all four squad cards
-   still fit one row of a 1280px window. */
-.card--squad {
-  width: 16rem;
-  border-width: 3px;
-  border-color: color-mix(in srgb, var(--card) 65%, transparent);
-  background: color-mix(in srgb, var(--card) 13%, var(--bg));
+/* A squad is a hand of cards and nothing else — no frame of its own, no
+   caption. It was a wide card with the members shrunk to portraits inside it,
+   which made it a card of cards: a thing to explain. The button is only here to
+   be pressed, so it is given nothing to look like. */
+.hand {
+  position: relative;
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease;
 }
 
-/* The faces, in the order the squad was written. They shrink together rather
-   than wrapping: four on one line is what says «four of them». */
-.card__faces {
+/* Under the pointer the hand opens: every card slides out from the middle until
+   all of them can be seen, and the hand lifts the way a card does.
+
+   The opening is a transform and not a change of the overlap, deliberately. The
+   overlap is a margin, so opening with it would re-lay-out the row and shove the
+   neighbouring hands sideways every time the pointer crossed one. A transform
+   changes nothing about the layout: the hand grows over its neighbours instead
+   of pushing them, which is what a hand of cards does when it opens, and needs
+   only to be told to draw on top of them. */
+.hand:hover {
+  transform: translateY(-4px);
+  z-index: 3;
+}
+
+.hand:hover .card__hand {
+  /* Enough that every card shows all but a sliver of itself — the rank, the
+     picture, the name. Not more: an opened hand of four reaches a hundred pixels
+     past its button on each side, and at 1280px the row has about that much
+     margin to give. Opened wider it would ask the page to scroll sideways every
+     time the pointer crossed a hand at the end of a row. */
+  --spread: 5rem;
+  /* Opened cards stand more upright — a closed hand is gripped, an open one is
+     laid out to be read. */
+  --fan: 3deg;
+}
+
+/* Beaten, and still playable — the same language a beaten card speaks, said
+   once across the whole hand rather than four times over. */
+.hand--beaten {
+  position: relative;
+  opacity: 0.62;
+}
+
+.hand--beaten:hover {
+  opacity: 1;
+}
+
+.hand--beaten::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 2px),
+    var(--card) calc(50% - 2px),
+    var(--card) calc(50% + 2px),
+    transparent calc(50% + 2px)
+  );
+}
+
+/* The members, fanned like a hand of cards, in the order the squad was written.
+
+   Each is turned about a point below the fan, which is what makes the outer
+   ones lift and splay the way cards held in the fingers do — rotating about
+   their own centres would give a row of tilted pictures instead. The last card
+   is drawn over the one before it, which is document order, so nothing here
+   needs a z-index.
+
+   The angles are arithmetic rather than four hand-written transforms: `--slot`
+   counts from the left and `--hand` says how many there are, so a squad of two
+   and a squad of four both spread evenly about the middle, and a squad of three
+   or five would too without a line changing. */
+.card__hand {
+  /* The three numbers the fan is made of, together because they only make sense
+     together: turn one up and the hand needs to close, close it and the turn
+     has room to grow. All three were settled by measuring the turned boxes
+     against the card, not by eye.
+
+     --fan     how far each card turns from the middle
+     --mini    how much of full size a member's card is drawn at
+     --lap     how much of a card the next one covers, in FULL-size units: the
+               margin is inside the zoom, so it shrinks with the card
+     --spread  how far each card slides from the middle when the hand opens
+
+     The cards are the roster's own, at the roster's own size — a squad is the
+     same cards, so it is the same cards. `--mini` stays as the dial it is; at 1
+     the zoom below does nothing. */
+  --fan: 5deg;
+  --mini: 1;
+  --spread: 0rem;
+  /* Closed far enough that a covered card shows its rank and little else. Less
+     than this and the strength wording is sliced through the middle, which
+     reads as broken text rather than as one card behind another; the rank is in
+     the corner precisely so that it survives being covered. */
+  --lap: 8rem;
   display: flex;
   justify-content: center;
-  gap: 0.3rem;
+  /* Room for the lift and the turn. A turned card reaches past the box it
+     occupies in layout — at full size, thirty pixels past it on each side for a
+     hand of four — and nothing in the layout knows: neighbouring hands would
+     have been laid out sixteen pixels apart and drawn overlapping.
+
+     The room grows with the hand, because the reach does: the outermost card is
+     turned further the more of them there are. Measured at every size the
+     lineups actually use, and it comes out near enough a rem per card past the
+     first. A flat padding sized for four would leave a hand of two rattling
+     inside a box half again its width — which the beaten diagonal, drawn across
+     that box, would show up at once. */
+  padding: 0.7rem calc((var(--hand) - 1) * 0.92rem) 0;
 }
 
-/* How the squad takes turns. Set apart from the name — it is a rule of the
-   battle, not part of what the group is called. */
-.card__mode {
-  color: var(--muted);
-  font-size: 0.8rem;
-  letter-spacing: 0.03em;
+/* A member of the hand: the roster's own card, shrunk.
+
+   `zoom` and not `transform: scale`, because a scaled card keeps its full-size
+   footprint and the fan would have to be laid out around a box that is not
+   there. Zoom shrinks the layout too, so the overlap below is measured in what
+   you actually see. It is the one place in the stylesheet that leans on the
+   browser being Chromium (T14), which it is.
+
+   Each keeps its own member's level colour, not the squad's, so a mixed group
+   shows its mixture: the motley band fans out green, gold, orange, orange. */
+.card--mini {
+  zoom: var(--mini);
+  /* A hand is a stack, and a stack has depth. Small and soft: this is a card on
+     a card, not a card off the page. */
+  box-shadow: 0 3px 8px color-mix(in srgb, #000 26%, transparent);
+  transform-origin: 50% 125%;
+
+  /* How far this card is from the middle of the hand: −1.5 … +1.5 for four of
+     them, −0.5 … +0.5 for two. Both the turn and the opening are that number
+     times a step, which is what lets one rule serve every size of hand. */
+  --from-middle: calc(var(--slot) - (var(--hand) - 1) / 2);
+  --turn: rotate(calc(var(--from-middle) * var(--fan)));
+  --slide: translateX(calc(var(--from-middle) * var(--spread)));
+
+  /* Slide before turn, so the cards open along the row rather than along
+     whatever angle each of them happens to sit at. */
+  transform: var(--slide) var(--turn);
+  transition: transform 0.22s ease;
+  cursor: inherit;
+}
+
+/* The lift belongs to the hand, which is one thing to press. A card inside it
+   rising on its own would say it could be picked, and it cannot — so the card's
+   own hover repeats the hand's transform instead of replacing it with `.card`'s
+   lift, which would otherwise win on specificity. */
+.card--mini:hover {
+  transform: var(--slide) var(--turn);
+  border-color: color-mix(in srgb, var(--card) 40%, transparent);
+}
+
+/* Overlapped, because a hand is held closed — and closed far enough that only
+   the left edge of each card but the last shows. That is what the rank being in
+   the top-left corner buys: every member's level stays readable down the fan.
+
+   Measured rather than guessed, and against the turned boxes rather than the
+   laid-out ones: a rotated card takes more width than it occupies in layout, so
+   `scrollWidth` sees nothing and the fan can reach past the card with nothing
+   reporting it. */
+.card--mini + .card--mini {
+  margin-left: calc(-1 * var(--lap));
 }
 
 /* --- Characters: the picture from the config, or an emoji --- */

@@ -50,17 +50,18 @@ export const ru = {
 
     /**
      * The two halves of the screen (**G9**). Headings rather than nothing,
-     * because a card with four faces on it and a card with one are two
-     * different offers, and the child has to be told which is which.
+     * because a hand of cards and a single card are two different offers, and
+     * the child has to be told which is which.
+     *
+     * There were two more words here — «вперемешку» and «по очереди», printed
+     * under a squad to say how it takes turns. They went when the squad lost
+     * everything but its cards. The flag is still real and still decides the
+     * battle; it is simply not written down anywhere the child looks, which
+     * costs nothing while every squad is shuffled and would cost something the
+     * day one is not (**G9**).
      */
     squadsTitle: 'Отряды',
     duelsTitle: 'Один на один',
-    /**
-     * How a squad takes turns, printed on its card. It changes the battle more
-     * than anything else on the card does, so it is not left to be discovered.
-     */
-    squadShuffled: 'вперемешку',
-    squadInTurn: 'по очереди',
   },
 
   fight: {

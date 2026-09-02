@@ -171,9 +171,7 @@ function SelectScreen({
               style={{ '--card': monster.color } as React.CSSProperties}
               onClick={() => onFight({ kind: 'duel', monster })}
             >
-              <CardTop level={monster.level} />
-              <MonsterAvatar monster={monster} size="card" />
-              <span className="card__name">{monster.name}</span>
+              <MonsterFace monster={monster} />
             </button>
           )
         })}
@@ -185,11 +183,19 @@ function SelectScreen({
 }
 
 /**
- * One ready-made squad, as a wider card carrying the faces of its members.
+ * One ready-made squad: its members fanned out like a hand of cards, and a
+ * caption. There is no card around them.
  *
- * The faces are what the child picks by, the same as on a monster's card. The
- * mode is the one thing spelled out in words, because it changes the battle more
- * than anything else here and there is nothing to show it with.
+ * A group used to be one wide card with the members shrunk to portraits inside
+ * it, and a card of cards was a thing to explain. A hand needs no explaining —
+ * these are several opponents, and each is the very card the child would meet
+ * that opponent on alone. Each keeps its own level's colour, so a mixed group
+ * shows its mixture: the motley band fans out green, gold, orange, orange.
+ *
+ * Nothing else is drawn — no caption, no name, no word for how the group takes
+ * turns. The cards say what there is to say: how many opponents, which ones, and
+ * how hard each is. The name stays as the button's accessible name, because a
+ * control made of pictures still has to answer to something.
  */
 function SquadCard({
   squad,
@@ -198,36 +204,59 @@ function SquadCard({
 }: {
   squad: Squad
   /**
-   * Whether this squad has been beaten — struck through like a monster, and
-   * still playable. It is the squad's own tally and not its members': a child
-   * who beat every one of them separately has not beaten the group.
+   * Whether this squad has been beaten — dimmed and struck through, and still
+   * playable. It is the squad's own tally and not its members': a child who
+   * beat every one of them separately has not beaten the group.
    */
   beaten: boolean
   onFight: (opposition: Opposition) => void
 }) {
-  const classes = ['card', 'card--squad']
-  if (beaten) classes.push('card--beaten')
-
   return (
     <button
-      className={classes.join(' ')}
+      className={beaten ? 'hand hand--beaten' : 'hand'}
       style={{ '--card': squad.color } as React.CSSProperties}
+      aria-label={squad.name}
       onClick={() => onFight({ kind: 'squad', squad })}
     >
-      {/* The strongest member's level, not an average: a group is as hard as
-          the hardest thing in it. */}
-      <CardTop level={squad.level} />
-      <span className="card__faces">
-        {/* Keyed by slot: the same monster may stand in a squad twice. */}
+      {/* The fan needs to know how many there are to spread them evenly about
+          the middle, and each card which of them it is. Both go in as custom
+          properties so the angles are the stylesheet's arithmetic, not a pile
+          of inline transforms. */}
+      <span className="card__hand" style={{ '--hand': squad.monsters.length } as React.CSSProperties}>
+        {/* A span and not a button, because a button cannot nest, and the hand
+            as a whole is the one thing being pressed here.
+
+            Keyed by slot: the same monster may stand in a squad twice. */}
         {squad.monsters.map((monster, slot) => (
-          <MonsterAvatar key={slot} monster={monster} size="face" />
+          <span
+            key={slot}
+            className="card card--mini"
+            style={{ '--slot': slot, '--card': monster.color } as React.CSSProperties}
+          >
+            <MonsterFace monster={monster} />
+          </span>
         ))}
       </span>
-      <span className="card__name">{squad.name}</span>
-      <span className="card__mode">
-        {squad.shuffle ? t.select.squadShuffled : t.select.squadInTurn}
-      </span>
     </button>
+  )
+}
+
+/**
+ * What is printed on a monster's card, without the element around it.
+ *
+ * That element differs and cannot be shared: in the roster the card is a button
+ * the child presses, and in a squad's hand it is a plain span, because a button
+ * cannot nest inside the button the hand itself is. The printing is the same
+ * either way, and this is what makes «the same card, smaller» true rather than
+ * a resemblance kept up by hand in two places.
+ */
+function MonsterFace({ monster }: { monster: Monster }) {
+  return (
+    <>
+      <CardTop level={monster.level} />
+      <MonsterAvatar monster={monster} size="card" />
+      <span className="card__name">{monster.name}</span>
+    </>
   )
 }
 
