@@ -155,29 +155,34 @@ const IMAGES: Record<string, string> = {
  */
 export const ASKS: Record<number, Record<TaskKind, readonly string[]>> = {
   1: {
-    addition: ['gobot', 'peasant', 'sea-devil'],
+    addition: ['gobot', 'peasant'],
     subtraction: ['robber', 'skeleton'],
     'comparing-numbers': ['forest-fairy', 'skeleton-archer'],
+    'making-a-number': ['sea-devil'],
   },
   2: {
-    addition: ['adult-gobot', 'archer', 'mage-slayer', 'priest', 'wolf'],
-    subtraction: ['hyena', 'imp', 'pirate', 'snake', 'zombie'],
+    addition: ['adult-gobot', 'archer', 'wolf'],
+    subtraction: ['hyena', 'imp', 'snake', 'zombie'],
     'comparing-numbers': ['fire-spider', 'goblin', 'swamp-snake', 'swordsman'],
+    'making-a-number': ['mage-slayer', 'pirate', 'priest'],
   },
   3: {
-    addition: ['beholder', 'griffin', 'guardsman', 'scout'],
-    subtraction: ['bear', 'gorgul', 'inquisitor', 'white-wolf'],
-    'comparing-numbers': ['ancient-bear', 'frost-spider', 'ghost-pirate', 'sky-guard'],
+    addition: ['beholder', 'griffin', 'guardsman'],
+    subtraction: ['bear', 'gorgul', 'inquisitor'],
+    'comparing-numbers': ['frost-spider', 'ghost-pirate', 'sky-guard'],
+    'making-a-number': ['ancient-bear', 'scout', 'white-wolf'],
   },
   4: {
-    addition: ['ancient-vampire-bat', 'knight', 'pyromancer', 'royal-thorn'],
+    addition: ['knight', 'pyromancer'],
     subtraction: ['archmage', 'cavalryman', 'evil-beholder'],
     'comparing-numbers': ['assassin', 'paladin', 'royal-griffin'],
+    'making-a-number': ['ancient-vampire-bat', 'royal-thorn'],
   },
   5: {
     addition: ['archdemon', 'giant'],
-    subtraction: ['black-dragon', 'emerald-dragon'],
+    subtraction: ['emerald-dragon'],
     'comparing-numbers': ['lava-golem'],
+    'making-a-number': ['black-dragon'],
   },
 }
 

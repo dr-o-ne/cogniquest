@@ -55,6 +55,17 @@ export type ExercisePrompt =
       readonly left: { readonly terms: readonly number[]; readonly ops: readonly MathOp[] }
       readonly right: { readonly terms: readonly number[]; readonly ops: readonly MathOp[] }
     }
+  /**
+   * A number bond — «5 = 2 И □» drawn as a whole with two lines fanning down
+   * to its two parts. The child names the missing part. Exactly one of `parts`
+   * is `null`, and it is never the whole: this is composition, not an equation
+   * to rearrange.
+   */
+  | {
+      readonly kind: 'composition'
+      readonly whole: number
+      readonly parts: readonly [number | null, number | null]
+    }
 
 /**
  * One exercise type per subject, and every layer above written against it (A2).

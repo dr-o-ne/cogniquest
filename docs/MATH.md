@@ -37,7 +37,7 @@ says five.
 | Comparing numbers `5 □ 7` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Increase / decrease by | ☐ | ☐ | ☐ | ☐ | ☐ |
-| Making a number (5 = 2 + □) | ☐ | ☐ | ☐ | ☐ | ☐ |
+| Making a number (5 = 2 + □) | ✅ | ✅ | ✅ | ✅ | — |
 | Number sequences | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Word problems | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Logic | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -47,13 +47,13 @@ says five.
 | Measuring | ✖ | ✖ | ✖ | ✖ | ✖ |
 | Patterns | ☐ | ☐ | ☐ | — | — |
 
-**Addition, subtraction and comparing numbers are asked; two rows are still
-parked** — that is what ⏸ means. What each of them asks, and by what rules, is
-written down below and still holds: nothing has been withdrawn or rethought.
-They are simply not drawn while they go back one row at a time, each given on
-its own long enough to say whether it works before the next joins it. A ⏸ is a
-row waiting its turn, and the only cell that changes when its turn comes is the
-tick.
+**Addition, subtraction, comparing numbers and making a number are asked; two
+rows are still parked** — that is what ⏸ means. What each of them asks, and by
+what rules, is written down below and still holds: nothing has been withdrawn or
+rethought. They are simply not drawn while they go back one row at a time, each
+given on its own long enough to say whether it works before the next joins it. A
+⏸ is a row waiting its turn, and the only cell that changes when its turn comes
+is the tick.
 
 **Subtraction came back first because it was the cheapest of the four.** It
 shares one table below with addition, and one generator behind that table, so
@@ -299,14 +299,46 @@ correct answer anywhere else, and a run of them is worth less than it looks.
 
 ---
 
+## Making a number
+
+A whole and its two parts, drawn as a bond: the number up top, two lines fanning
+down to two boxes with **И** between them. One box holds a part, the other is
+the blank. The child names the missing part — `whole − known`, a single number.
+
+| Level | Whole | The two parts |
+|---|---|---|
+| 1 | 2–5   | any split, each part at least one — `5 = 2 И 3` |
+| 2 | 6–10  | any split — `10 = 6 И 4` (six and up, or it is level 1 again) |
+| 3 | 11–19 | always ten and the units — `13 = 10 И 3` |
+| 4 | 20–99 | always the round tens and the units — `47 = 40 И 7` |
+
+**Four rungs, not five.** Place value stops at two digits and there is nothing
+for a fifth to compose — level 5 is a dash in the grid, not a gap. Rungs 1–2 are
+the number bonds a child learns whole; rungs 3–4 are the same idea turned on
+place value, `10 + n` and then `tens + n`, which is decomposition read as a
+bond rather than as a sum.
+
+**Its own splitter, not the addition ladder's.** The parked missing-number row
+rides addition rung for rung, because `□ + 2 = 5` *is* a sum with a hole in it.
+A bond is not: `5 = 2 И 3` has no operation on the page, and the place-value
+rule at rungs 3–4 states more plainly on its own than borrowed from a generator
+built for something else. Either box is the blank, drawn at random — composition
+is commutative, and a child who only ever completes the right-hand part learns
+half the bond.
+
+**The answer is one number**, so the judging and the recognition grammar are
+addition's, unchanged.
+
+---
+
 ## What the unwritten rows would ask for
 
 Sorted by the shape of their answer, because that is what decides whether a row
 is merely unwritten or out of reach.
 
-- **A number** — how many more, increase/decrease, making a number, sequences,
-  patterns, word problems. The same answer shape every row above already uses,
-  so these are unwritten and nothing more.
+- **A number** — how many more, increase/decrease, sequences, patterns, word
+  problems. The same answer shape every row above already uses, so these are
+  unwritten and nothing more.
 - **A word off a named list** — comparing numbers was the first of these. Any
   row answered the same way asks for nothing new.
 - **Something pointed at rather than said** (✖) — geometry, telling the time,
@@ -378,4 +410,6 @@ difficulty is what the rungs are for.
 
 A row is drawn only at a level it actually has. Comparing numbers now runs all
 five rungs, so an opponent that asks it compares at whatever levels its own band
-reaches — bare numbers low down, sums higher up.
+reaches — bare numbers low down, sums higher up. Making a number stops at four,
+so a level-5 opponent that asks it is handed only its rung-4 bonds; the pairing
+drops the rung it has not got rather than throwing mid-battle.

@@ -762,6 +762,43 @@ img.avatar {
   border-radius: 0.12em;
 }
 
+/* A number bond: the whole up top, two lines fanning down to its parts. Sized
+   like a short expression so it fits the same window. */
+.composition {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: clamp(2.4rem, 9vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.composition__whole {
+  color: var(--fg);
+}
+
+.composition__fork {
+  width: 3.2em;
+  height: 1.3em;
+  stroke: var(--muted);
+  stroke-width: 4;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.composition__parts {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.composition__and {
+  color: var(--muted);
+  font-size: 0.7em;
+}
+
 .pad__choices {
   display: flex;
   gap: 0.5rem;

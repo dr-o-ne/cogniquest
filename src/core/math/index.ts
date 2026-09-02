@@ -18,6 +18,13 @@ export {
   type ComparisonSide,
 } from './comparison'
 export {
+  createCompositionExercise,
+  describeComposition,
+  generateComposition,
+  MAKING_LEVELS,
+  type Composition,
+} from './composition'
+export {
   createEquationExercise,
   describeEquation,
   generateEquation,

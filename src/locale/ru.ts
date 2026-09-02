@@ -140,6 +140,13 @@ export const ru = {
      */
     compare: (left: string, right: string) =>
       `Сравни. ${left} и ${right}. Больше, меньше или равно?`,
+    /**
+     * A number bond read out loud: «пять — это два и сколько?». Nominative, like
+     * every numeral in the pack — the child hears the shape, not a grammar
+     * lesson. Composition is commutative, so the known part is named first
+     * whichever box it sits in.
+     */
+    compose: (whole: string, known: string) => `${whole} — это ${known} и сколько?`,
   },
 
   /**
@@ -215,6 +222,15 @@ export const ru = {
     less: 'меньше',
     equal: 'равно',
     greater: 'больше',
+  },
+
+  /**
+   * The letter between the two boxes of a number bond — «2 И 3». It is shown on
+   * screen and so it is language, unlike the lines of the bond, which are a
+   * drawing and live in the component.
+   */
+  compose: {
+    and: 'И',
   },
 
   /**

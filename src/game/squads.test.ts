@@ -141,7 +141,12 @@ describe('the ready-made squads', () => {
 })
 
 /** Kept honest by the compiler: the row names below have to exist. */
-const ROWS: readonly TaskKind[] = ['addition', 'subtraction', 'comparing-numbers']
+const ROWS: readonly TaskKind[] = [
+  'addition',
+  'subtraction',
+  'comparing-numbers',
+  'making-a-number',
+]
 
 describe('which rows each squad actually asks', () => {
   // Spelled out one squad at a time, because the mix is the reason the lineups
@@ -153,8 +158,14 @@ describe('which rows each squad actually asks', () => {
     expect(asked('two-on-the-path')).toEqual(new Set(['addition', 'subtraction']))
   })
 
-  it('the beast pack, the sky watch and the motley band — all three rows', () => {
-    for (const id of ['beast-pack', 'sky-watch', 'motley-band']) {
+  it('the beast pack — three of the four rows', () => {
+    expect(asked('beast-pack')).toEqual(
+      new Set(['addition', 'subtraction', 'comparing-numbers']),
+    )
+  })
+
+  it('the sky watch and the motley band — every row of the grid', () => {
+    for (const id of ['sky-watch', 'motley-band']) {
       expect(asked(id), id).toEqual(new Set(ROWS))
     }
   })

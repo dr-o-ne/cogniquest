@@ -57,18 +57,19 @@ const LINEUPS: readonly Lineup[] = [
   { id: 'two-on-the-path', shuffle: true, members: ['peasant', 'robber'] },
   //                                                 +          −
 
-  // Three members, three rows — every row of the grid inside one battle.
+  // Three members, three rows — as many of the grid's rows as three can hold.
   { id: 'beast-pack', shuffle: true, members: ['wolf', 'hyena', 'swamp-snake'] },
   //                                            +       −        <>
 
-  { id: 'sky-watch', shuffle: true, members: ['griffin', 'gorgul', 'sky-guard', 'beholder'] },
-  //                                           +          −         <>           +
+  // Four members, four rows — every row of the grid inside one battle.
+  { id: 'sky-watch', shuffle: true, members: ['griffin', 'gorgul', 'sky-guard', 'scout'] },
+  //                                           +          −         <>           состав
 
   // The one group drawn from more than one band: rungs 1, 2, 3 and 3, so the
   // level moves under the child as well as the row. The hardest of the four,
   // and it is last for that reason rather than for its size.
-  { id: 'motley-band', shuffle: true, members: ['gobot', 'zombie', 'frost-spider', 'guardsman'] },
-  //                                             +(1)     −(2)      <>(3)           +(3)
+  { id: 'motley-band', shuffle: true, members: ['gobot', 'zombie', 'frost-spider', 'white-wolf'] },
+  //                                             +(1)     −(2)      <>(3)           состав(3)
 ]
 
 function build(lineup: Lineup): Squad {

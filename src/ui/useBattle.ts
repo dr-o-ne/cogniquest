@@ -196,6 +196,14 @@ function questionText(exercise: Exercise): string {
       return t.teacher.compare(say(prompt.left), say(prompt.right))
     }
 
+    // «сорок семь — это сорок и сколько?» — the whole, then the part that is
+    // shown. Composition is commutative, so the shown part is named first
+    // whichever box it is in.
+    case 'composition': {
+      const known = prompt.parts.find((part): part is number => part !== null)
+      return t.teacher.compose(numberToWords(prompt.whole), numberToWords(known ?? 0))
+    }
+
     default:
       return assertNever(prompt, 'exercise prompt')
   }
@@ -229,6 +237,12 @@ function spokenAnswer(exercise: Exercise): string | null {
         ),
       )
 
+    // The missing part is the whole less the part that is shown.
+    case 'composition': {
+      const known = prompt.parts.find((part): part is number => part !== null)
+      return known === undefined ? null : numberToWords(prompt.whole - known)
+    }
+
     default:
       return assertNever(prompt, 'exercise prompt')
   }
@@ -246,10 +260,11 @@ function draftFor(exercise: Exercise): Draft {
   const prompt = exercise.prompt
 
   switch (prompt.kind) {
-    // Both are answered with a number — the sum of a chain, or the operand
-    // hidden in an equation.
+    // Answered with a number — the sum of a chain, the operand hidden in an
+    // equation, or the missing part of a bond.
     case 'arithmetic':
     case 'equation':
+    case 'composition':
       return { kind: 'number', digits: '' }
 
     case 'comparison':

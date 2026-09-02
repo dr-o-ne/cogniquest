@@ -5,6 +5,7 @@ import type { Random } from '../random'
 // import { createChainExercise } from './chains'
 // import { createEquationExercise } from './equations'
 import { COMPARISON_LEVELS, createComparisonExercise } from './comparison'
+import { createCompositionExercise, MAKING_LEVELS } from './composition'
 import { generateProblem, toExercise } from './generator'
 import { MATH_LEVELS } from './levels'
 
@@ -20,13 +21,14 @@ import { MATH_LEVELS } from './levels'
  * join this union as they land, and every switch over it stops compiling until
  * it says what to do with them.
  *
- * **Addition, subtraction and comparing numbers are asked; the other two rows
- * are parked.** They are written and still under test — their generators, their
- * rules and their test files are untouched — but not drawn while they go back
- * one at a time. Parked, not deleted: a row is commented out in exactly three
- * places, this union, `RUNGS` and the switch at the foot of the file, plus its
- * import at the top. Uncomment those and the row is playable again, along with
- * whatever in game/monsters.ts offers it to an opponent.
+ * **Addition, subtraction, comparing numbers and making a number are asked; the
+ * other two rows are parked.** The parked ones are written and still under test
+ * — their generators, their rules and their test files are untouched — but not
+ * drawn while they go back one at a time. Parked, not deleted: a row is
+ * commented out in exactly three places, this union, `RUNGS` and the switch at
+ * the foot of the file, plus its import at the top. Uncomment those and the row
+ * is playable again, along with whatever in game/monsters.ts offers it to an
+ * opponent.
  *
  * Subtraction needed no import of its own, which is why it came back first: it
  * shares `generateProblem` with addition and passes it a different operation.
@@ -36,6 +38,7 @@ export type TaskKind =
   | 'addition'
   | 'subtraction'
   | 'comparing-numbers'
+  | 'making-a-number'
 // | 'addition-subtraction'
 // | 'missing-number'
 
@@ -53,6 +56,8 @@ const RUNGS: Record<TaskKind, readonly number[]> = {
   addition: MATH_LEVELS,
   subtraction: MATH_LEVELS,
   'comparing-numbers': COMPARISON_LEVELS,
+  // Four rungs: place value stops at two digits (see composition.ts).
+  'making-a-number': MAKING_LEVELS,
   // 'addition-subtraction': MATH_LEVELS,
   // Rides the addition/subtraction ladder — a base problem for the level with
   // one operand hidden — so it reaches every rung they do.
@@ -90,6 +95,9 @@ export function createMathExercise(kind: TaskKind, levelId: number, random: Rand
 
     case 'comparing-numbers':
       return createComparisonExercise(levelId, random)
+
+    case 'making-a-number':
+      return createCompositionExercise(levelId, random)
 
     // case 'addition-subtraction':
     //   return createChainExercise(levelId, random)
