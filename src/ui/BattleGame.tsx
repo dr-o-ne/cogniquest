@@ -118,66 +118,77 @@ function SelectScreen({
   const [confirming, setConfirming] = useState(false)
 
   return (
-    <div className="screen screen--center">
-      {/* Wipes everything, hence two steps: a stray click must not clear the
-          child's progress. */}
-      <div className="reset-corner">
-        {confirming ? (
-          <>
-            <span className="reset__ask">{t.select.wipeAsk}</span>
-            <button className="reset__yes" onClick={onReset}>
-              {t.select.wipeYes}
+    <div className="screen">
+      {/* Stays at the top while the roster scrolls under it: both things on it
+          answer questions the child can have at any point of a very long list —
+          whose game this is, and how to start over. */}
+      <header className="topbar">
+        {/* Wipes everything, hence two steps: a stray click must not clear the
+            child's progress. */}
+        <div className="topbar__reset">
+          {confirming ? (
+            <>
+              <span className="reset__ask">{t.select.wipeAsk}</span>
+              <button className="reset__yes" onClick={onReset}>
+                {t.select.wipeYes}
+              </button>
+              <button className="reset__no" onClick={() => setConfirming(false)}>
+                {t.select.wipeNo}
+              </button>
+            </>
+          ) : (
+            <button className="reset__start" onClick={() => setConfirming(true)}>
+              {t.select.newGame}
             </button>
-            <button className="reset__no" onClick={() => setConfirming(false)}>
-              {t.select.wipeNo}
-            </button>
-          </>
-        ) : (
-          <button className="reset__start" onClick={() => setConfirming(true)}>
-            {t.select.newGame}
-          </button>
-        )}
+          )}
+        </div>
+
+        {/* The same face that stands for the child in a battle, so the corner of
+            the screen and the corner of the fight agree on who they mean. */}
+        <div className="topbar__who">
+          <span className="avatar avatar--user avatar--emoji" aria-hidden="true">
+            🧒
+          </span>
+          <span className="topbar__name">{state.name}</span>
+        </div>
+      </header>
+
+      <div className="screen--center select__body">
+        {/* The squads come first: there are four of them against forty-eight
+            cards, and at the foot of the roster nobody would ever meet them. */}
+        <h2 className="roster__title">{t.select.squadsTitle}</h2>
+        <div className="roster">
+          {SQUADS.map((squad) => (
+            <SquadCard
+              key={squad.id}
+              squad={squad}
+              beaten={(state.squadsBeaten[squad.id] ?? 0) > 0}
+              onFight={onFight}
+            />
+          ))}
+        </div>
+
+        <h2 className="roster__title">{t.select.duelsTitle}</h2>
+        <div className="roster">
+          {availableMonsters().map((monster) => {
+            // Beaten ones are struck through, and can still be played. How many
+            // times over is kept in the profile and no longer shown: the
+            // diagonal says the thing the child acts on.
+            const beaten = (state.defeated[monster.id] ?? 0) > 0
+
+            return (
+              <button
+                key={monster.id}
+                className={beaten ? 'card card--beaten' : 'card'}
+                style={{ '--card': monster.color } as React.CSSProperties}
+                onClick={() => onFight({ kind: 'duel', monster })}
+              >
+                <MonsterFace monster={monster} />
+              </button>
+            )
+          })}
+        </div>
       </div>
-
-      <h1 className="splash__title">{t.select.title(state.name)}</h1>
-
-      {/* The squads come first: there are four of them against forty-eight
-          cards, and at the foot of the roster nobody would ever meet them. */}
-      <h2 className="roster__title">{t.select.squadsTitle}</h2>
-      <div className="roster">
-        {SQUADS.map((squad) => (
-          <SquadCard
-            key={squad.id}
-            squad={squad}
-            beaten={(state.squadsBeaten[squad.id] ?? 0) > 0}
-            onFight={onFight}
-          />
-        ))}
-      </div>
-
-      <h2 className="roster__title">{t.select.duelsTitle}</h2>
-      <div className="roster">
-        {availableMonsters().map((monster) => {
-          // Beaten ones are struck through, and can still be played. How many
-          // times over is kept in the profile and no longer shown: the diagonal
-          // says the thing the child acts on, and a tally in the corner was
-          // competing with the strength for the same corner.
-          const beaten = (state.defeated[monster.id] ?? 0) > 0
-
-          return (
-            <button
-              key={monster.id}
-              className={beaten ? 'card card--beaten' : 'card'}
-              style={{ '--card': monster.color } as React.CSSProperties}
-              onClick={() => onFight({ kind: 'duel', monster })}
-            >
-              <MonsterFace monster={monster} />
-            </button>
-          )
-        })}
-      </div>
-
-      {state.wins > 0 && <p className="splash__note">{t.select.wins(state.wins)}</p>}
     </div>
   )
 }

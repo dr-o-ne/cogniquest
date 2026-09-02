@@ -88,8 +88,6 @@ export interface GameState {
   heard: string | null
   /** Null exactly when no answer is being taken — between tasks, and after. */
   draft: Draft | null
-  /** Battles won in total. */
-  wins: number
   /** monster id → times beaten. Beaten ones are struck through in the list. */
   defeated: Record<string, number>
   /** squad id → times beaten. Struck through the same way (**G9**). */
@@ -324,7 +322,6 @@ const initial: GameState = {
   flash: null,
   heard: null,
   draft: null,
-  wins: 0,
   defeated: {},
   squadsBeaten: {},
 }
@@ -368,7 +365,6 @@ export function useBattle() {
         patch({
           screen: profile.name ? 'select' : 'name',
           name: profile.name,
-          wins: profile.victories,
           defeated: profile.defeated,
           squadsBeaten: profile.squadsBeaten,
         })
@@ -604,7 +600,6 @@ export function useBattle() {
         draft: null,
         mic: 'idle',
         flash: null,
-        wins: d.profile.victories,
         defeated: d.profile.defeated,
         squadsBeaten: d.profile.squadsBeaten,
       })
@@ -689,7 +684,6 @@ export function useBattle() {
     patch({
       screen: 'name',
       name: '',
-      wins: 0,
       defeated: {},
       squadsBeaten: {},
       opposition: null,

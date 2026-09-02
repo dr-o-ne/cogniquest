@@ -41,8 +41,14 @@ export const ru = {
   },
 
   select: {
-    title: (name: string) => `С кем сразимся, ${name}?`,
-    wins: (count: number) => `Побед: ${count}`,
+    /**
+     * Two lines went from here when the screen gained a top bar: «С кем
+     * сразимся, {name}?» and «Побед: N». The greeting asked the child their own
+     * question back at them and spent a heading doing it — the bar says whose
+     * game this is in the corner, where it does not have to be read twice. The
+     * tally is still kept (`Profile.battles`); it is simply not on the screen
+     * the child picks a fight from.
+     */
     newGame: 'Новая игра',
     wipeAsk: 'Всё стереть?',
     wipeYes: 'Да',
