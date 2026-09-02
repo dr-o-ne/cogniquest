@@ -28,6 +28,7 @@ export {
   createEquationExercise,
   describeEquation,
   generateEquation,
+  MISSING_LEVELS,
   type Equation,
 } from './equations'
 export { createMathExercise, levelsFor, taskChoices, type TaskKind } from './kinds'

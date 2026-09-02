@@ -184,30 +184,38 @@ export const ASKS: Record<number, Record<TaskKind, readonly string[]>> = {
     subtraction: ['robber', 'skeleton'],
     'comparing-numbers': ['forest-fairy', 'skeleton-archer'],
     'making-a-number': ['sea-devil'],
+    // Its rungs are 2 and 3; a band-1 pool is [1], so there is nothing to give.
+    'missing-number': [],
   },
   2: {
-    addition: ['adult-gobot', 'archer', 'wolf'],
-    subtraction: ['hyena', 'imp', 'snake', 'zombie'],
-    'comparing-numbers': ['fire-spider', 'goblin', 'swamp-snake', 'swordsman'],
+    addition: ['adult-gobot', 'wolf'],
+    subtraction: ['hyena', 'imp', 'zombie'],
+    'comparing-numbers': ['fire-spider', 'goblin', 'swamp-snake'],
     'making-a-number': ['mage-slayer', 'pirate', 'priest'],
+    'missing-number': ['archer', 'snake', 'swordsman'],
   },
   3: {
-    addition: ['beholder', 'griffin', 'guardsman'],
+    addition: ['griffin', 'guardsman'],
     subtraction: ['bear', 'gorgul', 'inquisitor'],
-    'comparing-numbers': ['frost-spider', 'ghost-pirate', 'sky-guard'],
-    'making-a-number': ['ancient-bear', 'scout', 'white-wolf'],
+    'comparing-numbers': ['frost-spider', 'sky-guard'],
+    'making-a-number': ['scout', 'white-wolf'],
+    'missing-number': ['ancient-bear', 'beholder', 'ghost-pirate'],
   },
   4: {
     addition: ['knight', 'pyromancer'],
-    subtraction: ['archmage', 'cavalryman', 'evil-beholder'],
-    'comparing-numbers': ['assassin', 'paladin', 'royal-griffin'],
+    subtraction: ['archmage', 'cavalryman'],
+    'comparing-numbers': ['assassin', 'paladin'],
     'making-a-number': ['ancient-vampire-bat', 'royal-thorn'],
+    // Rung 3 is in a band-4 pool, so it is asked here — at «до десяти», never higher.
+    'missing-number': ['evil-beholder', 'royal-griffin'],
   },
   5: {
     addition: ['archdemon', 'giant'],
     subtraction: ['emerald-dragon'],
     'comparing-numbers': ['lava-golem'],
     'making-a-number': ['black-dragon'],
+    // Band-5 pool is [4, 5]; missing-number's rungs stop at 3.
+    'missing-number': [],
   },
 }
 

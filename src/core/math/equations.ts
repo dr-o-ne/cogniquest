@@ -1,73 +1,91 @@
 import type { Exercise, MathOp } from '../exercises'
 import { randomInt, type Random } from '../random'
 import { ArithmeticAnswer } from './ArithmeticAnswer'
-import { generateProblem } from './generator'
 
 /**
  * Missing number — the «□ + 2 = 5» row of the grid (see docs/MATH.md).
  *
- * A known sum run backwards: the child is shown `terms … = result` with one of
- * the operands hidden and names it. Reading a sum backwards is the whole of the
- * skill, so the ladder is about the size of the arithmetic, nothing cleverer —
- * which is why this row does not have a ladder of its own at all. **It rides
- * the addition one rung for rung:** whatever level N asks as a sum, this row
- * asks with one operand covered up.
+ * A known sum shown backwards: `a op b = c` with one operand covered up, and
+ * the child names it. Reading a sum backwards is the whole of the skill, so the
+ * arithmetic behind the blank is kept small and stays its own concern.
  *
- * | Level | The sum behind the blank | Heard |
- * |---|---|---|
- * | 1 | within five                — `□ + 2 = 5`   | 0–10 |
- * | 2 | up to ten, not crossed     — `4 + □ = 9`   | 0–10 |
- * | 3 | across the ten, or whole tens — `□ + 5 = 13`, `30 + □ = 70` | 0–20, 0–100 |
- * | 4 | two-digit, nothing carried — `45 + □ = 68` | 0–100 |
- * | 5 | two-digit, the units overflow — `□ + 28 = 75` | 0–100 |
+ * | Level | The sum behind the blank | Heard | Example |
+ * |---|---|---|---|
+ * | 2 | within five | 0–10 | `□+2=5`, `5−□=3` |
+ * | 3 | within ten  | 0–10 | `4+□=9`, `9−□=3` |
  *
- * It used to remap the rungs by hand — level 3 reached for the across-the-ten
- * generator, level 4 flipped a coin between two others — which was a second
- * ladder to keep in step with the first, and it fell out of step the moment the
- * first one was re-cut. Riding along cannot drift.
+ * **Two rungs, and neither is level 1.** Level 1 is where a child is still
+ * meeting `2 + 3` forwards; turning it round is a level-2 move. Levels 4 and 5
+ * are two-digit, and this row waits on the evidence from these two before it
+ * takes them on.
  *
- * The blank never falls on the result: `□ + 2 = 5` asks the child to think
- * backwards, `2 + 3 = □` is plain addition with an equals sign drawn in, and
- * that row is already played.
+ * **Its own splitter, not the addition ladder's.** It used to ride addition
+ * rung for rung — `generateProblem(level, …)` with an operand hidden — which
+ * tied its rungs to a ladder re-cut for something else. «Within five» and
+ * «within ten» say more plainly on their own than «level 2 of addition» does.
  *
- * Every operand is at least one — no `7 + □ = 7`. The answer is a single
- * number, so `ArithmeticAnswer` and its recognition grammar carry over
- * untouched (A5, T16).
+ * The blank falls on either operand, never on the result: `2 + 3 = □` is plain
+ * addition with an equals sign drawn in, and that row is already played. `□+2=5`
+ * and `2+□=5` are different tasks, and the review queue (C3) keeps them apart.
+ * Every operand is at least one — no `7 + □ = 7`.
+ *
+ * The answer is a single number, so `ArithmeticAnswer` and its recognition
+ * grammar carry over untouched (A5, T16).
  */
+export const MISSING_LEVELS: readonly number[] = [2, 3]
+
+/** How big the numbers get, by rung. */
+const CEILING: Record<number, number> = { 2: 5, 3: 10 }
+
 export interface Equation {
-  /** Every operand, in written order. One of them is the unknown. */
+  /** Both operands, in written order. One of them is the unknown. */
   readonly terms: readonly number[]
-  /** The signs between them — one fewer than there are terms. */
+  /** The sign between them. */
   readonly ops: readonly MathOp[]
   /** The right-hand side, always shown. */
   readonly result: number
-  /** Index into `terms` of the operand that is hidden. */
+  /** Index into `terms` of the operand that is hidden — 0 or 1. */
   readonly blank: number
   /** The number the child has to name: `terms[blank]`. */
   readonly answer: number
-  /** The grammar ceiling — the range the child is heard against (T16). */
+  /**
+   * The grammar ceiling — the range the child is heard against (T16). Ten on
+   * both rungs: answers reach five and then ten, and a list shorter than that
+   * is one Vosk hears its single word in anything.
+   */
   readonly heardUpTo: number
 }
 
 export function generateEquation(levelId: number, random: Random): Equation {
-  const operation: MathOp = random() < 0.5 ? '+' : '-'
-  // The rung itself, sum and all. A level that the ladder does not have throws
-  // from in there, which is where the message about it belongs.
-  const base = generateProblem(levelId, random, operation)
-  const blank = randomInt(random, 0, base.terms.length - 1)
+  const ceiling = CEILING[levelId]
+  if (ceiling === undefined) throw new RangeError(`No missing-number rung for level ${levelId}`)
+
+  const op: MathOp = random() < 0.5 ? '+' : '-'
+  let a: number
+  let b: number
+  if (op === '+') {
+    a = randomInt(random, 1, ceiling - 1)
+    b = randomInt(random, 1, ceiling - a)
+  } else {
+    a = randomInt(random, 2, ceiling)
+    b = randomInt(random, 1, a - 1)
+  }
+
+  const terms = [a, b] as const
+  const blank = random() < 0.5 ? 0 : 1
 
   return {
-    terms: base.terms,
-    ops: base.ops,
-    result: base.answer,
+    terms,
+    ops: [op],
+    result: op === '+' ? a + b : a - b,
     blank,
-    answer: base.terms[blank]!,
-    heardUpTo: base.heardUpTo,
+    answer: terms[blank],
+    heardUpTo: 10,
   }
 }
 
 /**
- * «□+2=5», «47+□+3=69» — for the id and for debugging.
+ * «□+2=5», «5-□=2» — for the id and for debugging.
  *
  * The blank position is part of it: «□+2=5» and «2+□=5» are different tasks to
  * a child, and the review queue (C3) keys on this string, so they must not
@@ -75,9 +93,9 @@ export function generateEquation(levelId: number, random: Random): Equation {
  */
 export function describeEquation(equation: Equation): string {
   const body = equation.terms.reduce((text, term, i) => {
-    const op = i === 0 ? '' : equation.ops[i - 1]
+    const sign = i === 0 ? '' : equation.ops[i - 1]
     const shown = i === equation.blank ? '□' : String(term)
-    return `${text}${op}${shown}`
+    return `${text}${sign}${shown}`
   }, '')
 
   return `${body}=${equation.result}`

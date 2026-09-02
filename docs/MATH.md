@@ -33,7 +33,7 @@ says five.
 | Addition | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Subtraction | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Addition + subtraction | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
-| Missing number `□+2=5` | ⏸ | ⏸ | ⏸ | ⏸ | ⏸ |
+| Missing number `□+2=5` | — | ✅ | ✅ | — | — |
 | Comparing numbers `5 □ 7` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | «How many more?» | ☐ | ☐ | ☐ | ☐ | ☐ |
 | Increase / decrease by | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -47,13 +47,11 @@ says five.
 | Measuring | ✖ | ✖ | ✖ | ✖ | ✖ |
 | Patterns | ☐ | ☐ | ☐ | — | — |
 
-**Addition, subtraction, comparing numbers and making a number are asked; two
-rows are still parked** — that is what ⏸ means. What each of them asks, and by
-what rules, is written down below and still holds: nothing has been withdrawn or
-rethought. They are simply not drawn while they go back one row at a time, each
-given on its own long enough to say whether it works before the next joins it. A
-⏸ is a row waiting its turn, and the only cell that changes when its turn comes
-is the tick.
+**Every row but one is asked; `addition + subtraction` is the only one still
+parked** — that is what ⏸ means. What it asks, and by what rules, is written
+down below and still holds: nothing has been withdrawn or rethought. It is
+simply not drawn yet. A ⏸ is a row waiting its turn, and the only cell that
+changes when its turn comes is the tick.
 
 **Subtraction came back first because it was the cheapest of the four.** It
 shares one table below with addition, and one generator behind that table, so
@@ -221,29 +219,30 @@ only row that asks it now.
 
 ## Missing number
 
-A known sum shown backwards: `terms … = result` with one operand covered up,
-and the child names it. Reading a sum backwards is the whole skill, so the
-ladder is about the size of the arithmetic behind the blank, nothing cleverer.
+A known sum shown backwards: `a op b = c` with one operand covered up, and the
+child names it. Reading a sum backwards is the whole skill, so the arithmetic
+behind the blank is kept small.
 
 | Level | The sum behind the blank | Heard | Example |
 |---|---|---|---|
-| 1 | the bonds within five | 0–10 | `□+2=5`, `4−□=3` |
-| 2 | up to ten, not crossed | 0–10 | `4+□=9`, `9−□=3` |
-| 3 | across the ten, or whole tens | 0–20, 0–100 | `□+6=13`, `30+□=70` |
-| 4 | two-digit, nothing carried | 0–100 | `45+□=68`, `□+15=87` |
-| 5 | two-digit, the units overflow | 0–100 | `□+28=75`, `63−□=36` |
+| 2 | within five | 0–10 | `□+2=5`, `5−□=3` |
+| 3 | within ten  | 0–10 | `4+□=9`, `9−□=3` |
 
-**The row has no ladder of its own: it rides the addition one rung for rung.**
-Whatever level 3 asks as a sum, level 3 asks here with one operand covered up.
-It used to remap the rungs by hand — its level 3 borrowed the across-the-ten
-generator, its level 4 flipped a coin between two others — and that was a second
-ladder to keep in step with the first, which fell out of step the moment the
-first one was re-cut. Riding along cannot drift.
+**Two rungs, and neither is level 1.** Level 1 is where a child still meets
+`2 + 3` forwards; turning it round is a level-2 move. Levels 4 and 5 are
+two-digit, and the row waits on the evidence from these two before it takes
+them on. A King's-Bounty band-4 opponent that draws this row is asked it at
+rung 3 only — the pairing drops the rung it does not have rather than throwing.
 
-The blank falls on any operand but never on the result: `2+3=□` is plain
+**Its own splitter, not the addition ladder's.** It used to ride addition rung
+for rung — `generateProblem` with an operand hidden — which tied its rungs to a
+ladder re-cut for something else. «Within five» and «within ten» state more
+plainly on their own.
+
+The blank falls on either operand but never on the result: `2+3=□` is plain
 addition with an equals sign drawn in, and that row is already played. `□+2=5`
-and `2+□=5` are different tasks, and the review queue (**C3**) keeps them apart.
-Every operand is at least one — no `7+□=7`.
+and `2+□=5` are different tasks, and the review queue (**C3**) keeps them apart
+— and apart from a bond, `5=2+□`. Every operand is at least one — no `7+□=7`.
 
 The answer is one number, so this row asks nothing of the game that addition
 did not already ask.
@@ -411,5 +410,7 @@ difficulty is what the rungs are for.
 A row is drawn only at a level it actually has. Comparing numbers now runs all
 five rungs, so an opponent that asks it compares at whatever levels its own band
 reaches — bare numbers low down, sums higher up. Making a number stops at four,
-so a level-5 opponent that asks it is handed only its rung-4 bonds; the pairing
-drops the rung it has not got rather than throwing mid-battle.
+missing number runs only two and three — so a level-5 opponent handed either is
+given only the rungs it does have, and a level-1 opponent is never handed
+missing number at all. The pairing drops the rung it has not got rather than
+throwing mid-battle, and a band with no rung for a row is dealt none of it.

@@ -1,11 +1,11 @@
 import type { Exercise } from '../exercises'
 import { assertNever } from '../exhaustive'
 import type { Random } from '../random'
-// Parked along with the rows they build — see the note on `TaskKind` below.
+// Parked along with the row it builds — see the note on `TaskKind` below.
 // import { createChainExercise } from './chains'
-// import { createEquationExercise } from './equations'
 import { COMPARISON_LEVELS, createComparisonExercise } from './comparison'
 import { createCompositionExercise, MAKING_LEVELS } from './composition'
+import { createEquationExercise, MISSING_LEVELS } from './equations'
 import { generateProblem, toExercise } from './generator'
 import { MATH_LEVELS } from './levels'
 
@@ -21,10 +21,9 @@ import { MATH_LEVELS } from './levels'
  * join this union as they land, and every switch over it stops compiling until
  * it says what to do with them.
  *
- * **Addition, subtraction, comparing numbers and making a number are asked; the
- * other two rows are parked.** The parked ones are written and still under test
- * — their generators, their rules and their test files are untouched — but not
- * drawn while they go back one at a time. Parked, not deleted: a row is
+ * **All the rows but one are asked; `addition-subtraction` is still parked.**
+ * The parked one is written and still under test — its generator, its rules and
+ * its test file are untouched — but not drawn. Parked, not deleted: a row is
  * commented out in exactly three places, this union, `RUNGS` and the switch at
  * the foot of the file, plus its import at the top. Uncomment those and the row
  * is playable again, along with whatever in game/monsters.ts offers it to an
@@ -39,8 +38,8 @@ export type TaskKind =
   | 'subtraction'
   | 'comparing-numbers'
   | 'making-a-number'
+  | 'missing-number'
 // | 'addition-subtraction'
-// | 'missing-number'
 
 /**
  * Which levels each kind actually has a rung on.
@@ -58,10 +57,10 @@ const RUNGS: Record<TaskKind, readonly number[]> = {
   'comparing-numbers': COMPARISON_LEVELS,
   // Four rungs: place value stops at two digits (see composition.ts).
   'making-a-number': MAKING_LEVELS,
+  // Two rungs, both under ten (see equations.ts): a band that reaches neither
+  // simply never draws it.
+  'missing-number': MISSING_LEVELS,
   // 'addition-subtraction': MATH_LEVELS,
-  // Rides the addition/subtraction ladder — a base problem for the level with
-  // one operand hidden — so it reaches every rung they do.
-  // 'missing-number': MATH_LEVELS,
 }
 
 export function levelsFor(kind: TaskKind): readonly number[] {
@@ -99,11 +98,11 @@ export function createMathExercise(kind: TaskKind, levelId: number, random: Rand
     case 'making-a-number':
       return createCompositionExercise(levelId, random)
 
+    case 'missing-number':
+      return createEquationExercise(levelId, random)
+
     // case 'addition-subtraction':
     //   return createChainExercise(levelId, random)
-
-    // case 'missing-number':
-    //   return createEquationExercise(levelId, random)
 
     default:
       return assertNever(kind, 'kind of task')

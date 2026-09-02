@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Exercise } from '@/core/exercises'
-import { ArithmeticAnswer, taskChoices, type TaskKind } from '@/core/math'
+import { ArithmeticAnswer, levelsFor, taskChoices, type TaskKind } from '@/core/math'
 import { createRandom } from '@/core/random'
 import type { AnswerResult } from '@/core/session'
 import { t } from '@/locale'
@@ -382,16 +382,30 @@ describe('the monster config', () => {
       // and 4/2/1 is the shape that turns a row into a difficulty. A band too
       // small to hold every row — level 5 is one opponent so far — reads as
       // «0 or 1 each» and passes, which is the most even it can be.
+      //
+      // A row with no rung in the band's levels (missing-number tops out at 3,
+      // so bands 1 and 5 cannot ask it) is left an empty pile and sits out the
+      // even check — it is not a row this band deals.
       for (const [band, piles] of Object.entries(ASKS)) {
         const units = bands().get(Number(band)) ?? []
-        const kinds = Object.keys(piles) as TaskKind[]
-        const counts = kinds.map((kind) => asking(units, kind).length)
-        const dealt = counts.reduce((sum, count) => sum + count, 0)
+        const bandLevels = units[0]?.levels ?? []
+        const canAsk = (kind: TaskKind) =>
+          levelsFor(kind).some((level) => bandLevels.includes(level))
+
+        for (const kind of Object.keys(piles) as TaskKind[]) {
+          if (!canAsk(kind)) {
+            expect(piles[kind], `${kind} at level ${band} has no rung here`).toHaveLength(0)
+          }
+        }
+
+        const dealt = (Object.keys(piles) as TaskKind[]).filter(canAsk)
+        const counts = dealt.map((kind) => asking(units, kind).length)
+        const total = counts.reduce((sum, count) => sum + count, 0)
 
         for (const [i, count] of counts.entries()) {
-          const where = `${kinds[i]} at level ${band}`
-          expect(count, where).toBeGreaterThanOrEqual(Math.floor(dealt / kinds.length))
-          expect(count, where).toBeLessThanOrEqual(Math.ceil(dealt / kinds.length))
+          const where = `${dealt[i]} at level ${band}`
+          expect(count, where).toBeGreaterThanOrEqual(Math.floor(total / dealt.length))
+          expect(count, where).toBeLessThanOrEqual(Math.ceil(total / dealt.length))
         }
       }
     })
