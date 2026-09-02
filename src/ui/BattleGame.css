@@ -226,16 +226,12 @@
      against the card, not by eye.
 
      --fan     how far each card turns from the middle
-     --mini    how much of full size a member's card is drawn at
-     --lap     how much of a card the next one covers, in FULL-size units: the
-               margin is inside the zoom, so it shrinks with the card
+     --lap     how much of a card the next one covers
      --spread  how far each card slides from the middle when the hand opens
 
      The cards are the roster's own, at the roster's own size — a squad is the
-     same cards, so it is the same cards. `--mini` stays as the dial it is; at 1
-     the zoom below does nothing. */
+     same cards, so it is the same cards. */
   --fan: 5deg;
-  --mini: 1;
   --spread: 0rem;
   /* Closed far enough that a covered card shows its rank and little else. Less
      than this and the strength wording is sliced through the middle, which
@@ -258,18 +254,11 @@
   padding: 0.7rem calc((var(--hand) - 1) * 0.92rem) 0;
 }
 
-/* A member of the hand: the roster's own card, shrunk.
-
-   `zoom` and not `transform: scale`, because a scaled card keeps its full-size
-   footprint and the fan would have to be laid out around a box that is not
-   there. Zoom shrinks the layout too, so the overlap below is measured in what
-   you actually see. It is the one place in the stylesheet that leans on the
-   browser being Chromium (T14), which it is.
+/* A member of the hand: the roster's own card, unaltered but for how it sits.
 
    Each keeps its own member's level colour, not the squad's, so a mixed group
    shows its mixture: the motley band fans out green, gold, orange, orange. */
 .card--mini {
-  zoom: var(--mini);
   /* A hand is a stack, and a stack has depth. Small and soft: this is a card on
      a card, not a card off the page. */
   box-shadow: 0 3px 8px color-mix(in srgb, #000 26%, transparent);
@@ -371,16 +360,6 @@
   width: 1.9rem;
   height: 1.9rem;
   font-size: 1.1rem;
-}
-
-/* One member on a squad card. Four of them across, and still large enough to be
-   told apart — that is what the child picks by, here as much as on a monster's
-   card. Shaped to the pictures for the same reason the card avatar is, and no
-   larger than this: four is the widest a squad gets, and it has to fit one line. */
-.avatar--face {
-  height: 4rem;
-  aspect-ratio: 40 / 51;
-  font-size: 2.6rem;
 }
 
 /* A picture needs a backing plate: with a transparent png, a dark outline is
