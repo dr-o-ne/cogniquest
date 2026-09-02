@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { Exercise } from '@/core/exercises'
 import { ArithmeticAnswer, taskChoices, type TaskKind } from '@/core/math'
+import { createRandom } from '@/core/random'
 import type { AnswerResult } from '@/core/session'
 import { t } from '@/locale'
-import { Battle } from './Battle'
+import { Battle, MAX_SQUAD } from './Battle'
 import {
   ASKS,
   availableMonsters,
@@ -11,6 +12,7 @@ import {
   HEARTS_MIN,
   MONSTERS,
   monsterById,
+  PLAYER_HEARTS,
   type Monster,
 } from './monsters'
 
@@ -30,55 +32,57 @@ function feed(battle: Battle, verdict: AnswerResult['verdict'], times: number) {
   for (let i = 0; i < times; i++) battle.onAnswerAccepted(answer(verdict))
 }
 
-const dummy: Monster = {
-  id: 'test',
-  tasks: ['addition'],
-  name: 'Test',
-  hearts: 3,
-  levels: [1],
-  color: '#000',
+function unit(id: string, hearts: number, tasks: readonly TaskKind[] = ['addition']): Monster {
+  return { id, tasks, name: id, hearts, levels: [1], color: '#000' }
 }
+
+const dummy = unit('test', 3)
+
+/** Hearts left, opponent by opponent — the shape most of these assertions want. */
+const hearts = (battle: Battle) => battle.state.foes.map((foe) => foe.hearts)
 
 describe('Battle', () => {
   it('a correct answer takes a heart off the monster', () => {
-    const battle = new Battle(dummy, 5)
+    const battle = new Battle([dummy], { playerHearts: 5 })
     battle.onAnswerAccepted(answer('correct'))
 
-    expect(battle.state.monsterHearts).toBe(2)
+    expect(hearts(battle)).toEqual([2])
     expect(battle.state.playerHearts).toBe(5)
     expect(battle.state.lastHit).toBe('monster')
+    expect(battle.state.hitFoe).toBe(0)
   })
 
   it('a mistake takes a heart off the child', () => {
-    const battle = new Battle(dummy, 5)
+    const battle = new Battle([dummy], { playerHearts: 5 })
     battle.onAnswerAccepted(answer('wrong'))
 
     expect(battle.state.playerHearts).toBe(4)
-    expect(battle.state.monsterHearts).toBe(3)
+    expect(hearts(battle)).toEqual([3])
     expect(battle.state.lastHit).toBe('player')
+    expect(battle.state.hitFoe).toBeNull()
   })
 
   it('C5: a miss costs not a single heart', () => {
-    const battle = new Battle(dummy, 5)
+    const battle = new Battle([dummy], { playerHearts: 5 })
     feed(battle, 'unrecognised', 10)
 
     expect(battle.state.playerHearts).toBe(5)
-    expect(battle.state.monsterHearts).toBe(3)
+    expect(hearts(battle)).toEqual([3])
     expect(battle.state.lastHit).toBeNull()
     expect(battle.finished).toBe(false)
   })
 
   it('the monster runs out of hearts — the child wins', () => {
-    const battle = new Battle(dummy, 5)
+    const battle = new Battle([dummy], { playerHearts: 5 })
     feed(battle, 'correct', 3)
 
     expect(battle.finished).toBe(true)
     expect(battle.state.winner).toBe('player')
-    expect(battle.state.monsterHearts).toBe(0)
+    expect(hearts(battle)).toEqual([0])
   })
 
   it('the child runs out of hearts — the monster wins', () => {
-    const battle = new Battle(dummy, 2)
+    const battle = new Battle([dummy], { playerHearts: 2 })
     feed(battle, 'wrong', 2)
 
     expect(battle.finished).toBe(true)
@@ -86,7 +90,7 @@ describe('Battle', () => {
   })
 
   it('answers change nothing once the battle is over', () => {
-    const battle = new Battle(dummy, 5)
+    const battle = new Battle([dummy], { playerHearts: 5 })
     feed(battle, 'correct', 3)
     feed(battle, 'wrong', 10)
 
@@ -95,14 +99,151 @@ describe('Battle', () => {
   })
 
   it('hearts never go negative', () => {
-    const battle = new Battle(dummy, 1)
+    const battle = new Battle([dummy], { playerHearts: 1 })
     feed(battle, 'wrong', 5)
     expect(battle.state.playerHearts).toBe(0)
   })
 
   it('a battle without hearts makes no sense', () => {
-    expect(() => new Battle(dummy, 0)).toThrow(RangeError)
-    expect(() => new Battle({ ...dummy, hearts: 0 })).toThrow(RangeError)
+    expect(() => new Battle([dummy], { playerHearts: 0 })).toThrow(RangeError)
+    expect(() => new Battle([{ ...dummy, hearts: 0 }])).toThrow(RangeError)
+  })
+
+  it('a battle needs somebody to fight, and not more than five', () => {
+    const five = Array.from({ length: MAX_SQUAD }, (_, i) => unit(`u${i}`, 2))
+
+    expect(() => new Battle([])).toThrow(RangeError)
+    expect(() => new Battle([...five, dummy])).toThrow(RangeError)
+    expect(new Battle(five).state.foes).toHaveLength(MAX_SQUAD)
+  })
+})
+
+/**
+ * A squad, one to five strong, and the two ways it takes turns.
+ *
+ * Both modes are the same battle with a different answer to one question —
+ * «who asks next» — so every assertion below is really about `nextAsker`, and
+ * about the heart landing on whoever it named rather than on the front of the
+ * list.
+ */
+describe('a squad', () => {
+  const squad = () => [unit('first', 2), unit('second', 3), unit('third', 1)]
+
+  /** Beat whoever is asking, drawing a fresh asker between blows. */
+  function beat(battle: Battle, times: number) {
+    for (let i = 0; i < times; i++) {
+      battle.nextAsker()
+      battle.onAnswerAccepted(answer('correct'))
+    }
+  }
+
+  describe('in order — a gauntlet of runs, one opponent at a time (G8)', () => {
+    it('the front one holds the arena until it is beaten', () => {
+      const battle = new Battle(squad())
+
+      expect(battle.nextAsker().id).toBe('first')
+      battle.onAnswerAccepted(answer('correct'))
+      expect(battle.nextAsker().id).toBe('first')
+      battle.onAnswerAccepted(answer('correct'))
+
+      // Out of hearts, so the next one steps up — and only now.
+      expect(hearts(battle)).toEqual([0, 3, 1])
+      expect(battle.nextAsker().id).toBe('second')
+    })
+
+    it('a mistake costs the child a heart and nobody their turn', () => {
+      const battle = new Battle(squad())
+      battle.nextAsker()
+      battle.onAnswerAccepted(answer('wrong'))
+
+      expect(battle.state.playerHearts).toBe(PLAYER_HEARTS - 1)
+      expect(hearts(battle)).toEqual([2, 3, 1])
+      expect(battle.nextAsker().id).toBe('first')
+    })
+
+    it('works through the squad in the order it was picked', () => {
+      const battle = new Battle(squad())
+      beat(battle, 2 + 3)
+
+      expect(hearts(battle)).toEqual([0, 0, 1])
+      expect(battle.nextAsker().id).toBe('third')
+    })
+  })
+
+  describe('shuffled — whichever survivor is drawn', () => {
+    it('the heart comes off whoever asked, not off the front', () => {
+      // 0.99 lands on the last of the survivors.
+      const battle = new Battle(squad(), { shuffle: true, random: () => 0.99 })
+
+      expect(battle.nextAsker().id).toBe('third')
+      battle.onAnswerAccepted(answer('correct'))
+
+      expect(hearts(battle)).toEqual([2, 3, 0])
+      expect(battle.state.hitFoe).toBe(2)
+    })
+
+    it('a beaten opponent is never asked again', () => {
+      const battle = new Battle(squad(), { shuffle: true, random: () => 0.99 })
+      // The third one has a single heart, so one blow takes it out of the draw.
+      beat(battle, 1)
+
+      expect(battle.nextAsker().id).toBe('second')
+      beat(battle, 3)
+      expect(battle.nextAsker().id).toBe('first')
+    })
+
+    it('the draw actually moves around the squad', () => {
+      // Every opponent deep enough that no draw can empty it, so anyone still
+      // being asked is the draw moving rather than the survivors thinning out.
+      const battle = new Battle([unit('a', 30), unit('b', 30), unit('c', 30)], {
+        shuffle: true,
+        random: createRandom(7),
+      })
+
+      const asked = new Set(Array.from({ length: 30 }, () => battle.nextAsker().id))
+      expect(asked).toEqual(new Set(['a', 'b', 'c']))
+    })
+  })
+
+  it('the child wins only once every last one of them is beaten', () => {
+    const battle = new Battle(squad())
+    beat(battle, 2 + 3)
+
+    expect(battle.finished).toBe(false)
+    expect(battle.state.winner).toBeNull()
+
+    beat(battle, 1)
+    expect(battle.state.winner).toBe('player')
+    expect(hearts(battle)).toEqual([0, 0, 0])
+  })
+
+  it('the squad wins with whoever is left standing', () => {
+    const battle = new Battle(squad(), { playerHearts: 2 })
+    battle.nextAsker()
+    feed(battle, 'wrong', 2)
+
+    expect(battle.state.winner).toBe('monster')
+    // Nobody lost a heart to a wrong answer, so the whole squad is still there.
+    expect(hearts(battle)).toEqual([2, 3, 1])
+    expect(battle.asker.id).toBe('first')
+  })
+
+  it('the same opponent may stand in the squad twice, with hearts of its own', () => {
+    const battle = new Battle([unit('twin', 2), unit('twin', 2)])
+    beat(battle, 2)
+
+    expect(hearts(battle)).toEqual([0, 2])
+    expect(battle.state.winner).toBeNull()
+  })
+
+  it('nobody left to ask — the pick stands, and the extra task goes nowhere', () => {
+    // The session draws one more task after the last heart goes, and that task
+    // is never put to the child. It still has to come from somebody.
+    const battle = new Battle([unit('only', 1)])
+    beat(battle, 1)
+
+    expect(battle.state.winner).toBe('player')
+    expect(battle.nextAsker().id).toBe('only')
   })
 })
 

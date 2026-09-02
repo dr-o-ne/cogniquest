@@ -47,6 +47,20 @@ export const ru = {
     wipeAsk: 'Всё стереть?',
     wipeYes: 'Да',
     wipeNo: 'Нет',
+
+    /**
+     * The two halves of the screen (**G9**). Headings rather than nothing,
+     * because a card with four faces on it and a card with one are two
+     * different offers, and the child has to be told which is which.
+     */
+    squadsTitle: 'Отряды',
+    duelsTitle: 'Один на один',
+    /**
+     * How a squad takes turns, printed on its card. It changes the battle more
+     * than anything else on the card does, so it is not left to be discovered.
+     */
+    squadShuffled: 'вперемешку',
+    squadInTurn: 'по очереди',
   },
 
   fight: {
@@ -351,6 +365,22 @@ export const ru = {
     'lava-golem': 'Лавовый голем',
     nekroh: 'Некрох',
     'guard-droid': 'Дроид-страж',
+  } as Record<string, string>,
+
+  /**
+   * Squad names, keyed by the id in src/game/squads.ts. Every squad in the
+   * table must appear here — there is a test for it.
+   *
+   * Named for what stands in front of the child rather than for the sums
+   * behind it: «Двое на тропе» is a thing to picture, «Два монстра 1 уровня»
+   * is a spreadsheet row. What the battle is made of is on the card — the
+   * faces, the hearts, and whether it is shuffled.
+   */
+  squads: {
+    'two-on-the-path': 'Двое на тропе',
+    'beast-pack': 'Звериная стая',
+    'sky-watch': 'Небесный дозор',
+    'motley-band': 'Сборная ватага',
   } as Record<string, string>,
 
   /** Phase 1 measuring rig. Developer tool, kept for when voice starts missing. */

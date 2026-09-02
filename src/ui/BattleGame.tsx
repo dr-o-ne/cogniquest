@@ -2,11 +2,11 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import type { Exercise, MathOp } from '@/core/exercises'
 import { assertNever } from '@/core/exhaustive'
 import { comparisonSign, comparisonWord, COMPARISONS, type Comparison } from '@/core/math'
-import { availableMonsters, PLAYER_HEARTS, type Monster } from '@/game'
+import { availableMonsters, PLAYER_HEARTS, SQUADS, type Monster, type Squad } from '@/game'
 import { t } from '@/locale'
 import { MonsterAvatar } from './MonsterAvatar'
 import { Teacher } from './Teacher'
-import { useBattle, type Draft, type GameState } from './useBattle'
+import { useBattle, type Draft, type GameState, type Opposition } from './useBattle'
 import './BattleGame.css'
 
 /**
@@ -42,14 +42,20 @@ export function BattleGame() {
     case 'name':
       return <NameScreen onDone={(name) => void setName(name)} />
     case 'select':
-      return <SelectScreen state={state} onPick={(m) => void fight(m)} onReset={() => void resetAll()} />
+      return (
+        <SelectScreen
+          state={state}
+          onFight={(opposition) => void fight(opposition)}
+          onReset={() => void resetAll()}
+        />
+      )
     case 'fight':
       return (
         <FightScreen
           state={state}
           input={input}
           onLeave={toSelect}
-          onRematch={() => state.monster && void fight(state.monster)}
+          onRematch={() => state.opposition && void fight(state.opposition)}
         />
       )
   }
@@ -91,13 +97,22 @@ function NameScreen({ onDone }: { onDone: (name: string) => void }) {
   )
 }
 
+/**
+ * Picking the opposition: a ready-made squad, or one opponent for a duel.
+ *
+ * Both are one press, and neither has a form to fill in. The squads come from
+ * the config (`SQUADS`, **G9**) rather than being assembled on the screen: what
+ * makes a squad worth fighting is its mix of rows, which is a thing to compose
+ * in a table beside the reason for it, not something to hand a six-year-old a
+ * builder for. So the roster card does exactly what it always did.
+ */
 function SelectScreen({
   state,
-  onPick,
+  onFight,
   onReset,
 }: {
   state: GameState
-  onPick: (monster: Monster) => void
+  onFight: (opposition: Opposition) => void
   onReset: () => void
 }) {
   const [confirming, setConfirming] = useState(false)
@@ -125,36 +140,107 @@ function SelectScreen({
       </div>
 
       <h1 className="splash__title">{t.select.title(state.name)}</h1>
+
+      {/* The squads come first: there are four of them against forty-eight
+          cards, and at the foot of the roster nobody would ever meet them. */}
+      <h2 className="roster__title">{t.select.squadsTitle}</h2>
+      <div className="roster">
+        {SQUADS.map((squad) => (
+          <SquadCard
+            key={squad.id}
+            squad={squad}
+            beaten={state.squadsBeaten[squad.id] ?? 0}
+            onFight={onFight}
+          />
+        ))}
+      </div>
+
+      <h2 className="roster__title">{t.select.duelsTitle}</h2>
       <div className="roster">
         {availableMonsters().map((monster) => {
           const beaten = state.defeated[monster.id] ?? 0
 
           return (
-          <button
-            key={monster.id}
-            className={beaten > 0 ? 'card card--beaten' : 'card'}
-            style={{ '--card': monster.color } as React.CSSProperties}
-            onClick={() => onPick(monster)}
-          >
-            {/* Beaten ones are struck through, but can still be played */}
-            {beaten > 0 && (
-              <span className="card__badge" title={t.select.wins(beaten)}>
-                ✔{beaten > 1 && <span className="card__times">{beaten}</span>}
+            <button
+              key={monster.id}
+              className={beaten > 0 ? 'card card--beaten' : 'card'}
+              style={{ '--card': monster.color } as React.CSSProperties}
+              onClick={() => onFight({ kind: 'duel', monster })}
+            >
+              {/* Beaten ones are struck through, but can still be played */}
+              {beaten > 0 && (
+                <span className="card__badge" title={t.select.wins(beaten)}>
+                  ✔{beaten > 1 && <span className="card__times">{beaten}</span>}
+                </span>
+              )}
+              <MonsterAvatar monster={monster} size="card" />
+              <span className="card__name">{monster.name}</span>
+              {/* Every last heart: how many there are IS the main difference
+                  between monsters, so that number must not be abbreviated. */}
+              <span className="card__hearts" style={{ fontSize: `${heartSize(monster.hearts)}rem` }}>
+                {'❤'.repeat(monster.hearts)}
               </span>
-            )}
-            <MonsterAvatar monster={monster} size="card" />
-            <span className="card__name">{monster.name}</span>
-            {/* Every last heart: how many there are IS the main difference
-                between monsters, so that number must not be abbreviated. */}
-            <span className="card__hearts" style={{ fontSize: `${heartSize(monster.hearts)}rem` }}>
-              {'❤'.repeat(monster.hearts)}
-            </span>
-          </button>
+            </button>
           )
         })}
       </div>
+
       {state.wins > 0 && <p className="splash__note">{t.select.wins(state.wins)}</p>}
     </div>
+  )
+}
+
+/**
+ * One ready-made squad, as a card the size of two roster cards.
+ *
+ * It carries the three things that decide what the battle is: the faces, so the
+ * child picks the way they pick a monster; how it takes turns, because that
+ * changes the battle more than anything else on the card; and every heart of
+ * every member, since the total is now the length of the battle and there is no
+ * other way to see that a group of four is four times the sitting.
+ */
+function SquadCard({
+  squad,
+  beaten,
+  onFight,
+}: {
+  squad: Squad
+  /** How many times this squad has been beaten. Struck through like a monster. */
+  beaten: number
+  onFight: (opposition: Opposition) => void
+}) {
+  const classes = ['card', 'card--squad']
+  if (beaten > 0) classes.push('card--beaten')
+
+  return (
+    <button
+      className={classes.join(' ')}
+      style={{ '--card': squad.color } as React.CSSProperties}
+      onClick={() => onFight({ kind: 'squad', squad })}
+    >
+      {/* Beaten squads are struck through and still playable, exactly as the
+          monsters are — and it is the squad's own tally, not its members'. A
+          child who beat every one of them separately has not beaten the
+          group. */}
+      {beaten > 0 && (
+        <span className="card__badge" title={t.select.wins(beaten)}>
+          ✔{beaten > 1 && <span className="card__times">{beaten}</span>}
+        </span>
+      )}
+      <span className="card__faces">
+        {/* Keyed by slot: the same monster may stand in a squad twice. */}
+        {squad.monsters.map((monster, slot) => (
+          <MonsterAvatar key={slot} monster={monster} size="face" />
+        ))}
+      </span>
+      <span className="card__name">{squad.name}</span>
+      <span className="card__mode">
+        {squad.shuffle ? t.select.squadShuffled : t.select.squadInTurn}
+      </span>
+      <span className="card__hearts" style={{ fontSize: `${heartSize(squad.hearts)}rem` }}>
+        {'❤'.repeat(squad.hearts)}
+      </span>
+    </button>
   )
 }
 
@@ -169,10 +255,11 @@ function FightScreen({
   onLeave: () => void
   onRematch: () => void
 }) {
-  const { battle, monster } = state
-  if (!battle || !monster) return null
+  const { battle } = state
+  if (!battle) return null
 
   const hitClass = state.flash === 'correct' ? 'hit-monster' : state.flash === 'wrong' ? 'hit-player' : ''
+  const crowd = battle.foes.length
 
   return (
     <div className={`screen fight ${hitClass}`}>
@@ -185,14 +272,26 @@ function FightScreen({
           color="#4a7de0"
         />
         <span className="hud__vs">{t.fight.vs}</span>
-        <Fighter
-          name={monster.name}
-          avatar={<MonsterAvatar monster={monster} size="hud" />}
-          hearts={battle.monsterHearts}
-          max={monster.hearts}
-          color={monster.color}
-          mirrored
-        />
+        {/* One row per opponent, the asker brought forward and the beaten ones
+            struck through. A squad of one is the single row it always was, which
+            is why there is no separate case for it. */}
+        <div className={crowd > 1 ? 'hud__foes hud__foes--crowd' : 'hud__foes'}>
+          {battle.foes.map((foe, slot) => (
+            <Fighter
+              key={slot}
+              name={foe.monster.name}
+              avatar={<MonsterAvatar monster={foe.monster} size="hud" />}
+              hearts={foe.hearts}
+              max={foe.monster.hearts}
+              color={foe.monster.color}
+              mirrored
+              crowd={crowd}
+              asking={slot === battle.asking && foe.hearts > 0}
+              beaten={foe.hearts === 0}
+              struck={slot === battle.hitFoe}
+            />
+          ))}
+        </div>
       </header>
 
       <div className="fight__stage">
@@ -217,7 +316,10 @@ function FightScreen({
       {battle.winner && (
         <WinnerPopup
           won={battle.winner === 'player'}
-          monster={monster}
+          squad={battle.foes.map((foe) => foe.monster)}
+          /* Whoever was asking when the last heart went is the one still
+             standing, so it is the one that gets its name in the title. */
+          victor={battle.foes[battle.asking]!.monster}
           name={state.name}
           onRematch={onRematch}
           onLeave={onLeave}
@@ -227,17 +329,36 @@ function FightScreen({
   )
 }
 
-/** The more hearts, the smaller they get — a long battle would break the layout. */
+/**
+ * The more hearts, the smaller they get — a long battle would break the layout.
+ *
+ * The bottom rung is for a squad card, where the count is every heart of every
+ * member and runs to seventy (**G9**). Still drawn one by one: seventy of them
+ * filling the card is exactly the fact the child needs off that card.
+ */
 function heartSize(count: number): number {
+  if (count > 48) return 0.45
   if (count > 30) return 0.55
   if (count > 12) return 0.72
   return 1
 }
 
-/** Wraps at roughly twelve per row whatever the size. */
-function heartRowStyle(count: number): React.CSSProperties {
-  const size = heartSize(count)
-  return { fontSize: `${size}rem`, maxWidth: `${size * 13}rem` }
+/**
+ * A squad shares one corner of the screen, so its rows shrink as it grows: five
+ * opponents of twenty hearts is a hundred of them in the same header, and the
+ * hearts are never abbreviated to a number.
+ */
+const CROWD_SCALE: readonly number[] = [1, 1, 0.82, 0.74, 0.68, 0.62]
+
+/**
+ * Wraps at roughly twelve hearts per row on its own, and at twenty-four in a
+ * squad — the longest battle in the table is twenty, so a squad member gets one
+ * line each, which is what keeps five of them readable at once. The glyph is
+ * about a fifth wider than its own font size, hence the numbers.
+ */
+function heartRowStyle(count: number, crowd: number): React.CSSProperties {
+  const size = heartSize(count) * (CROWD_SCALE[crowd] ?? CROWD_SCALE[CROWD_SCALE.length - 1]!)
+  return { fontSize: `${size}rem`, maxWidth: `${size * (crowd > 1 ? 24 : 13)}rem` }
 }
 
 function Fighter({
@@ -247,6 +368,10 @@ function Fighter({
   max,
   color,
   mirrored,
+  crowd = 1,
+  asking,
+  beaten,
+  struck,
 }: {
   name: string
   avatar: React.ReactNode
@@ -254,19 +379,32 @@ function Fighter({
   max: number
   color: string
   mirrored?: boolean
+  /** How many fighters share this side of the header. Sets how small it goes. */
+  crowd?: number
+  /** Whose question is on the screen right now. */
+  asking?: boolean
+  beaten?: boolean
+  /** Took the last hit — this is what the shake hangs off. */
+  struck?: boolean
 }) {
+  // `asking` and `beaten` are marked whatever the crowd; what they look like is
+  // the stylesheet's business, and there they only show inside a squad — on its
+  // own an opponent is always the asker, and dimming it would be plain wrong.
+  const classes = ['fighter']
+  if (mirrored) classes.push('fighter--right')
+  if (asking) classes.push('fighter--asking')
+  if (beaten) classes.push('fighter--beaten')
+  if (struck) classes.push('fighter--struck')
+
   return (
-    <div
-      className={mirrored ? 'fighter fighter--right' : 'fighter'}
-      style={{ '--fighter': color } as React.CSSProperties}
-    >
+    <div className={classes.join(' ')} style={{ '--fighter': color } as React.CSSProperties}>
       <span className="fighter__avatar">{avatar}</span>
       <div className="fighter__info">
         <span className="fighter__name">{name}</span>
         {/* Hearts are always drawn one by one: the child has to see how many
             are left without counting in their head. Many of them just means
             smaller, across a few rows. */}
-        <span className="fighter__hearts" style={heartRowStyle(max)}>
+        <span className="fighter__hearts" style={heartRowStyle(max, crowd)}>
           {Array.from({ length: max }, (_, i) => (
             <span key={i} className={i < hearts ? 'heart' : 'heart heart--lost'}>
               ❤
@@ -280,13 +418,16 @@ function Fighter({
 
 function WinnerPopup({
   won,
-  monster,
+  squad,
+  victor,
   name,
   onRematch,
   onLeave,
 }: {
   won: boolean
-  monster: Monster
+  squad: readonly Monster[]
+  /** The opponent left standing. Only ever looked at on a defeat. */
+  victor: Monster
   name: string
   onRematch: () => void
   onLeave: () => void
@@ -297,11 +438,20 @@ function WinnerPopup({
         {won ? (
           <span className="avatar avatar--popup avatar--emoji">🏆</span>
         ) : (
-          <MonsterAvatar monster={monster} size="popup" />
+          <MonsterAvatar monster={victor} size="popup" />
         )}
         <h2 className="popup__title">
-          {won ? t.result.victoryTitle : t.result.defeatTitle(monster.name)}
+          {won ? t.result.victoryTitle : t.result.defeatTitle(victor.name)}
         </h2>
+        {/* Beating a squad is worth seeing the squad for. One opponent is
+            already the picture above, so the row only appears for a group. */}
+        {won && squad.length > 1 && (
+          <div className="popup__squad">
+            {squad.map((monster, slot) => (
+              <MonsterAvatar key={slot} monster={monster} size="chip" />
+            ))}
+          </div>
+        )}
         <p className="popup__note">
           {won ? t.result.victoryNote(name) : t.result.defeatNote}
         </p>

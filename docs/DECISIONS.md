@@ -388,14 +388,16 @@ way to answer that can miss will come back the moment reading (**C2**) needs one
 | **G6** | The format is a **Mortal Kombat style battle**: hearts on both sides, fought to a win, a result window. | Accepted |
 | **G7** | A monster's battle comes from its **level**: how many tasks it runs to, and which math rungs they are drawn from. The harder the tasks, the shorter the battle. | Accepted |
 | **G8** | A row coming back takes a **share of the roster**, not a share of every battle: opponents are dealt out between the rows — an equal share inside each level band — so one battle is a run of one row. The split is **probation and dissolves** once the row has proved itself. | Accepted |
+| **G9** | A battle takes on **one to five** opponents. Squads are **written in the config**, not assembled on the screen. In order they are a **gauntlet**; shuffled, every question comes from a survivor drawn afresh. Each keeps its own hearts. | Accepted |
 | **G2** | The setting: wizard against a little monster / space / something else. | **Open** — phase 6 |
 | **G3** | The cast of teacher characters. | **Open** — the child may pick them |
 | **G4** | A timer on answers: speed bonus / hard limit / no clock. | **Deferred** — taken off the critical path by **A7** |
 | **G5** | The teacher: 3D through AI, or 2D through Rive. | **Open** — phase 5, behind abstraction **A10** |
 
-**G6 — how it works.** The child and their hearts on one side, the monster and
-its hearts on the other. A correct answer takes a heart off the monster, a
-mistake off the child, and the battle runs until somebody runs out. It is
+**G6 — how it works.** The child and their hearts on one side, the opponents and
+theirs on the other — one of them, or up to five (**G9**). A correct answer takes
+a heart off whichever one is asking, a mistake off the child, and the battle runs
+until the child runs out or every opponent does. It is
 implemented as an ordinary `SessionObserver` (`src/game/Battle.ts`): delete the
 class and the math carries on, which is exactly what the **A4** seam was
 conceived for. Because a battle's length is not known in advance,
@@ -496,6 +498,49 @@ the tables is corrected for it: **C4** absorbs it inside the battle, easing the
 rung down after three misses in a row. If it turns out to need more than that,
 the honest fix is the level table, not a fudge in the roster.
 
+**G9 — why the two modes are the G8 question asked one level down.** A battle was
+one opponent because a battle was one row of the grid, so putting several
+opponents on the other side puts several rows there, and the order they ask in
+decides whether the child meets them blocked or mixed. In order, one opponent
+holds the arena until it is beaten: a gauntlet, which is several runs of one row
+back to back — exactly what **G8** asks for, at the tempo of one sitting rather
+than one a week. Shuffled, the next question comes from whoever is drawn, which
+puts «mixed, not blocked» (see [MATH.md](MATH.md)) back inside a single battle.
+That is where **G8** says it is heading once the parked rows are all back, and a
+shuffled squad gets it there early — so the dissolution of the split becomes
+something to try on the child rather than something to schedule.
+
+**Squads are written in the config; a builder on the screen was tried and
+reversed.** The first pass gave every roster card a «+ в отряд» button and a bar
+along the bottom to gather five in. It went out the same day for one reason:
+**what makes a squad worth fighting is its mix of rows, and the mix is not
+visible on a card**. A child pressing «+» four times picks four pictures, and
+whether the result asks three rows or one row three times over is invisible to
+them and uncheckable by us. Written as lineups instead, a group can be aimed and
+a test can hold the rule that each covers as many rows as it has slots. What that
+cost is the child's freedom to field any five they like, which is a real loss and
+not a rounding error.
+
+**Hearts are not divided by the size of the squad.** Dividing them was the
+alternative — it would keep a squad the length of a single battle and make it
+purely a choice of mix — and it was turned down because a squad plainly means
+fighting that many opponents, and **G7**'s table has to keep meaning what it
+says. The price is that the groups run forty to seventy tasks against the ten to
+fifteen minutes **P7** asks for, and it is no longer the child's price to choose:
+while squads were assembled by hand the length was theirs, and now we write it.
+That is the one thing here to watch on the child. If it bites, the fix is a cap
+on a squad's total beside its lineup, not a fudge in `BY_LEVEL`.
+
+**Beating every member is not beating the group.** A squad card is struck through
+for a tally of its own, and the tempting shortcut — deriving it from whether all
+its members have been beaten — is wrong: four duels are four battles and no group
+faced. Which also splits «Побед» from the per-opponent tally it used to be summed
+out of, since a win over four opponents is one victory.
+
+**A card still does not say which row it asks**, and a squad makes that matter
+more rather than less: picking one is now how the child picks a mix of rows, and
+they pick it blind. The cheap fix named under **G8** is the same fix here.
+
 ### A sketch (not a decision, a starting point for phase 6)
 
 - **The core is «the duel».** The child and the teacher against a little
@@ -582,4 +627,5 @@ actually did is in `git log`, which says it better.
 | 2026-09-01 | **`Monster.avatar` deleted, on the same argument.** An emoji per unit sat between the picture and the letter in `MonsterAvatar` and could not be reached: only units with a picture are ever fielded, so that rung fired solely when an `<img>` failed to load, which the letter already covers. |
 | 2026-09-02 | **One table deals the rows out, and the shares inside a band are equal (G8).** `ASKS` replaces the three places that used to say which row an opponent asks — a default, a two-way split, and an exception table — which read well enough for two rows and stopped reading at three. Grouped by band, because the band is what has to come out even; typed as a full record per band, so a row coming off the parking bay cannot compile until every band has said what it gives it. The evenness rule counts piles rather than naming rows, so it survives the next row coming back, and `build` throws for a unit with a picture and no pile. |
 | 2026-09-02 | **King's Bounty level 5 opened.** Four opponents join the archdemon, so band 5 is five, split evenly by the `ASKS` rule. The «level 5 sums are a wall» worry that had kept them off is being run rather than designed around; if it bites, the fix is `ASKS`, not the roster. 48 opponents on the selection screen. |
+| 2026-09-02 | **A battle takes on up to five opponents at once (G9).** Four squads in the config, all shuffled. A builder on the selection screen was tried and reversed the same day — a mix of rows is what makes a squad worth fighting, and it is not visible on a card. Hearts deliberately not divided by the squad's size, so the groups run 40–70 tasks against **P7**; that is the part to watch on the child. `Profile` split «Побед» from its per-opponent tally, since a win over four is one victory. |
 | 2026-09-02 | **This document trimmed to the rule above** — 57 KB to 40. Out went the folder tree (**A9**) and the install line, both of which the [README](../README.md) already carried, the tree in a copy that still had the project at a path it left months ago; the mechanics of how **A1** is enforced, same reason; and a changelog that had grown from a record of decisions into a prose retelling of `git log`, now one line an entry. Nothing was struck through and nothing was dropped: 53 decision IDs before, 53 after, every status and every **Why** with them. |

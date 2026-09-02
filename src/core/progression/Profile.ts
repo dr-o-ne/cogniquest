@@ -11,6 +11,21 @@ export interface ProfileData {
   review: ReviewItem[]
   /** monster id → how many times it has been beaten. */
   defeated: Record<string, number>
+  /**
+   * squad id → how many times that squad has been beaten (**G9**).
+   *
+   * Its own map rather than more entries in `defeated`, which is keyed by
+   * roster id: a squad is not an opponent on the roster, and beating one is
+   * not the same event as beating each of its members — both are recorded,
+   * and only one of them is what a squad card is struck through for.
+   */
+  squadsBeaten: Record<string, number>
+  /**
+   * Battles won. Counted apart from `defeated` since a battle can be fought
+   * against a squad (**G9**): four opponents beaten at once is four entries
+   * there and one victory here.
+   */
+  battles: number
   stars: number
   solved: number
   mistakes: number
@@ -24,6 +39,8 @@ function defaults(): ProfileData {
     sessionIndex: 0,
     review: [],
     defeated: {},
+    squadsBeaten: {},
+    battles: 0,
     stars: 0,
     solved: 0,
     mistakes: 0,
@@ -55,6 +72,18 @@ export class Profile implements SessionObserver {
     // The save could come from an older version, or be corrupted.
     if (typeof this.data.defeated !== 'object' || this.data.defeated === null) {
       this.data.defeated = {}
+    }
+    // A save from before squads existed has no such map, which reads correctly
+    // as «no squad has been beaten yet» — there were none to beat.
+    if (typeof this.data.squadsBeaten !== 'object' || this.data.squadsBeaten === null) {
+      this.data.squadsBeaten = {}
+    }
+    // A save written before squads existed carries no battle count and needs
+    // none: a battle was one opponent then, so the per-opponent tally IS the
+    // count. Read that way rather than started at nought, which is what
+    // bumping PROFILE_VERSION would have cost the child.
+    if (data.battles === undefined) {
+      this.data.battles = Object.values(this.data.defeated).reduce((sum, count) => sum + count, 0)
     }
     this.queue = new ReviewQueue(this.data.review)
     this.now = now
@@ -105,17 +134,39 @@ export class Profile implements SessionObserver {
     return { ...this.data.defeated }
   }
 
-  /** Battles won in total. */
+  /** Which squads have been beaten, and how often (**G9**). Also a copy. */
+  get squadsBeaten(): Record<string, number> {
+    return { ...this.data.squadsBeaten }
+  }
+
+  /** Battles won in total — one per battle, whatever stood on the other side. */
   get victories(): number {
-    return Object.values(this.data.defeated).reduce((sum, count) => sum + count, 0)
+    return this.data.battles
   }
 
   hasDefeated(monsterId: string): boolean {
     return (this.data.defeated[monsterId] ?? 0) > 0
   }
 
-  recordVictory(monsterId: string): void {
-    this.data.defeated[monsterId] = (this.data.defeated[monsterId] ?? 0) + 1
+  /**
+   * A battle won, against everyone named — and against the squad they stood
+   * in, when they stood in one from the config (**G9**).
+   *
+   * Everything goes in at once rather than one call per thing beaten, because
+   * the three tallies must not drift: one victory, one tick against each
+   * opponent who stood in it (each of them once, however many slots it filled),
+   * and one against the squad itself.
+   */
+  recordVictory(monsterIds: readonly string[], squadId?: string): void {
+    this.data.battles++
+
+    for (const id of new Set(monsterIds)) {
+      this.data.defeated[id] = (this.data.defeated[id] ?? 0) + 1
+    }
+
+    if (squadId !== undefined) {
+      this.data.squadsBeaten[squadId] = (this.data.squadsBeaten[squadId] ?? 0) + 1
+    }
   }
 
   // --- SessionObserver ---
@@ -146,6 +197,11 @@ export class Profile implements SessionObserver {
   }
 
   toJSON(): ProfileData {
-    return { ...this.data, review: this.queue.toJSON(), defeated: { ...this.data.defeated } }
+    return {
+      ...this.data,
+      review: this.queue.toJSON(),
+      defeated: { ...this.data.defeated },
+      squadsBeaten: { ...this.data.squadsBeaten },
+    }
   }
 }

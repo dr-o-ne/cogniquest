@@ -85,6 +85,17 @@
   gap: 1rem;
 }
 
+/* The heading over each half of the screen: the squads, then the duels. Quiet —
+   it labels a group of cards, it does not compete with them. */
+.roster__title {
+  margin: 0.6rem 0 -0.2rem;
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .card {
   position: relative;
   display: flex;
@@ -105,6 +116,32 @@
 .card:hover {
   transform: translateY(-4px);
   border-color: var(--card);
+}
+
+/* A squad card holds two to four faces and up to seventy hearts, so it is wider
+   than a monster's — and marked out by a heavier border, because the difference
+   between «one opponent» and «four at once» must not rest on reading the name. */
+.card--squad {
+  width: 15rem;
+  border-width: 3px;
+  border-color: color-mix(in srgb, var(--card) 65%, transparent);
+  background: color-mix(in srgb, var(--card) 13%, var(--bg));
+}
+
+/* The faces, in the order the squad was written. They shrink together rather
+   than wrapping: four on one line is what says «four of them». */
+.card__faces {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+/* How the squad takes turns. Set apart from the name — it is a rule of the
+   battle, not part of what the group is called. */
+.card__mode {
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
 }
 
 /* --- Characters: the picture from the config, or an emoji --- */
@@ -147,6 +184,21 @@
   width: 5.5rem;
   height: 5.5rem;
   font-size: 4.5rem;
+}
+
+/* The victory row: a portrait small enough to line five up */
+.avatar--chip {
+  width: 1.9rem;
+  height: 1.9rem;
+  font-size: 1.1rem;
+}
+
+/* One member on a squad card. Four of them across 15rem, and still large enough
+   to be told apart — that is what the child picks by. */
+.avatar--face {
+  width: 3.1rem;
+  height: 3.1rem;
+  font-size: 2.2rem;
 }
 
 /* A picture needs a backing plate: with a transparent png, a dark outline is
@@ -296,16 +348,62 @@ img.avatar {
   letter-spacing: 0.1em;
 }
 
+/* Up to five opponents, one row each, right-aligned so their avatars line up
+   against the edge of the screen whatever their names are */
+.hud__foes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
 .fighter {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   min-width: 0;
+  transition: opacity 0.25s ease;
 }
 
 .fighter--right {
   flex-direction: row-reverse;
   text-align: right;
+}
+
+/* Everything below is scoped to a squad of two or more: on its own an opponent
+   is always the one asking, so dimming and ringing it would both be pointing
+   out the obvious — and dimming it would be plain wrong. */
+
+/* Waiting their turn: still legible — the child needs to see what is left —
+   but plainly not the one asking. */
+.hud__foes--crowd .fighter {
+  opacity: 0.55;
+}
+
+.hud__foes--crowd .fighter--asking {
+  opacity: 1;
+}
+
+/* Beaten and out. Struck through rather than dropped, so the squad keeps the
+   shape it was picked in and the child can see how far through they are. */
+.hud__foes--crowd .fighter--beaten {
+  opacity: 0.32;
+}
+
+/* A ring in the opponent's own colour: whose question is on the screen has to
+   be readable at a glance, and in a shuffled battle it moves every question. */
+.hud__foes--crowd .fighter--asking .fighter__avatar {
+  outline: 3px solid var(--fighter);
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
+.fighter--beaten .fighter__name {
+  text-decoration: line-through;
+}
+
+.fighter--beaten .fighter__avatar {
+  filter: grayscale(1);
 }
 
 .fighter__avatar {
@@ -347,8 +445,10 @@ img.avatar {
   transform: scale(0.82);
 }
 
-/* A hit: shake whichever side took it */
-.hit-monster .fighter--right .fighter__avatar {
+/* A hit: shake whichever side took it — and on the monsters' side, whichever
+   one of them took it, which is why the class is on the fighter that was struck
+   rather than on the whole right-hand column. */
+.hit-monster .fighter--struck .fighter__avatar {
   animation: shake 0.4s ease;
 }
 
@@ -518,6 +618,18 @@ img.avatar {
 .popup__note {
   margin: 0 0 0.5rem;
   color: var(--muted);
+}
+
+/* Who was beaten, when it was more than one. All of them faded and struck the
+   same way: the whole squad went down, so nothing here has to be told apart. */
+.popup__squad {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.popup__squad .avatar {
+  filter: grayscale(1);
+  opacity: 0.6;
 }
 
 /* --- The answer pad: on screen for every task (T18) --- */

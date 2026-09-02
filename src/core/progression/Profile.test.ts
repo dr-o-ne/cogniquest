@@ -88,13 +88,14 @@ describe('Profile', () => {
       expect(profile.victories).toBe(0)
       expect(profile.hasDefeated('goblin')).toBe(false)
       expect(profile.defeated).toEqual({})
+      expect(profile.squadsBeaten).toEqual({})
     })
 
     it('victories are remembered per opponent', () => {
       const profile = new Profile()
-      profile.recordVictory('goblin')
-      profile.recordVictory('goblin')
-      profile.recordVictory('zombie')
+      profile.recordVictory(['goblin'])
+      profile.recordVictory(['goblin'])
+      profile.recordVictory(['zombie'])
 
       expect(profile.hasDefeated('goblin')).toBe(true)
       expect(profile.hasDefeated('zombie')).toBe(true)
@@ -103,9 +104,59 @@ describe('Profile', () => {
       expect(profile.victories).toBe(3)
     })
 
+    it('a squad is one victory and a tick against each of them (G9)', () => {
+      const profile = new Profile()
+      profile.recordVictory(['goblin', 'zombie', 'wolf'], 'beast-pack')
+
+      expect(profile.defeated).toEqual({ goblin: 1, zombie: 1, wolf: 1 })
+      expect(profile.squadsBeaten).toEqual({ 'beast-pack': 1 })
+      // Not three, and not four. «Побед» counts battles, and that was one.
+      expect(profile.victories).toBe(1)
+    })
+
+    it('beating the members one by one does not beat the squad', () => {
+      // The squad's card is struck through for its own tally alone: three
+      // duels are three battles won and no group faced.
+      const profile = new Profile()
+      profile.recordVictory(['goblin'])
+      profile.recordVictory(['zombie'])
+      profile.recordVictory(['wolf'])
+
+      expect(profile.defeated).toEqual({ goblin: 1, zombie: 1, wolf: 1 })
+      expect(profile.squadsBeaten).toEqual({})
+      expect(profile.victories).toBe(3)
+    })
+
+    it('a squad beaten twice counts twice', () => {
+      const profile = new Profile()
+      profile.recordVictory(['peasant', 'robber'], 'two-on-the-path')
+      profile.recordVictory(['peasant', 'robber'], 'two-on-the-path')
+
+      expect(profile.squadsBeaten).toEqual({ 'two-on-the-path': 2 })
+      expect(profile.defeated).toEqual({ peasant: 2, robber: 2 })
+      expect(profile.victories).toBe(2)
+    })
+
+    it('the list of beaten squads cannot be edited from outside', () => {
+      const profile = new Profile()
+      profile.recordVictory(['peasant', 'robber'], 'two-on-the-path')
+
+      const copy = profile.squadsBeaten
+      copy['two-on-the-path'] = 99
+      expect(profile.squadsBeaten['two-on-the-path']).toBe(1)
+    })
+
+    it('an opponent standing in a squad twice is beaten once', () => {
+      const profile = new Profile()
+      profile.recordVictory(['peasant', 'peasant', 'peasant'])
+
+      expect(profile.defeated).toEqual({ peasant: 1 })
+      expect(profile.victories).toBe(1)
+    })
+
     it('the list of beaten opponents cannot be edited from outside', () => {
       const profile = new Profile()
-      profile.recordVictory('goblin')
+      profile.recordVictory(['goblin'])
 
       const copy = profile.defeated
       copy['goblin'] = 99
@@ -115,8 +166,24 @@ describe('Profile', () => {
     it('an old save without the victory list does not break the game', () => {
       const profile = Profile.fromJSON({ version: PROFILE_VERSION, stars: 5 })
       expect(profile.defeated).toEqual({})
-      expect(() => profile.recordVictory('goblin')).not.toThrow()
+      expect(() => profile.recordVictory(['goblin'])).not.toThrow()
       expect(profile.victories).toBe(1)
+    })
+
+    it('a save from before squads keeps its count instead of starting over', () => {
+      // Written when a battle was one opponent, so the per-opponent tally is
+      // the number of battles won. Read that way rather than reset to nought —
+      // which is what a PROFILE_VERSION bump would have cost the child.
+      const profile = Profile.fromJSON({
+        version: PROFILE_VERSION,
+        defeated: { goblin: 2, zombie: 1 },
+      })
+
+      expect(profile.victories).toBe(3)
+
+      // And a squad won after the migration adds one, not three.
+      profile.recordVictory(['wolf', 'bear', 'griffin'])
+      expect(profile.victories).toBe(4)
     })
   })
 
@@ -124,7 +191,8 @@ describe('Profile', () => {
     it('survives a write and a read', () => {
       const profile = new Profile()
       profile.name = 'Тимофей'
-      profile.recordVictory('goblin')
+      profile.recordVictory(['goblin'])
+      profile.recordVictory(['peasant', 'robber'], 'two-on-the-path')
       profile.onAnswerAccepted(answer('math:8+5', 'wrong', 3))
       profile.onSessionFinished(sessionResult)
 
@@ -133,7 +201,9 @@ describe('Profile', () => {
       expect(restored.name).toBe('Тимофей')
       expect(restored.sessionIndex).toBe(1)
       expect(restored.stars).toBe(3)
-      expect(restored.defeated).toEqual({ goblin: 1 })
+      expect(restored.defeated).toEqual({ goblin: 1, peasant: 1, robber: 1 })
+      expect(restored.squadsBeaten).toEqual({ 'two-on-the-path': 1 })
+      expect(restored.victories).toBe(2)
       expect(restored.review.toJSON()).toEqual(profile.review.toJSON())
     })
 

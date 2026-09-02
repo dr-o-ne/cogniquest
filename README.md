@@ -58,7 +58,7 @@ docs\           decisions, the plan, and the math ladder
 src\core\       pure TypeScript: the rules of the game and of the learning.
                 Zero dependencies on React, the DOM or the browser.
 src\adapters\   implementations of the core ports: voice, speech, saves, sounds
-src\game\       the battle and the roster of opponents
+src\game\       the battle, the roster of opponents, and the squads
 src\locale\     the text pack: every word the child sees or hears
 src\ui\         React components
 scripts\        fetching the speech model

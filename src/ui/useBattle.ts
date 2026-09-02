@@ -17,7 +17,7 @@ import type { TextToSpeech } from '@/core/ports'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
 import { pick, systemRandom } from '@/core/random'
 import { ExerciseSession } from '@/core/session'
-import { Battle, type BattleState, type Monster } from '@/game'
+import { Battle, type BattleState, type Monster, type Squad } from '@/game'
 import { t } from '@/locale'
 import { playCorrect, playFinish, playUnheard, playWrong } from '@/adapters/audio/sfx'
 import { VoiceAnswerInput } from '@/adapters/input'
@@ -55,11 +55,31 @@ export type Draft =
   | { readonly kind: 'number'; readonly digits: string }
   | { readonly kind: 'choice'; readonly value: Comparison | null }
 
+/**
+ * What the child picked to fight (**G9**). One value rather than a list of
+ * monsters and a flag beside it, because who is on the other side and how they
+ * take turns are one decision — and because a squad has an **identity** the
+ * profile has to be told about, which a bare list of monsters cannot carry.
+ */
+export type Opposition =
+  | { readonly kind: 'duel'; readonly monster: Monster }
+  | { readonly kind: 'squad'; readonly squad: Squad }
+
+/** Everyone on the other side, whichever way they were picked. */
+function opponentsOf(opposition: Opposition): readonly Monster[] {
+  return opposition.kind === 'duel' ? [opposition.monster] : opposition.squad.monsters
+}
+
 export interface GameState {
   screen: Screen
   error: string | null
   name: string
-  monster: Monster | null
+  /**
+   * What is being fought. Null when there is no battle — and kept here rather
+   * than read off `battle.foes`, because a rematch needs it after the battle
+   * object is done with, and needs the squad's id along with it.
+   */
+  opposition: Opposition | null
   battle: BattleState | null
   exercise: Exercise | null
   mic: Mic
@@ -72,6 +92,8 @@ export interface GameState {
   wins: number
   /** monster id → times beaten. Beaten ones are struck through in the list. */
   defeated: Record<string, number>
+  /** squad id → times beaten. Struck through the same way (**G9**). */
+  squadsBeaten: Record<string, number>
 }
 
 interface Deps {
@@ -280,7 +302,7 @@ const initial: GameState = {
   screen: 'loading',
   error: null,
   name: '',
-  monster: null,
+  opposition: null,
   battle: null,
   exercise: null,
   mic: 'idle',
@@ -289,6 +311,7 @@ const initial: GameState = {
   draft: null,
   wins: 0,
   defeated: {},
+  squadsBeaten: {},
 }
 
 export function useBattle() {
@@ -332,6 +355,7 @@ export function useBattle() {
           name: profile.name,
           wins: profile.victories,
           defeated: profile.defeated,
+          squadsBeaten: profile.squadsBeaten,
         })
       } catch (cause) {
         if (cancelled) return
@@ -359,7 +383,7 @@ export function useBattle() {
   )
 
   const fight = useCallback(
-    async (monster: Monster) => {
+    async (opposition: Opposition) => {
       const d = deps.current
       if (!d) return
 
@@ -367,16 +391,29 @@ export function useBattle() {
       const run = new AbortController()
       runAbort.current = run
 
-      const battle = new Battle(monster)
-      // Difficulty adjusts within the monster's own pool of levels (C4):
-      // going badly, we draw from the easy end; going well, we come back.
-      const difficulty = new DifficultyAdapter(Math.max(...monster.levels), Math.min(...monster.levels))
+      const squad = opponentsOf(opposition)
+      // A duel has nobody to take turns with, so the mode is the squad's alone.
+      const shuffle = opposition.kind === 'squad' && opposition.squad.shuffle
+
+      const battle = new Battle(squad, { shuffle })
+
+      // Difficulty adjusts within the squad's own pool of levels (C4): going
+      // badly, we draw from the easy end; going well, we come back. One adapter
+      // for the battle and not one per opponent — three mistakes in a row is a
+      // fact about the child, not about whoever happened to be asking.
+      const rungs = squad.flatMap((monster) => monster.levels)
+      const difficulty = new DifficultyAdapter(Math.max(...rungs), Math.min(...rungs))
 
       const session = new ExerciseSession({
         subject: 'math',
-        level: Math.max(...monster.levels),
+        level: Math.max(...rungs),
         // No length given: the battle runs until somebody wins.
         nextExercise: () => {
+          // Who asks comes first, and everything else follows from it: the row
+          // of the grid and the rungs are the asker's own, so a squad plays as
+          // its members do rather than as some average of them.
+          const asker = battle.nextAsker()
+
           // Kind and level are drawn together, afresh each time, so an
           // opponent listing more than one kind keeps the child moving between
           // them rather than settling into a rhythm.
@@ -385,8 +422,16 @@ export function useBattle() {
           // reaches every level: drawing them separately can land on a pair
           // that has no rung, and there is nothing sensible to do about it
           // that late.
-          const affordable = monster.levels.filter((level) => level <= difficulty.current)
-          const choice = pick(systemRandom, taskChoices(monster.tasks, affordable))
+          //
+          // A squad's floor can sit below this opponent's own easiest rung —
+          // a peasant beside a dragon — and then there is nothing affordable
+          // to draw. Its whole pool stands in for it: the easing is for the
+          // squad, and no opponent can be eased past what it knows how to ask.
+          const affordable = asker.levels.filter((level) => level <= difficulty.current)
+          const choice = pick(
+            systemRandom,
+            taskChoices(asker.tasks, affordable.length > 0 ? affordable : asker.levels),
+          )
 
           return createMathExercise(choice.kind, choice.level, systemRandom)
         },
@@ -395,7 +440,7 @@ export function useBattle() {
 
       patch({
         screen: 'fight',
-        monster,
+        opposition,
         battle: battle.state,
         flash: null,
         heard: null,
@@ -452,7 +497,10 @@ export function useBattle() {
         lastPosition = session.position
 
         const draft = draftFor(exercise)
-        patch({ exercise, draft, flash: null, heard: null })
+        // The battle goes along with the task because the task came from an
+        // opponent: `nextExercise` has just picked who asks, and the HUD has to
+        // point at them by the time their question is on the screen.
+        patch({ exercise, draft, battle: battle.state, flash: null, heard: null })
 
         // Coming back to a task sounds different from being asked it: «try once
         // more», not the problem read out again. A miss no longer brings us back
@@ -523,7 +571,16 @@ export function useBattle() {
 
       // A win accumulates in the profile. A loss takes nothing away: the battle
       // can be lost, the progress cannot (P10).
-      if (battle.state.winner === 'player') d.profile.recordVictory(monster.id)
+      //
+      // Everything beaten goes in at once: one victory, a tick against each
+      // opponent who stood in it, and one against the squad itself so its card
+      // is struck through the way a monster's is. `Profile` keeps them in step.
+      if (battle.state.winner === 'player') {
+        d.profile.recordVictory(
+          squad.map((monster) => monster.id),
+          opposition.kind === 'squad' ? opposition.squad.id : undefined,
+        )
+      }
       await d.storage.save(PROFILE_KEY, d.profile.toJSON())
 
       patch({
@@ -534,6 +591,7 @@ export function useBattle() {
         flash: null,
         wins: d.profile.victories,
         defeated: d.profile.defeated,
+        squadsBeaten: d.profile.squadsBeaten,
       })
     },
     [patch],
@@ -618,7 +676,8 @@ export function useBattle() {
       name: '',
       wins: 0,
       defeated: {},
-      monster: null,
+      squadsBeaten: {},
+      opposition: null,
       battle: null,
       exercise: null,
       draft: null,
@@ -632,7 +691,7 @@ export function useBattle() {
     deps.current?.tts.stop()
     patch({
       screen: 'select',
-      monster: null,
+      opposition: null,
       battle: null,
       exercise: null,
       draft: null,

@@ -1,4 +1,11 @@
-export { Battle, type BattleState, type Winner } from './Battle'
+export {
+  Battle,
+  MAX_SQUAD,
+  type BattleConfig,
+  type BattleState,
+  type Foe,
+  type Winner,
+} from './Battle'
 export {
   availableMonsters,
   HEARTS_MAX,
@@ -8,3 +15,6 @@ export {
   PLAYER_HEARTS,
   type Monster,
 } from './monsters'
+// `squadById` stays unexported from here: nothing outside `game` looks a squad
+// up by id, and an export is a claim that somebody does.
+export { SQUADS, type Squad } from './squads'

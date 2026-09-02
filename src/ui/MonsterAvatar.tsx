@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Monster } from '@/game'
 
-type Size = 'hud' | 'card' | 'popup'
+type Size = 'hud' | 'card' | 'popup' | 'chip' | 'face'
 
 /**
  * The character's picture.
