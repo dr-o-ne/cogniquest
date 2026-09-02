@@ -6,6 +6,7 @@ import { availableMonsters, PLAYER_HEARTS, SQUADS, type Monster, type Squad } fr
 import { t } from '@/locale'
 import { MonsterAvatar } from './MonsterAvatar'
 import { Teacher } from './Teacher'
+import { TopBar } from './TopBar'
 import { useBattle, type Draft, type GameState, type Opposition } from './useBattle'
 import './BattleGame.css'
 
@@ -24,8 +25,18 @@ interface PadInput {
 }
 
 export function BattleGame() {
-  const { state, setName, fight, typeDigit, eraseDigit, chooseComparison, sendAnswer, toSelect, resetAll } =
-    useBattle()
+  const {
+    state,
+    setName,
+    fight,
+    typeDigit,
+    eraseDigit,
+    chooseComparison,
+    sendAnswer,
+    toHome,
+    toSelect,
+    resetAll,
+  } = useBattle()
 
   // Stable, so the pad's keyboard listener is not torn down and rebuilt on
   // every patch the battle loop makes.
@@ -41,11 +52,14 @@ export function BattleGame() {
       return <Splash title={t.app.errorTitle} note={state.error ?? ''} bad />
     case 'name':
       return <NameScreen onDone={(name) => void setName(name)} />
+    case 'home':
+      return <HomeScreen name={state.name} onArena={toSelect} onReset={() => void resetAll()} />
     case 'select':
       return (
         <SelectScreen
           state={state}
           onFight={(opposition) => void fight(opposition)}
+          onBack={toHome}
           onReset={() => void resetAll()}
         />
       )
@@ -98,6 +112,49 @@ function NameScreen({ onDone }: { onDone: (name: string) => void }) {
 }
 
 /**
+ * Where the child lands with a name already given: the two things there are to
+ * play. The arena is the roster; the quest is not built yet and says so rather
+ * than being hidden, so that what is coming is visible and what is playable is
+ * unambiguous.
+ */
+function HomeScreen({
+  name,
+  onArena,
+  onReset,
+}: {
+  name: string
+  onArena: () => void
+  onReset: () => void
+}) {
+  return (
+    <div className="screen">
+      <TopBar name={name} onReset={onReset} />
+
+      <div className="screen--center screen__body">
+        <div className="menu">
+          <button className="menu__choice" onClick={onArena}>
+            <span className="menu__icon" aria-hidden="true">
+              ⚔️
+            </span>
+            {t.home.arena}
+          </button>
+
+          {/* Disabled rather than absent: the child can see there is more, and
+              cannot press into nothing. */}
+          <button className="menu__choice" disabled>
+            <span className="menu__icon" aria-hidden="true">
+              🗺️
+            </span>
+            {t.home.quest}
+            <span className="menu__soon">{t.home.soon}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
  * Picking the opposition: a ready-made squad, or one opponent for a duel.
  *
  * Both are one press, and neither has a form to fill in. The squads come from
@@ -109,51 +166,19 @@ function NameScreen({ onDone }: { onDone: (name: string) => void }) {
 function SelectScreen({
   state,
   onFight,
+  onBack,
   onReset,
 }: {
   state: GameState
   onFight: (opposition: Opposition) => void
+  onBack: () => void
   onReset: () => void
 }) {
-  const [confirming, setConfirming] = useState(false)
-
   return (
     <div className="screen">
-      {/* Stays at the top while the roster scrolls under it: both things on it
-          answer questions the child can have at any point of a very long list —
-          whose game this is, and how to start over. */}
-      <header className="topbar">
-        {/* Wipes everything, hence two steps: a stray click must not clear the
-            child's progress. */}
-        <div className="topbar__reset">
-          {confirming ? (
-            <>
-              <span className="reset__ask">{t.select.wipeAsk}</span>
-              <button className="reset__yes" onClick={onReset}>
-                {t.select.wipeYes}
-              </button>
-              <button className="reset__no" onClick={() => setConfirming(false)}>
-                {t.select.wipeNo}
-              </button>
-            </>
-          ) : (
-            <button className="reset__start" onClick={() => setConfirming(true)}>
-              {t.select.newGame}
-            </button>
-          )}
-        </div>
+      <TopBar name={state.name} onReset={onReset} onBack={onBack} />
 
-        {/* The same face that stands for the child in a battle, so the corner of
-            the screen and the corner of the fight agree on who they mean. */}
-        <div className="topbar__who">
-          <span className="avatar avatar--user avatar--emoji" aria-hidden="true">
-            🧒
-          </span>
-          <span className="topbar__name">{state.name}</span>
-        </div>
-      </header>
-
-      <div className="screen--center select__body">
+      <div className="screen--center screen__body">
         {/* The squads come first: there are four of them against forty-eight
             cards, and at the foot of the roster nobody would ever meet them. */}
         <h2 className="roster__title">{t.select.squadsTitle}</h2>

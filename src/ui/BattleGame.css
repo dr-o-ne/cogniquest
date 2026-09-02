@@ -517,11 +517,96 @@ img.avatar {
   font-weight: 700;
 }
 
-/* Whatever is left over after the bar, and the roster inside it. */
-.select__body {
+/* Whatever is left over after the bar — the roster on one screen, the menu on
+   the other. */
+.screen__body {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+/* Back to the menu. Quiet, like «выйти» from a battle: it is the way out, not
+   the thing to do. */
+.topbar__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.topbar__back:hover {
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  color: var(--fg);
+}
+
+/* Sized apart from the word, so it reads as a direction and not as punctuation */
+.topbar__back-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+/* --- The menu: what there is to play --- */
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+/* Big, because there are two of them and one of the two is the whole game so
+   far. Sized in one place: the icon, the word and the «скоро» all scale off it. */
+.menu__choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 15rem;
+  height: 13rem;
+  border: 3px solid color-mix(in srgb, #4a7de0 45%, transparent);
+  border-radius: 24px;
+  background: color-mix(in srgb, #4a7de0 10%, var(--bg));
+  color: var(--fg);
+  font: inherit;
+  font-size: 1.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.menu__choice:hover:not(:disabled) {
+  transform: translateY(-5px);
+  border-color: #4a7de0;
+}
+
+/* Not built yet. Faded rather than hidden, so the child can see there is more
+   coming — and cannot press into nothing. */
+.menu__choice:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.menu__icon {
+  font-size: 3.6rem;
+  line-height: 1;
+}
+
+.menu__soon {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .reset__ask {

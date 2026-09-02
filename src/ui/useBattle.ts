@@ -40,7 +40,13 @@ const RELISTEN_PAUSE_MS = 400
 
 type Mic = 'idle' | 'speaking' | 'listening'
 type Flash = 'correct' | 'wrong' | 'unheard' | null
-type Screen = 'loading' | 'error' | 'name' | 'select' | 'fight'
+/**
+ * `home` is the menu the child lands on once they have a name: it offers the
+ * arena, and will offer the quest. `select` is the arena's own screen — the
+ * roster and the squads — and a battle leaves back to it rather than to the
+ * menu, because «выйти» from a fight means «pick another opponent».
+ */
+type Screen = 'loading' | 'error' | 'name' | 'home' | 'select' | 'fight'
 
 /**
  * The answer being built, before anything is sent (T18).
@@ -363,7 +369,7 @@ export function useBattle() {
         deps.current = { recognizer, tts, voiceInput: new VoiceAnswerInput(recognizer), storage, profile }
 
         patch({
-          screen: profile.name ? 'select' : 'name',
+          screen: profile.name ? 'home' : 'name',
           name: profile.name,
           defeated: profile.defeated,
           squadsBeaten: profile.squadsBeaten,
@@ -388,7 +394,7 @@ export function useBattle() {
       if (!d) return
       d.profile.name = name.trim()
       await d.storage.save(PROFILE_KEY, d.profile.toJSON())
-      patch({ name: d.profile.name, screen: 'select' })
+      patch({ name: d.profile.name, screen: 'home' })
     },
     [patch],
   )
@@ -695,19 +701,33 @@ export function useBattle() {
     })
   }, [patch])
 
-  const toSelect = useCallback(() => {
-    runAbort.current?.abort()
-    deps.current?.tts.stop()
-    patch({
-      screen: 'select',
-      opposition: null,
-      battle: null,
-      exercise: null,
-      draft: null,
-      mic: 'idle',
-      flash: null,
-    })
-  }, [patch])
+  /**
+   * Leave whatever is happening for a screen that is not a battle.
+   *
+   * Both ways out do the same work — stop the loop, stop the teacher, drop the
+   * battle — and differ only in where they land, so they are one function. A
+   * battle that is not stopped here goes on asking questions at a screen that
+   * has no pad to answer them with.
+   */
+  const leaveFor = useCallback(
+    (screen: 'home' | 'select') => {
+      runAbort.current?.abort()
+      deps.current?.tts.stop()
+      patch({
+        screen,
+        opposition: null,
+        battle: null,
+        exercise: null,
+        draft: null,
+        mic: 'idle',
+        flash: null,
+      })
+    },
+    [patch],
+  )
+
+  const toHome = useCallback(() => leaveFor('home'), [leaveFor])
+  const toSelect = useCallback(() => leaveFor('select'), [leaveFor])
 
   return {
     state,
@@ -717,6 +737,7 @@ export function useBattle() {
     eraseDigit,
     chooseComparison,
     sendAnswer,
+    toHome,
     toSelect,
     resetAll,
   }

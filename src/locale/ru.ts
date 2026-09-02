@@ -40,6 +40,23 @@ export const ru = {
     start: 'Вперёд',
   },
 
+  /** Moving between screens. Not a screen's own words, so not in any of them. */
+  nav: {
+    back: 'назад',
+  },
+
+  /**
+   * The menu the child lands on with a name already given: what there is to
+   * play. Two words and no sentence — at six, a screen of two choices should be
+   * read in the time it takes to point at one.
+   */
+  home: {
+    arena: 'Арена',
+    quest: 'Квест',
+    /** On the quest, which is not built. Says «not yet», not «not for you». */
+    soon: 'скоро',
+  },
+
   select: {
     /**
      * Two lines went from here when the screen gained a top bar: «С кем
