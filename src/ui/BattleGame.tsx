@@ -572,10 +572,10 @@ function Expression({ exercise }: { exercise: Exercise }) {
         <div className="composition">
           <span className="composition__whole">{prompt.whole}</span>
           {/* The bond itself — a drawing, not a glyph, so it is the same shape
-              at any font the machine has. */}
+              at any font the machine has. A short flat run at the top, so the
+              fork blunts there rather than coming to a point. */}
           <svg className="composition__fork" viewBox="0 0 100 40" aria-hidden="true">
-            <line x1="50" y1="2" x2="12" y2="38" />
-            <line x1="50" y1="2" x2="88" y2="38" />
+            <path d="M 10 38 L 42 12 L 58 12 L 90 38" />
           </svg>
           {/* Equal-width slots on either side of «И», so «И» sits on the centre
               of the row and thus straight under the whole above. */}
