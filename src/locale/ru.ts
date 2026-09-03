@@ -471,12 +471,23 @@ export const ru = {
    * Quest names, keyed by the id in src/game/quests.ts. Every quest in the
    * table must appear here — there is a test for it.
    *
-   * Named for the road rather than for who is on it: the card already shows the
-   * mini-boss who ends it.
+   * Named for the road rather than for who is on it: the card names the
+   * mini-boss who ends it separately, under `questBosses`.
    */
   quests: {
     'first-path': 'Первая тропа',
     'second-path': 'Вторая тропа',
+  } as Record<string, string>,
+
+  /**
+   * The mini-boss's own name, printed under their portrait on a quest's card —
+   * keyed by the quest id, same as `quests` above and for the same reason:
+   * every quest in `BOSS_IMAGES` (src/game/quests.ts) must appear here, and a
+   * test holds that.
+   */
+  questBosses: {
+    'first-path': 'Грабитель',
+    'second-path': 'Безбородый Джо',
   } as Record<string, string>,
 
   /** Phase 1 measuring rig. Developer tool, kept for when voice starts missing. */

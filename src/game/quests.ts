@@ -50,6 +50,8 @@ export interface Quest {
    * draw for its last stop.
    */
   readonly image: string
+  /** The mini-boss's own name, printed under the portrait. From `t.questBosses`. */
+  readonly bossName: string
 }
 
 /** A row of the grid, asked at an opponent's own band — one opponent's worth. */
@@ -210,6 +212,7 @@ function build(id: string, file: QuestFile): Quest {
     nodes,
     boss: bossOpposition.monster,
     image: publicUrl(image),
+    bossName: t.questBosses[id] ?? id,
   }
 }
 

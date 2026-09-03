@@ -50,11 +50,14 @@ export function QuestScreen({
 }
 
 /**
- * One path, as its mini-boss's portrait with a line of progress under it.
+ * One path, as its mini-boss's portrait and name, with a line of progress
+ * under it.
  *
- * Only the portrait — no rank, no strength, no name — which is the whole
- * difference from the arena's own card: the child is not sizing up an
- * opponent here, only picking a road by the face at the end of it.
+ * No rank, no strength — the whole difference from the arena's own card: the
+ * child is not sizing up an opponent here, only picking a road by the face
+ * at the end of it. The name is kept: unlike a monster fought many times
+ * over, a mini-boss is somebody in particular, and «who is this?» deserves
+ * an answer.
  *
  * A finished path is struck through and still walkable, exactly like a beaten
  * opponent — and for the same reason: nothing in this game is spent by being
@@ -77,7 +80,8 @@ function QuestCard({
       style={{ '--card': quest.boss.color } as React.CSSProperties}
       onClick={() => onOpen(quest.id)}
     >
-      <img className="avatar avatar--card" src={quest.image} alt={quest.name} />
+      <img className="avatar avatar--card" src={quest.image} alt={quest.bossName} />
+      <span className="card__name">{quest.bossName}</span>
       <span className="card__progress">{t.quest.progress(cleared, quest.nodes.length)}</span>
     </button>
   )

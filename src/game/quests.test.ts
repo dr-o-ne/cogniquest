@@ -94,6 +94,13 @@ describe('the quest maps', () => {
     }
   })
 
+  it('every quest has its mini-boss named in the text pack', () => {
+    for (const quest of QUESTS) {
+      expect(t.questBosses[quest.id], `no boss name for ${quest.id}`).toBeDefined()
+      expect(quest.bossName).not.toBe(quest.id)
+    }
+  })
+
   /**
    * The first map is written to climb, and that is the half a table cannot hold
    * on its own: nothing about a list of demands says the walk gets harder, so a
