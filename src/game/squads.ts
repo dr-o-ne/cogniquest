@@ -79,42 +79,55 @@ const LINEUPS: readonly Lineup[] = [
   //                                             +(1)     −(2)      <>(3)           состав(3)
 ]
 
-function build(lineup: Lineup): Squad {
+/**
+ * Everything a squad is once its members are known — hearts, level, colour,
+ * rungs, all read off them. The one place that turns a bare list of monsters
+ * into a `Squad`, so it is shared rather than repeated: the lineups below
+ * call it with members named by hand, and a quest's generator (**G10**)
+ * calls it with members an ASKS demand drew, and both get the same checks
+ * and the same arithmetic.
+ */
+export function assembleSquad(id: string, monsters: readonly Monster[], shuffle: boolean): Squad {
   // Two is what makes it a group; one is a duel, and the roster already has
   // forty-eight cards for that.
-  if (lineup.members.length < 2) {
-    throw new RangeError(`Squad ${lineup.id} is not a group: it needs at least two members`)
+  if (monsters.length < 2) {
+    throw new RangeError(`Squad ${id} is not a group: it needs at least two members`)
   }
-  if (lineup.members.length > MAX_SQUAD) {
-    throw new RangeError(`Squad ${lineup.id} is more than ${MAX_SQUAD} strong`)
+  if (monsters.length > MAX_SQUAD) {
+    throw new RangeError(`Squad ${id} is more than ${MAX_SQUAD} strong`)
   }
-
-  // Throws for an id nobody has, and it fires when the game is opened rather
-  // than when somebody next runs the tests.
-  const monsters = lineup.members.map(monsterById)
 
   // A squad puts its members on the screen, so the roster's rule holds for
   // them too: no picture, no appearance (see IMAGES in monsters.ts).
   for (const monster of monsters) {
     if (monster.image === undefined) {
-      throw new RangeError(`Squad ${lineup.id} fields ${monster.id}, which has no picture`)
+      throw new RangeError(`Squad ${id} fields ${monster.id}, which has no picture`)
     }
   }
 
   const worst = strongest(monsters)
 
   return {
-    id: lineup.id,
+    id,
     // Falling back to the id keeps a missing translation visible instead of
-    // blank. A test makes sure it never actually comes to that.
-    name: t.squads[lineup.id] ?? lineup.id,
+    // blank. A test makes sure it never actually comes to that for a
+    // hand-written lineup; a quest's generated squad has no card of its own
+    // to show a name on, and is never checked against the text pack.
+    name: t.squads[id] ?? id,
     monsters,
-    shuffle: lineup.shuffle,
+    shuffle,
     hearts: monsters.reduce((sum, monster) => sum + monster.hearts, 0),
     level: worst.level,
     levels: [...new Set(monsters.flatMap((monster) => monster.levels))].sort((a, b) => a - b),
     color: worst.color,
   }
+}
+
+function build(lineup: Lineup): Squad {
+  // Throws for an id nobody has, and it fires when the game is opened rather
+  // than when somebody next runs the tests.
+  const monsters = lineup.members.map(monsterById)
+  return assembleSquad(lineup.id, monsters, lineup.shuffle)
 }
 
 /** Every group on the selection screen, easiest first. */

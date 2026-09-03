@@ -427,3 +427,18 @@ export function monsterById(id: string): Monster {
   if (!monster) throw new RangeError(`No such monster: ${id}`)
   return monster
 }
+
+/**
+ * Every monster asking `kind` at its own band `level` (1–5) — ASKS's own
+ * pile, read out as monsters rather than ids. What a quest's generator
+ * (**G10**) draws an opponent from: a demand names a row and a band, exactly
+ * the two things a pile is already keyed on, so no second lookup table is
+ * needed to answer it.
+ *
+ * Empty when the band has no pile for that row at all (see the comments on
+ * ASKS — band 1 gives nothing to `missing-number`, for one).
+ */
+export function monstersAsking(level: number, kind: TaskKind): readonly Monster[] {
+  const ids = ASKS[level]?.[kind] ?? []
+  return ids.map(monsterById)
+}

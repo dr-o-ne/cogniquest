@@ -1,23 +1,27 @@
 /**
- * QUEST CONFIG. One table, `LINES`: the opponents a path is made of, in the
- * order the child meets them, and the mini-boss who ends it.
+ * QUEST CONFIG. A quest is generated from data rather than hand-picked: what
+ * a quest file holds is a list of *demands* — a row of the grid, and the band
+ * (1–5) to ask it at — and this module is the generator that turns each into
+ * the opponent actually standing there.
  *
  * A quest is a walk down a path: node after node, each one a battle, no
  * choosing and no going round. That is the whole difference from the arena,
  * where the child picks whoever they like and nothing is locked.
  *
- * **The maps are written by hand today and will be generated tomorrow.** The
- * plan is that a parent writes a list of demands — «addition 1, addition 1,
- * subtraction 1» — and a generator finds opponents that ask those rows at those
- * rungs and lays them out. That shape is deliberately not invented here: it
- * would be guessed off one hand-made map, and **A2** already records what
- * guessing a shape a phase early costs. What this file settles is only what a
- * path *is*, which the generator will fill rather than replace.
+ * **The files are written by hand, under `./quests/`.** One file per path,
+ * named `<order>_<id>.json` — see `quests/README.md` for the shape and the
+ * worked example. A parent writes «addition 1, addition 1, subtraction 1» and
+ * this file is the machine-readable form of exactly that: a demand is a
+ * `{ kind, level }` pair, and a stop with several of them is a squad rather
+ * than a duel. Nothing here names a monster by id — an opponent is drawn from
+ * the very pile `ASKS` (`monsters.ts`) already deals the arena out of, so a
+ * quest and the arena can never disagree about who asks what.
  */
+import type { TaskKind } from '@/core/math'
 import { t } from '@/locale'
-import { monsterById, type Monster } from './monsters'
+import { monstersAsking, type Monster } from './monsters'
 import type { Opposition } from './opposition'
-import { squadById } from './squads'
+import { assembleSquad } from './squads'
 
 /** One stop on the path. */
 export interface QuestNode {
@@ -40,102 +44,154 @@ export interface Quest {
   readonly boss: Monster
 }
 
-/** How many ordinary stops a path has before its boss. */
-const NODES_PER_PATH = 12
+/** A row of the grid, asked at an opponent's own band — one opponent's worth. */
+interface Demand {
+  readonly kind: TaskKind
+  readonly level: number
+}
 
-type Stop = { readonly monster: string } | { readonly squad: string }
+/**
+ * A stop as it is written in a file: one demand for a duel, several — each
+ * with its own band — for a squad. The two shapes differ only in whether
+ * `kind` is a string or a list, which is what every branch below switches on.
+ */
+type RawStop = Demand | { readonly kind: readonly Demand[] }
 
-interface Line {
+interface QuestFile {
+  readonly stops: readonly RawStop[]
+}
+
+/**
+ * Every file under `./quests/`, loaded whole rather than fetched: a quest is
+ * offered from a menu of all of them (`QuestScreen`), so every file is wanted
+ * from the very first screen that shows a quest at all, and there is nothing
+ * here a loading spinner would ever earn its keep on.
+ */
+const FILES = import.meta.glob<QuestFile>('./quests/*.json', { eager: true, import: 'default' })
+
+/** `<order>_<id>.json`, wherever in the path Vite happens to have put it. */
+const FILENAME = /(\d+)_([a-z0-9-]+)\.json$/
+
+interface Entry {
+  readonly order: number
   readonly id: string
-  readonly stops: readonly Stop[]
-  /** A monster id. Stands at the end, and is the twelve-plus-one'th stop. */
-  readonly boss: string
+  readonly file: QuestFile
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// LINES — who stands where. Twelve stops, then the boss.
-//
-// The first map is written to climb: bands 1, then 2, then 3, so the sums grow
-// under the child as they walk. The rows are mixed on purpose — all five of the
-// grid's live rows appear — because a path is long enough to settle into one,
-// and settling into one is what «mixed, not blocked» exists to prevent.
-//
-// The two squads are the two easiest of the arena's, placed where the band they
-// belong to ends, so a group reads as the thing that closes a stretch.
-// ─────────────────────────────────────────────────────────────────────────
+const ENTRIES: readonly Entry[] = Object.entries(FILES)
+  .map(([path, file]): Entry => {
+    const match = FILENAME.exec(path)
+    if (!match) throw new RangeError(`Quest file ${path} is not named <order>_<id>.json`)
+    const [, order, id] = match
+    return { order: Number(order), id: id!, file }
+  })
+  .sort((a, b) => a.order - b.order)
 
-const LINES: readonly Line[] = [
-  {
-    id: 'first-path',
-    stops: [
-      { monster: 'peasant' }, //        band 1  +
-      { monster: 'forest-fairy' }, //   band 1  <>
-      { monster: 'robber' }, //         band 1  −
-      { monster: 'sea-devil' }, //      band 1  состав
-      { squad: 'two-on-the-path' }, //  band 1  + −
-      { monster: 'adult-gobot' }, //    band 2  +
-      { monster: 'swordsman' }, //      band 2  □
-      { monster: 'hyena' }, //          band 2  −
-      { monster: 'priest' }, //         band 2  состав
-      { squad: 'beast-pack' }, //       band 2  + − <>
-      { monster: 'griffin' }, //        band 3  +
-      { monster: 'bear' }, //           band 3  −
-    ],
-    // Band 4, a step above everything on the path. A stand-in: the boss
-    // pictures are not drawn yet, and when they are, this is the line to change.
-    boss: 'royal-griffin',
-  },
-]
-
-/** A stop resolved to the opponents it stands for, and checked. */
-function resolve(line: string, stop: Stop): Opposition {
-  if ('squad' in stop) {
-    // Throws for an unknown id, and its own build has already refused a member
-    // without a picture.
-    return { kind: 'squad', squad: squadById(stop.squad) }
+function assertUniqueIds(entries: readonly Entry[]): void {
+  const seen = new Set<string>()
+  for (const entry of entries) {
+    if (seen.has(entry.id)) throw new RangeError(`Two quest files share the id "${entry.id}"`)
+    seen.add(entry.id)
   }
+}
+assertUniqueIds(ENTRIES)
 
-  const monster = monsterById(stop.monster)
+/**
+ * Draws a monster for a demand, cycling through the pile rather than always
+ * taking the first — and one counter for every file together, not one per
+ * file. Two *different* quests asking the same demand — a common first stop,
+ * «addition 1», is exactly the case a hash of the id could still collide on —
+ * draw two different opponents because the second one is simply the next
+ * draw the pile has not given out yet, the same way a repeat two stops apart
+ * in one file already does.
+ *
+ * The price is real and worth naming: inserting or removing a stop in an
+ * earlier-ordered file can shift what a later file draws, since the count is
+ * cumulative across all of them in the order `ENTRIES` names. That is
+ * accepted on purpose — the generated quests are recomputed fresh from the
+ * files on every load rather than saved anywhere (nothing about a specific
+ * draw is ever persisted, only how many *stops* of a quest are cleared), so
+ * there is nothing for a shifted draw to contradict; the only cost is that a
+ * path drawn while checking one file can look different once a sibling file
+ * is edited.
+ */
+function makeDraw(): (questId: string, demand: Demand) => Monster {
+  const drawnSoFar = new Map<string, number>()
 
-  // A path puts its opponents on the screen, so the roster's rule holds here
-  // too: no picture, no appearance (see IMAGES in monsters.ts).
-  if (monster.image === undefined) {
-    throw new RangeError(`Quest ${line} fields ${monster.id}, which has no picture`)
+  return (questId, demand) => {
+    const pile = monstersAsking(demand.level, demand.kind)
+    if (pile.length === 0) {
+      throw new RangeError(
+        `Quest ${questId} asks ${demand.kind} at level ${demand.level}, and nothing does`,
+      )
+    }
+
+    const key = `${demand.level}:${demand.kind}`
+    const at = drawnSoFar.get(key) ?? 0
+    drawnSoFar.set(key, at + 1)
+
+    return pile[at % pile.length]!
   }
-
-  return { kind: 'duel', monster }
 }
 
-function build(line: Line): Quest {
-  if (line.stops.length !== NODES_PER_PATH) {
-    throw new RangeError(
-      `Quest ${line.id} has ${line.stops.length} stops before its boss, not ${NODES_PER_PATH}`,
-    )
+/** Shared by every quest built below, so the round-robin runs across all of them. */
+const draw = makeDraw()
+
+/** A stop resolved to who actually stands there. */
+function resolveStop(questId: string, index: number, raw: RawStop): Opposition {
+  // `typeof`, not `Array.isArray`: TS narrows the whole union off a property
+  // check like this one, and only off this one — `Array.isArray(raw.kind)`
+  // narrows the type of `raw.kind` alone and leaves `raw` itself unresolved,
+  // so `draw(raw)` below would still see the union rather than `Demand`.
+  if (typeof raw.kind === 'string') return { kind: 'duel', monster: draw(questId, raw) }
+
+  const band = raw.kind
+  if (band.length < 2) {
+    throw new RangeError(`Quest ${questId} stop ${index} bands fewer than two types`)
+  }
+  const rows = new Set(band.map((demand) => demand.kind))
+  if (rows.size !== band.length) {
+    throw new RangeError(`Quest ${questId} stop ${index} bands the same row twice`)
   }
 
-  const boss = monsterById(line.boss)
-  if (boss.image === undefined) {
-    throw new RangeError(`Quest ${line.id} is ended by ${boss.id}, which has no picture`)
+  const monsters = band.map((demand) => draw(questId, demand))
+  // Every stop generated this way is a fresh mix of rows, so shuffled is the
+  // only mode that makes sense for it — see G9 on what the two modes are for.
+  return { kind: 'squad', squad: assembleSquad(`${questId}:${index}`, monsters, true) }
+}
+
+function build(id: string, file: QuestFile): Quest {
+  if (file.stops.length < 2) {
+    throw new RangeError(`Quest ${id} has too few stops to end on a boss`)
   }
 
-  const nodes: QuestNode[] = line.stops.map((stop) => ({
-    opposition: resolve(line.id, stop),
-    boss: false,
+  const last = file.stops[file.stops.length - 1]!
+  if (Array.isArray(last.kind)) {
+    throw new RangeError(`Quest ${id} ends on a band; the boss must be a single opponent`)
+  }
+
+  const nodes: QuestNode[] = file.stops.map((raw, index) => ({
+    opposition: resolveStop(id, index, raw),
+    boss: index === file.stops.length - 1,
   }))
-  nodes.push({ opposition: { kind: 'duel', monster: boss }, boss: true })
+
+  // Safe: `last` was just checked to be a single demand, and `resolveStop`
+  // turns exactly that shape into a duel, never a squad.
+  const bossOpposition = nodes[nodes.length - 1]!.opposition
+  if (bossOpposition.kind !== 'duel') throw new RangeError(`Quest ${id} did not end on a duel`)
 
   return {
-    id: line.id,
+    id,
     // Falling back to the id keeps a missing translation visible instead of
     // blank. A test makes sure it never actually comes to that.
-    name: t.quests[line.id] ?? line.id,
+    name: t.quests[id] ?? id,
     nodes,
-    boss,
+    boss: bossOpposition.monster,
   }
 }
 
-/** Every path there is, in the order they are offered. */
-export const QUESTS: readonly Quest[] = LINES.map(build)
+/** Every path there is, in the order the files name. */
+export const QUESTS: readonly Quest[] = ENTRIES.map((entry) => build(entry.id, entry.file))
 
 export function questById(id: string): Quest {
   const quest = QUESTS.find((candidate) => candidate.id === id)

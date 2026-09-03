@@ -5,13 +5,12 @@ import { availableMonsters } from './monsters'
 import { questById, QUESTS } from './quests'
 
 /**
- * The hand-made maps (**G10**).
+ * The generated quest maps (**G10**).
  *
- * Most of what can go wrong with a path is arithmetic nobody would notice while
- * reading it: a stop too many, the boss in the middle, an opponent who never
- * appears on any screen. The generator that will write these later has to satisfy
- * the same rules, so they are worth pinning now, while there is one map to check
- * them against.
+ * Most of what can go wrong with a path is arithmetic nobody would notice
+ * while reading its JSON file: a demand nothing can answer, a band of one, the
+ * boss in the middle. This is those rules, held against whatever `./quests/`
+ * actually contains — see `quests/README.md` for the file format itself.
  */
 describe('the quest maps', () => {
   it('there are some, and every id is unique', () => {
@@ -20,9 +19,9 @@ describe('the quest maps', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('a path is twelve stops and then the boss', () => {
+  it('a path ends on exactly one boss, and nowhere else', () => {
     for (const quest of QUESTS) {
-      expect(quest.nodes.length, quest.id).toBe(13)
+      expect(quest.nodes.length, quest.id).toBeGreaterThan(1)
 
       const bosses = quest.nodes.filter((node) => node.boss)
       expect(bosses.length, `${quest.id} has ${bosses.length} bosses`).toBe(1)
@@ -49,7 +48,9 @@ describe('the quest maps', () => {
 
   it('every opponent on a path is one the child could also meet on the arena', () => {
     // A path puts its opponents on the screen, so the roster's own rule holds:
-    // no picture, no appearance. `build` throws for it; this pins the rule.
+    // no picture, no appearance. `assembleSquad` and `monstersAsking` only
+    // ever draw from monsters ASKS already fields, so this pins the rule
+    // rather than being the reason it holds.
     const shown = new Set(availableMonsters().map((monster) => monster.id))
 
     for (const quest of QUESTS) {
@@ -95,7 +96,7 @@ describe('the quest maps', () => {
 
   /**
    * The first map is written to climb, and that is the half a table cannot hold
-   * on its own: nothing about a list of ids says the walk gets harder, so a
+   * on its own: nothing about a list of demands says the walk gets harder, so a
    * re-shuffle could flatten it without anybody noticing.
    */
   it('the first map does not get easier as it goes', () => {
@@ -122,6 +123,28 @@ describe('the quest maps', () => {
     // A path is thirteen battles long. Settling into one row for that stretch is
     // exactly what «mixed, not blocked» exists to prevent.
     expect(rows.size).toBeGreaterThanOrEqual(4)
+  })
+
+  /**
+   * The generator's own rule (**G10**): a demand asked twice in one file must
+   * not put the same picture on the path twice in a row, or drilling one thing
+   * on purpose — «addition 1, addition 1» — would look like a mistake in the
+   * file rather than a repeat asked for. `first-path.json` asks `addition 1`
+   * once as its own stop and once inside the band four stops later, and
+   * `ASKS[1].addition` has two names to give — `gobot`, then `peasant`.
+   */
+  it('the same demand asked twice draws two different opponents', () => {
+    const nodes = questById('first-path').nodes
+    const first = nodes[0]!.opposition
+    const band = nodes[4]!.opposition
+
+    expect(first.kind).toBe('duel')
+    expect(band.kind).toBe('squad')
+    if (first.kind !== 'duel' || band.kind !== 'squad') return
+
+    const fromBand = band.squad.monsters.find((monster) => monster.tasks.includes('addition'))
+    expect(fromBand, 'no addition member in the band').toBeDefined()
+    expect(fromBand!.id).not.toBe(first.monster.id)
   })
 
   it('an unknown quest is an error', () => {

@@ -1,0 +1,28 @@
+{
+  "stops": [
+    { "kind": "addition", "level": 1 },
+    { "kind": "comparing-numbers", "level": 1 },
+    { "kind": "subtraction", "level": 1 },
+    { "kind": "making-a-number", "level": 1 },
+    {
+      "kind": [
+        { "kind": "addition", "level": 1 },
+        { "kind": "subtraction", "level": 1 }
+      ]
+    },
+    { "kind": "addition", "level": 2 },
+    { "kind": "missing-number", "level": 2 },
+    { "kind": "subtraction", "level": 2 },
+    { "kind": "making-a-number", "level": 2 },
+    {
+      "kind": [
+        { "kind": "addition", "level": 2 },
+        { "kind": "subtraction", "level": 2 },
+        { "kind": "comparing-numbers", "level": 2 }
+      ]
+    },
+    { "kind": "addition", "level": 3 },
+    { "kind": "subtraction", "level": 3 },
+    { "kind": "missing-number", "level": 4 }
+  ]
+}

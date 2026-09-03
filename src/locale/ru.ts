@@ -471,6 +471,7 @@ export const ru = {
    */
   quests: {
     'first-path': 'Первая тропа',
+    'second-path': 'Вторая тропа',
   } as Record<string, string>,
 
   /** Phase 1 measuring rig. Developer tool, kept for when voice starts missing. */
