@@ -1273,7 +1273,14 @@ img.avatar {
   display: block;
   padding: 0;
   border: none;
-  background: none;
+  /* An opaque plate the exact size of the card, so the road passes behind the
+     card and not through it. The stop sits above the road already, but a locked
+     or cleared stop is faded with `opacity`, and a faded box lets whatever is
+     behind it show through — here, the switchback running under the card. The
+     fade is put on the card inside instead (`.path__go > *`), leaving this plate
+     solid to hide the road. */
+  background: var(--bg);
+  border-radius: 18px;
   font: inherit;
   color: inherit;
   cursor: default;
@@ -1307,8 +1314,10 @@ img.avatar {
   opacity: 0.62;
 }
 
-/* Not reached yet. Dimmer than a cleared stop: «not yet» rather than «done». */
-.path__stop--locked {
+/* Not reached yet. Dimmer than a cleared stop: «not yet» rather than «done».
+   The fade is on the card, not the whole stop, so the plate behind it stays
+   solid and the road keeps passing behind the card rather than through it. */
+.path__stop--locked .path__go > * {
   opacity: 0.32;
 }
 
