@@ -973,16 +973,23 @@ img.avatar {
   top: 50%;
   translate: -50% -50%;
   font-size: 1.3rem;
-  animation: popup-star 0.9s ease-out both;
+  animation: popup-star 1.6s ease-out both;
 }
 
+/* Held near full size and opacity through the middle of the flight, so a
+   star reads as hanging in the air rather than instantly shrinking away —
+   the fade is left for the last third, once it has actually travelled. */
 @keyframes popup-star {
-  from {
+  0% {
     transform: translate(0, 0) scale(0.4);
     opacity: 1;
   }
-  to {
-    transform: translate(var(--dx), var(--dy)) scale(1.1);
+  55% {
+    transform: translate(calc(var(--dx) * 0.75), calc(var(--dy) * 0.75)) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1);
     opacity: 0;
   }
 }

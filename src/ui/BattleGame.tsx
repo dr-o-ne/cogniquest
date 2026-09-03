@@ -470,21 +470,23 @@ function Fighter({
 }
 
 /**
- * Where each of the eight stars a win scatters ends up, in a ring around
- * where it started. Hand-written rather than computed from an angle in a
- * loop: eight points is nothing to derive, and a plain table is what a CSS
- * custom property wants on the other end of it anyway.
+/** How many stars a win scatters, and how long the last of them takes to land. */
+const STAR_COUNT = 16
+const STAR_SPREAD_MS = 60
+
+/**
+ * Where each star a win scatters ends up — a ring around where it started,
+ * every other one thrown a little further so the burst reads as a spray
+ * rather than a wheel.
  */
-const STAR_OFFSETS: readonly (readonly [dx: number, dy: number])[] = [
-  [3, 0],
-  [2.1, 2.1],
-  [0, 3],
-  [-2.1, 2.1],
-  [-3, 0],
-  [-2.1, -2.1],
-  [0, -3],
-  [2.1, -2.1],
-]
+const STAR_OFFSETS: readonly (readonly [dx: number, dy: number])[] = Array.from(
+  { length: STAR_COUNT },
+  (_, i) => {
+    const angle = (i / STAR_COUNT) * 2 * Math.PI
+    const radius = i % 2 === 0 ? 4.2 : 3
+    return [Math.cos(angle) * radius, Math.sin(angle) * radius] as const
+  },
+)
 
 /** The stars a win scatters out of the trophy — decoration, nothing to click. */
 function StarBurst() {
@@ -494,7 +496,9 @@ function StarBurst() {
         <span
           key={i}
           className="popup__star"
-          style={{ '--dx': `${dx}rem`, '--dy': `${dy}rem`, animationDelay: `${i * 40}ms` } as React.CSSProperties}
+          style={
+            { '--dx': `${dx}rem`, '--dy': `${dy}rem`, animationDelay: `${i * STAR_SPREAD_MS}ms` } as React.CSSProperties
+          }
         >
           ⭐
         </span>
