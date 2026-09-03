@@ -376,6 +376,7 @@ function FightScreen({
       {battle.winner && (
         <WinnerPopup
           won={battle.winner === 'player'}
+          quest={state.returnTo === 'path'}
           squad={battle.foes.map((foe) => foe.monster)}
           /* Whoever was asking when the last heart went is the one still
              standing, so it is the one that gets its name in the title. */
@@ -471,6 +472,7 @@ function Fighter({
 
 function WinnerPopup({
   won,
+  quest,
   squad,
   victor,
   name,
@@ -478,6 +480,8 @@ function WinnerPopup({
   onLeave,
 }: {
   won: boolean
+  /** Fought from a path rather than the arena. */
+  quest: boolean
   squad: readonly Monster[]
   /** The opponent left standing. Only ever looked at on a defeat. */
   victor: Monster
@@ -485,6 +489,13 @@ function WinnerPopup({
   onRematch: () => void
   onLeave: () => void
 }) {
+  // A won stop is cleared and stays that way (P10) — replaying it moves
+  // nothing (see docs/DECISIONS.md on why a cleared stop is not offered), so
+  // «Ещё бой» has nothing to do here and the only way off the screen is on.
+  // A loss keeps the rematch: it is the one way back into the very stop that
+  // beat the child.
+  const onlyNext = won && quest
+
   return (
     <div className="popup">
       <div className="popup__box">
@@ -508,12 +519,20 @@ function WinnerPopup({
         <p className="popup__note">
           {won ? t.result.victoryNote(name) : t.result.defeatNote}
         </p>
-        <button className="big-button" onClick={onRematch} autoFocus>
-          {won ? t.result.fightAgain : t.result.rematch}
-        </button>
-        <button className="link" onClick={onLeave}>
-          {t.result.pickAnother}
-        </button>
+        {onlyNext ? (
+          <button className="big-button" onClick={onLeave} autoFocus>
+            {t.result.next}
+          </button>
+        ) : (
+          <>
+            <button className="big-button" onClick={onRematch} autoFocus>
+              {won ? t.result.fightAgain : t.result.rematch}
+            </button>
+            <button className="link" onClick={onLeave}>
+              {t.result.pickAnother}
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

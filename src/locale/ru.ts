@@ -106,6 +106,8 @@ export const ru = {
     fightAgain: 'Ещё бой',
     rematch: 'Реванш',
     pickAnother: 'выбрать другого',
+    /** The one button on a quest win — there is nothing else to offer there. */
+    next: 'Далее',
   },
 
   /**
