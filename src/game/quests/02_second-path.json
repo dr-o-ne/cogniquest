@@ -23,6 +23,26 @@
     },
     { "kind": "addition", "level": 3 },
     { "kind": "subtraction", "level": 3 },
-    { "kind": "missing-number", "level": 4 }
+    { "kind": "missing-number", "level": 3 },
+    { "kind": "comparing-numbers", "level": 3 },
+    {
+      "kind": [
+        { "kind": "addition", "level": 3 },
+        { "kind": "subtraction", "level": 3 },
+        { "kind": "missing-number", "level": 3 }
+      ]
+    },
+    { "kind": "addition", "level": 4 },
+    { "kind": "subtraction", "level": 4 },
+    { "kind": "missing-number", "level": 4 },
+    {
+      "kind": [
+        { "kind": "addition", "level": 4 },
+        { "kind": "subtraction", "level": 4 },
+        { "kind": "comparing-numbers", "level": 4 },
+        { "kind": "making-a-number", "level": 4 }
+      ]
+    },
+    { "kind": "addition", "level": 5 }
   ]
 }
