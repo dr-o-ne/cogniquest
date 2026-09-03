@@ -955,6 +955,38 @@ img.avatar {
   font-size: 2rem;
 }
 
+/* The trophy's anchor for the burst below — a point to scatter stars from,
+   not a box, so it takes no more room than the trophy already did. */
+.popup__trophy-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.popup__burst {
+  position: absolute;
+  inset: 0;
+}
+
+.popup__star {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  font-size: 1.3rem;
+  animation: popup-star 0.9s ease-out both;
+}
+
+@keyframes popup-star {
+  from {
+    transform: translate(0, 0) scale(0.4);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx), var(--dy)) scale(1.1);
+    opacity: 0;
+  }
+}
+
 .popup__note {
   margin: 0 0 0.5rem;
   color: var(--muted);

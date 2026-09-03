@@ -376,7 +376,6 @@ function FightScreen({
       {battle.winner && (
         <WinnerPopup
           won={battle.winner === 'player'}
-          quest={state.returnTo === 'path'}
           squad={battle.foes.map((foe) => foe.monster)}
           /* Whoever was asking when the last heart went is the one still
              standing, so it is the one that gets its name in the title. */
@@ -470,9 +469,42 @@ function Fighter({
   )
 }
 
+/**
+ * Where each of the eight stars a win scatters ends up, in a ring around
+ * where it started. Hand-written rather than computed from an angle in a
+ * loop: eight points is nothing to derive, and a plain table is what a CSS
+ * custom property wants on the other end of it anyway.
+ */
+const STAR_OFFSETS: readonly (readonly [dx: number, dy: number])[] = [
+  [3, 0],
+  [2.1, 2.1],
+  [0, 3],
+  [-2.1, 2.1],
+  [-3, 0],
+  [-2.1, -2.1],
+  [0, -3],
+  [2.1, -2.1],
+]
+
+/** The stars a win scatters out of the trophy — decoration, nothing to click. */
+function StarBurst() {
+  return (
+    <span className="popup__burst" aria-hidden="true">
+      {STAR_OFFSETS.map(([dx, dy], i) => (
+        <span
+          key={i}
+          className="popup__star"
+          style={{ '--dx': `${dx}rem`, '--dy': `${dy}rem`, animationDelay: `${i * 40}ms` } as React.CSSProperties}
+        >
+          ⭐
+        </span>
+      ))}
+    </span>
+  )
+}
+
 function WinnerPopup({
   won,
-  quest,
   squad,
   victor,
   name,
@@ -480,8 +512,6 @@ function WinnerPopup({
   onLeave,
 }: {
   won: boolean
-  /** Fought from a path rather than the arena. */
-  quest: boolean
   squad: readonly Monster[]
   /** The opponent left standing. Only ever looked at on a defeat. */
   victor: Monster
@@ -489,18 +519,14 @@ function WinnerPopup({
   onRematch: () => void
   onLeave: () => void
 }) {
-  // A won stop is cleared and stays that way (P10) — replaying it moves
-  // nothing (see docs/DECISIONS.md on why a cleared stop is not offered), so
-  // «Ещё бой» has nothing to do here and the only way off the screen is on.
-  // A loss keeps the rematch: it is the one way back into the very stop that
-  // beat the child.
-  const onlyNext = won && quest
-
   return (
     <div className="popup">
       <div className="popup__box">
         {won ? (
-          <span className="avatar avatar--popup avatar--emoji">🏆</span>
+          <span className="popup__trophy-wrap">
+            <span className="avatar avatar--popup avatar--emoji">🏆</span>
+            <StarBurst />
+          </span>
         ) : (
           <MonsterAvatar monster={victor} size="popup" />
         )}
@@ -519,14 +545,17 @@ function WinnerPopup({
         <p className="popup__note">
           {won ? t.result.victoryNote(name) : t.result.defeatNote}
         </p>
-        {onlyNext ? (
+        {won ? (
+          // A win has nothing left to decide — arena or quest, «выйти» already
+          // knows where it goes (the roster, or the path a stop further on) —
+          // so the one button on screen is the way there, not a choice.
           <button className="big-button" onClick={onLeave} autoFocus>
-            {t.result.next}
+            {t.result.victoryTitle}
           </button>
         ) : (
           <>
             <button className="big-button" onClick={onRematch} autoFocus>
-              {won ? t.result.fightAgain : t.result.rematch}
+              {t.result.rematch}
             </button>
             <button className="link" onClick={onLeave}>
               {t.result.pickAnother}

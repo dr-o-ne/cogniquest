@@ -103,11 +103,8 @@ export const ru = {
     defeatTitle: (monster: string) => `${monster} победил`,
     victoryNote: (name: string) => `${name} справился!`,
     defeatNote: 'Ничего страшного — попробуем ещё раз',
-    fightAgain: 'Ещё бой',
     rematch: 'Реванш',
     pickAnother: 'выбрать другого',
-    /** The one button on a quest win — there is nothing else to offer there. */
-    next: 'Далее',
   },
 
   /**
