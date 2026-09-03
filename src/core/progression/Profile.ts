@@ -37,6 +37,8 @@ export interface ProfileData {
    */
   battles: number
   stars: number
+  /** Coins in the bank — a defeated opponent's level each, arena or quest alike. */
+  gold: number
   solved: number
   mistakes: number
   lastPlayedAt: number | null
@@ -53,6 +55,7 @@ function defaults(): ProfileData {
     questProgress: {},
     battles: 0,
     stars: 0,
+    gold: 0,
     solved: 0,
     mistakes: 0,
     lastPlayedAt: null,
@@ -101,6 +104,11 @@ export class Profile implements SessionObserver {
     if (data.battles === undefined) {
       this.data.battles = Object.values(this.data.defeated).reduce((sum, count) => sum + count, 0)
     }
+    // A save from before gold existed has no such number, which reads
+    // correctly as «nothing banked yet» — there was none to bank.
+    if (typeof this.data.gold !== 'number') {
+      this.data.gold = 0
+    }
     this.queue = new ReviewQueue(this.data.review)
     this.now = now
   }
@@ -127,6 +135,10 @@ export class Profile implements SessionObserver {
 
   get stars(): number {
     return this.data.stars
+  }
+
+  get gold(): number {
+    return this.data.gold
   }
 
   get solved(): number {
@@ -185,12 +197,13 @@ export class Profile implements SessionObserver {
    * in, when they stood in one from the config (**G9**).
    *
    * Everything goes in at once rather than one call per thing beaten, because
-   * the three tallies must not drift: one victory, one tick against each
-   * opponent who stood in it (each of them once, however many slots it filled),
-   * and one against the squad itself.
+   * the tallies must not drift: one victory, one tick against each opponent
+   * who stood in it (each of them once, however many slots it filled), one
+   * against the squad itself, and the gold every one of them was worth.
    */
-  recordVictory(monsterIds: readonly string[], squadId?: string): void {
+  recordVictory(monsterIds: readonly string[], squadId?: string, goldEarned = 0): void {
     this.data.battles++
+    this.data.gold += goldEarned
 
     for (const id of new Set(monsterIds)) {
       this.data.defeated[id] = (this.data.defeated[id] ?? 0) + 1

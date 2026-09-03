@@ -127,6 +127,21 @@ describe('Profile', () => {
       expect(profile.victories).toBe(3)
     })
 
+    it('a win banks the gold every opponent it beat was worth', () => {
+      const profile = new Profile()
+      profile.recordVictory(['goblin'], undefined, 3)
+      profile.recordVictory(['zombie', 'wolf'], 'beast-pack', 5)
+
+      expect(profile.gold).toBe(8)
+    })
+
+    it('an old save without gold does not break the game', () => {
+      const profile = Profile.fromJSON({ version: PROFILE_VERSION, stars: 5 })
+      expect(profile.gold).toBe(0)
+      profile.recordVictory(['goblin'], undefined, 2)
+      expect(profile.gold).toBe(2)
+    })
+
     it('a squad beaten twice counts twice', () => {
       const profile = new Profile()
       profile.recordVictory(['peasant', 'robber'], 'two-on-the-path')
@@ -243,8 +258,8 @@ describe('Profile', () => {
     it('survives a write and a read', () => {
       const profile = new Profile()
       profile.name = 'Тимофей'
-      profile.recordVictory(['goblin'])
-      profile.recordVictory(['peasant', 'robber'], 'two-on-the-path')
+      profile.recordVictory(['goblin'], undefined, 2)
+      profile.recordVictory(['peasant', 'robber'], 'two-on-the-path', 2)
       profile.recordQuestStep('first-path', 4)
       profile.onAnswerAccepted(answer('math:8+5', 'wrong', 3))
       profile.onSessionFinished(sessionResult)
@@ -258,6 +273,7 @@ describe('Profile', () => {
       expect(restored.squadsBeaten).toEqual({ 'two-on-the-path': 1 })
       expect(restored.questProgress).toEqual({ 'first-path': 4 })
       expect(restored.victories).toBe(2)
+      expect(restored.gold).toBe(4)
       expect(restored.review.toJSON()).toEqual(profile.review.toJSON())
     })
 

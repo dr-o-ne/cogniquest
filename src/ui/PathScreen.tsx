@@ -85,6 +85,7 @@ function road(count: number): string {
  */
 export function PathScreen({
   name,
+  gold,
   questId,
   at,
   onFight,
@@ -92,6 +93,7 @@ export function PathScreen({
   onReset,
 }: {
   name: string
+  gold: number
   questId: string
   /** Which stop the child is standing on. */
   at: number
@@ -104,7 +106,7 @@ export function PathScreen({
 
   return (
     <div className="screen">
-      <TopBar name={name} onReset={onReset} onBack={onBack} />
+      <TopBar name={name} gold={gold} onReset={onReset} onBack={onBack} />
 
       <div className="screen--center screen__body">
         <h2 className="roster__title">{quest.name}</h2>

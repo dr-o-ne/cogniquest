@@ -15,11 +15,14 @@ import { t } from '@/locale'
  */
 export function TopBar({
   name,
+  gold,
   onReset,
   /** Where «назад» goes, when there is anywhere to go. The menu has nowhere. */
   onBack,
 }: {
   name: string
+  /** Coins banked from battles won (arena or quest). Shown top-right. */
+  gold: number
   onReset: () => void
   onBack?: () => void
 }) {
@@ -63,6 +66,14 @@ export function TopBar({
           🧒
         </span>
         <span className="topbar__name">{name}</span>
+
+        {/* The gold every opponent beaten was worth, arena or quest alike —
+            the outermost thing in the corner, since it is the one number here
+            that keeps changing. */}
+        <span className="topbar__gold" aria-label={t.topbar.gold(gold)}>
+          <span aria-hidden="true">🪙</span>
+          <span className="topbar__gold-amount">{gold}</span>
+        </span>
       </div>
     </header>
   )

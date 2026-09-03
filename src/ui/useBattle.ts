@@ -110,6 +110,8 @@ export interface GameState {
   squadsBeaten: Record<string, number>
   /** quest id → stops cleared. What the path screen draws itself from. */
   questProgress: Record<string, number>
+  /** Gold banked from battles won, arena or quest alike. What the top bar shows. */
+  gold: number
 }
 
 interface Deps {
@@ -345,6 +347,7 @@ const initial: GameState = {
   defeated: {},
   squadsBeaten: {},
   questProgress: {},
+  gold: 0,
 }
 
 export function useBattle() {
@@ -397,6 +400,7 @@ export function useBattle() {
           defeated: profile.defeated,
           squadsBeaten: profile.squadsBeaten,
           questProgress: profile.questProgress,
+          gold: profile.gold,
         })
       } catch (cause) {
         if (cancelled) return
@@ -620,9 +624,13 @@ export function useBattle() {
       const won = battle.state.winner === 'player'
 
       if (won) {
+        // A monster's level is its worth in gold — one opponent's, or the sum
+        // of a squad's, however many stood in the fight.
+        const goldEarned = squad.reduce((sum, monster) => sum + monster.level, 0)
         d.profile.recordVictory(
           squad.map((monster) => monster.id),
           opposition.kind === 'squad' ? opposition.squad.id : undefined,
+          goldEarned,
         )
       }
 
@@ -646,6 +654,7 @@ export function useBattle() {
         defeated: d.profile.defeated,
         squadsBeaten: d.profile.squadsBeaten,
         questProgress: d.profile.questProgress,
+        gold: d.profile.gold,
       })
     },
     [patch],
@@ -731,6 +740,7 @@ export function useBattle() {
       defeated: {},
       squadsBeaten: {},
       questProgress: {},
+      gold: 0,
       run: null,
       opposition: null,
       battle: null,

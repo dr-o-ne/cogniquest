@@ -63,6 +63,7 @@ export function BattleGame() {
       return (
         <HomeScreen
           name={state.name}
+          gold={state.gold}
           onArena={toSelect}
           onQuest={toQuests}
           onReset={() => void resetAll()}
@@ -81,6 +82,7 @@ export function BattleGame() {
       return (
         <QuestScreen
           name={state.name}
+          gold={state.gold}
           progress={state.questProgress}
           onOpen={openQuest}
           onBack={toHome}
@@ -96,6 +98,7 @@ export function BattleGame() {
       return (
         <PathScreen
           name={state.name}
+          gold={state.gold}
           questId={state.run.questId}
           at={state.run.at}
           onFight={fightNode}
@@ -160,18 +163,20 @@ function NameScreen({ onDone }: { onDone: (name: string) => void }) {
  */
 function HomeScreen({
   name,
+  gold,
   onArena,
   onQuest,
   onReset,
 }: {
   name: string
+  gold: number
   onArena: () => void
   onQuest: () => void
   onReset: () => void
 }) {
   return (
     <div className="screen">
-      <TopBar name={name} onReset={onReset} />
+      <TopBar name={name} gold={gold} onReset={onReset} />
 
       <div className="screen--center screen__body">
         <div className="menu">
@@ -216,7 +221,7 @@ function SelectScreen({
 }) {
   return (
     <div className="screen">
-      <TopBar name={state.name} onReset={onReset} onBack={onBack} />
+      <TopBar name={state.name} gold={state.gold} onReset={onReset} onBack={onBack} />
 
       <div className="screen--center screen__body">
         {/* The squads come first: there are four of them against forty-eight

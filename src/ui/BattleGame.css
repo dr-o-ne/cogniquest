@@ -517,6 +517,24 @@ img.avatar {
   font-weight: 700;
 }
 
+/* The gold count, bare like `.card__level` rather than pilled — this codebase's
+   own case against a token around a number, made once and kept everywhere a
+   number like this one shows up. */
+.topbar__gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.3rem;
+  padding-left: 0.7rem;
+  border-left: 1px solid color-mix(in srgb, var(--fg) 14%, transparent);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.topbar__gold-amount {
+  font-variant-numeric: tabular-nums;
+}
+
 /* Whatever is left over after the bar — the roster on one screen, the menu on
    the other. */
 .screen__body {

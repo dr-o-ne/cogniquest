@@ -45,6 +45,12 @@ export const ru = {
     back: 'назад',
   },
 
+  /** The bar at the top of every screen that is not a battle. */
+  topbar: {
+    /** Read by a screen reader; the digit and the coin already say it visually. */
+    gold: (amount: number) => `золота: ${amount}`,
+  },
+
   /**
    * The menu the child lands on with a name already given: what there is to
    * play. Two words and no sentence — at six, a screen of two choices should be

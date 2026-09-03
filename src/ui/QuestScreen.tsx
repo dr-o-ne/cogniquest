@@ -15,12 +15,14 @@ import { TopBar } from './TopBar'
  */
 export function QuestScreen({
   name,
+  gold,
   progress,
   onOpen,
   onBack,
   onReset,
 }: {
   name: string
+  gold: number
   /** quest id → stops cleared. */
   progress: Record<string, number>
   onOpen: (questId: string) => void
@@ -29,7 +31,7 @@ export function QuestScreen({
 }) {
   return (
     <div className="screen">
-      <TopBar name={name} onReset={onReset} onBack={onBack} />
+      <TopBar name={name} gold={gold} onReset={onReset} onBack={onBack} />
 
       <div className="screen--center screen__body">
         <h2 className="roster__title">{t.quest.title}</h2>
