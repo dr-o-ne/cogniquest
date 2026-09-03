@@ -15,6 +15,8 @@ export {
   PLAYER_HEARTS,
   type Monster,
 } from './monsters'
+export { opponentsOf, type Opposition } from './opposition'
 // `squadById` stays unexported from here: nothing outside `game` looks a squad
 // up by id, and an export is a claim that somebody does.
 export { SQUADS, type Squad } from './squads'
+export { questById, QUESTS, type Quest, type QuestNode } from './quests'

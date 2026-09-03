@@ -17,7 +17,13 @@ import type { TextToSpeech } from '@/core/ports'
 import { DifficultyAdapter, Profile, type ProfileData } from '@/core/progression'
 import { pick, systemRandom } from '@/core/random'
 import { ExerciseSession } from '@/core/session'
-import { Battle, type BattleState, type Monster, type Squad } from '@/game'
+import {
+  Battle,
+  opponentsOf,
+  questById,
+  type BattleState,
+  type Opposition,
+} from '@/game'
 import { t } from '@/locale'
 import { playCorrect, playFinish, playUnheard, playWrong } from '@/adapters/audio/sfx'
 import { VoiceAnswerInput } from '@/adapters/input'
@@ -41,12 +47,15 @@ const RELISTEN_PAUSE_MS = 400
 type Mic = 'idle' | 'speaking' | 'listening'
 type Flash = 'correct' | 'wrong' | 'unheard' | null
 /**
- * `home` is the menu the child lands on once they have a name: it offers the
- * arena, and will offer the quest. `select` is the arena's own screen — the
- * roster and the squads — and a battle leaves back to it rather than to the
- * menu, because «выйти» from a fight means «pick another opponent».
+ * `home` is the menu the child lands on once they have a name. Each of the two
+ * games it offers has a screen to choose on and a screen to play: the arena's
+ * are `select` and `fight`, the quest's are `quest` and `path`.
+ *
+ * A battle always leaves back to the screen it was started from rather than to
+ * the menu — «выйти» means «pick another opponent» on the arena and «back to
+ * the path» on a quest — which is what `returnTo` below is for.
  */
-type Screen = 'loading' | 'error' | 'name' | 'home' | 'select' | 'fight'
+type Screen = 'loading' | 'error' | 'name' | 'home' | 'select' | 'quest' | 'path' | 'fight'
 
 /**
  * The answer being built, before anything is sent (T18).
@@ -62,19 +71,11 @@ export type Draft =
   | { readonly kind: 'choice'; readonly value: Comparison | null }
 
 /**
- * What the child picked to fight (**G9**). One value rather than a list of
- * monsters and a flag beside it, because who is on the other side and how they
- * take turns are one decision — and because a squad has an **identity** the
- * profile has to be told about, which a bare list of monsters cannot carry.
+ * Re-exported so the screens can keep importing it from here, where it lived
+ * until a quest's map wanted to name the same thing and `game` — which cannot
+ * reach into `ui` — had to own it.
  */
-export type Opposition =
-  | { readonly kind: 'duel'; readonly monster: Monster }
-  | { readonly kind: 'squad'; readonly squad: Squad }
-
-/** Everyone on the other side, whichever way they were picked. */
-function opponentsOf(opposition: Opposition): readonly Monster[] {
-  return opposition.kind === 'duel' ? [opposition.monster] : opposition.squad.monsters
-}
+export type { Opposition } from '@/game'
 
 export interface GameState {
   screen: Screen
@@ -86,6 +87,15 @@ export interface GameState {
    * object is done with, and needs the squad's id along with it.
    */
   opposition: Opposition | null
+  /**
+   * Where leaving the battle on screen goes. A battle looks the same however
+   * it was started, so the way out has to be remembered rather than worked
+   * out: `run` cannot answer it, since a child halfway down a path may walk
+   * off to the arena and fight there.
+   */
+  returnTo: 'select' | 'path'
+  /** The path being walked, and how far along. Null outside a quest. */
+  run: { readonly questId: string; readonly at: number } | null
   battle: BattleState | null
   exercise: Exercise | null
   mic: Mic
@@ -98,6 +108,8 @@ export interface GameState {
   defeated: Record<string, number>
   /** squad id → times beaten. Struck through the same way (**G9**). */
   squadsBeaten: Record<string, number>
+  /** quest id → stops cleared. What the path screen draws itself from. */
+  questProgress: Record<string, number>
 }
 
 interface Deps {
@@ -322,6 +334,8 @@ const initial: GameState = {
   error: null,
   name: '',
   opposition: null,
+  returnTo: 'select',
+  run: null,
   battle: null,
   exercise: null,
   mic: 'idle',
@@ -330,6 +344,7 @@ const initial: GameState = {
   draft: null,
   defeated: {},
   squadsBeaten: {},
+  questProgress: {},
 }
 
 export function useBattle() {
@@ -341,6 +356,14 @@ export function useBattle() {
    * (T18). Also the flag for «is the pad live»: no resolver, no editing.
    */
   const answer = useRef<((attempt: AnswerAttempt) => void) | null>(null)
+  /**
+   * The walk in progress, mirrored out of state.
+   *
+   * `fight()` runs for the whole length of a battle and closes over what it
+   * saw when it started; by the time it records a win, the state it captured
+   * is minutes stale. A ref is read at the moment it is needed.
+   */
+  const runRef = useRef<{ questId: string; at: number } | null>(null)
 
   const patch = useCallback((changes: Partial<GameState>) => {
     setState((previous) => ({ ...previous, ...changes }))
@@ -373,6 +396,7 @@ export function useBattle() {
           name: profile.name,
           defeated: profile.defeated,
           squadsBeaten: profile.squadsBeaten,
+          questProgress: profile.questProgress,
         })
       } catch (cause) {
         if (cancelled) return
@@ -400,7 +424,7 @@ export function useBattle() {
   )
 
   const fight = useCallback(
-    async (opposition: Opposition) => {
+    async (opposition: Opposition, returnTo: 'select' | 'path' = 'select') => {
       const d = deps.current
       if (!d) return
 
@@ -458,6 +482,7 @@ export function useBattle() {
       patch({
         screen: 'fight',
         opposition,
+        returnTo,
         battle: battle.state,
         flash: null,
         heard: null,
@@ -592,12 +617,24 @@ export function useBattle() {
       // Everything beaten goes in at once: one victory, a tick against each
       // opponent who stood in it, and one against the squad itself so its card
       // is struck through the way a monster's is. `Profile` keeps them in step.
-      if (battle.state.winner === 'player') {
+      const won = battle.state.winner === 'player'
+
+      if (won) {
         d.profile.recordVictory(
           squad.map((monster) => monster.id),
           opposition.kind === 'squad' ? opposition.squad.id : undefined,
         )
       }
+
+      // A stop on a path is cleared by winning it, and by nothing else. A loss
+      // leaves the walk exactly where it was: the child stays on this node,
+      // everything behind them is still behind them, and «Реванш» in the result
+      // window starts the same fight again (**P10**).
+      const walk = runRef.current
+      if (won && returnTo === 'path' && walk) {
+        d.profile.recordQuestStep(walk.questId, walk.at + 1)
+      }
+
       await d.storage.save(PROFILE_KEY, d.profile.toJSON())
 
       patch({
@@ -608,6 +645,7 @@ export function useBattle() {
         flash: null,
         defeated: d.profile.defeated,
         squadsBeaten: d.profile.squadsBeaten,
+        questProgress: d.profile.questProgress,
       })
     },
     [patch],
@@ -692,6 +730,8 @@ export function useBattle() {
       name: '',
       defeated: {},
       squadsBeaten: {},
+      questProgress: {},
+      run: null,
       opposition: null,
       battle: null,
       exercise: null,
@@ -710,7 +750,7 @@ export function useBattle() {
    * has no pad to answer them with.
    */
   const leaveFor = useCallback(
-    (screen: 'home' | 'select') => {
+    (screen: 'home' | 'select' | 'quest' | 'path') => {
       runAbort.current?.abort()
       deps.current?.tts.stop()
       patch({
@@ -726,8 +766,71 @@ export function useBattle() {
     [patch],
   )
 
-  const toHome = useCallback(() => leaveFor('home'), [leaveFor])
+  const toHome = useCallback(() => {
+    runRef.current = null
+    leaveFor('home')
+    patch({ run: null })
+  }, [leaveFor, patch])
+
   const toSelect = useCallback(() => leaveFor('select'), [leaveFor])
+
+  /** Out of a path and back to the list of them. The walk is put down. */
+  const toQuests = useCallback(() => {
+    runRef.current = null
+    leaveFor('quest')
+    patch({ run: null })
+  }, [leaveFor, patch])
+
+  /**
+   * Open a path: the one being walked, at wherever the profile says the child
+   * had got to. A finished quest opens at its start, so it can be walked again.
+   */
+  const openQuest = useCallback(
+    (questId: string) => {
+      const d = deps.current
+      if (!d) return
+
+      const quest = questById(questId)
+      const cleared = d.profile.questProgress[questId] ?? 0
+      const at = cleared >= quest.nodes.length ? 0 : cleared
+
+      runRef.current = { questId, at }
+      leaveFor('path')
+      patch({ run: { questId, at } })
+    },
+    [leaveFor, patch],
+  )
+
+  /** Fight the stop the child is standing on. */
+  const fightNode = useCallback(() => {
+    const walk = runRef.current
+    if (!walk) return
+
+    const node = questById(walk.questId).nodes[walk.at]
+    if (!node) return
+
+    void fight(node.opposition, 'path')
+  }, [fight])
+
+  /**
+   * Back to the path after a battle, standing wherever the profile now says.
+   * Read back rather than incremented here: the win was recorded against the
+   * profile, and reading it is what keeps the screen and the save from
+   * disagreeing after a rematch or a replay of an earlier node.
+   */
+  const toPath = useCallback(() => {
+    const d = deps.current
+    const walk = runRef.current
+    if (!d || !walk) return
+
+    const quest = questById(walk.questId)
+    const cleared = d.profile.questProgress[walk.questId] ?? 0
+    const at = Math.min(cleared, quest.nodes.length - 1)
+
+    runRef.current = { questId: walk.questId, at }
+    leaveFor('path')
+    patch({ run: { questId: walk.questId, at } })
+  }, [leaveFor, patch])
 
   return {
     state,
@@ -739,6 +842,10 @@ export function useBattle() {
     sendAnswer,
     toHome,
     toSelect,
+    toQuests,
+    openQuest,
+    fightNode,
+    toPath,
     resetAll,
   }
 }

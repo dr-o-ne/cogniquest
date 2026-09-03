@@ -5,6 +5,9 @@ import { comparisonSign, comparisonWord, COMPARISONS, type Comparison } from '@/
 import { availableMonsters, PLAYER_HEARTS, SQUADS, type Monster, type Squad } from '@/game'
 import { t } from '@/locale'
 import { MonsterAvatar } from './MonsterAvatar'
+import { MonsterFace, SquadHand } from './OpponentCard'
+import { PathScreen } from './PathScreen'
+import { QuestScreen } from './QuestScreen'
 import { Teacher } from './Teacher'
 import { TopBar } from './TopBar'
 import { useBattle, type Draft, type GameState, type Opposition } from './useBattle'
@@ -35,6 +38,10 @@ export function BattleGame() {
     sendAnswer,
     toHome,
     toSelect,
+    toQuests,
+    openQuest,
+    fightNode,
+    toPath,
     resetAll,
   } = useBattle()
 
@@ -53,7 +60,14 @@ export function BattleGame() {
     case 'name':
       return <NameScreen onDone={(name) => void setName(name)} />
     case 'home':
-      return <HomeScreen name={state.name} onArena={toSelect} onReset={() => void resetAll()} />
+      return (
+        <HomeScreen
+          name={state.name}
+          onArena={toSelect}
+          onQuest={toQuests}
+          onReset={() => void resetAll()}
+        />
+      )
     case 'select':
       return (
         <SelectScreen
@@ -63,13 +77,41 @@ export function BattleGame() {
           onReset={() => void resetAll()}
         />
       )
+    case 'quest':
+      return (
+        <QuestScreen
+          name={state.name}
+          progress={state.questProgress}
+          onOpen={openQuest}
+          onBack={toHome}
+          onReset={() => void resetAll()}
+        />
+      )
+    case 'path':
+      // The path cannot be drawn without knowing which one is being walked.
+      // `run` is set the moment the screen is, so this is unreachable — and
+      // it stands rather than being asserted away, because a null here would
+      // otherwise be a blank screen with no clue what went wrong.
+      if (!state.run) return <Splash title={t.app.errorTitle} note="" bad />
+      return (
+        <PathScreen
+          name={state.name}
+          questId={state.run.questId}
+          at={state.run.at}
+          onFight={fightNode}
+          onBack={toQuests}
+          onReset={() => void resetAll()}
+        />
+      )
     case 'fight':
       return (
         <FightScreen
           state={state}
           input={input}
-          onLeave={toSelect}
-          onRematch={() => state.opposition && void fight(state.opposition)}
+          // Back where the battle was started from: another opponent on the
+          // arena, the path on a quest.
+          onLeave={state.returnTo === 'path' ? toPath : toSelect}
+          onRematch={() => state.opposition && void fight(state.opposition, state.returnTo)}
         />
       )
   }
@@ -113,17 +155,18 @@ function NameScreen({ onDone }: { onDone: (name: string) => void }) {
 
 /**
  * Where the child lands with a name already given: the two things there are to
- * play. The arena is the roster; the quest is not built yet and says so rather
- * than being hidden, so that what is coming is visible and what is playable is
- * unambiguous.
+ * play. The arena is a roster to pick from; the quest is a path to walk, chosen
+ * by its mini-boss and then taken stop by stop.
  */
 function HomeScreen({
   name,
   onArena,
+  onQuest,
   onReset,
 }: {
   name: string
   onArena: () => void
+  onQuest: () => void
   onReset: () => void
 }) {
   return (
@@ -139,14 +182,11 @@ function HomeScreen({
             {t.home.arena}
           </button>
 
-          {/* Disabled rather than absent: the child can see there is more, and
-              cannot press into nothing. */}
-          <button className="menu__choice" disabled>
+          <button className="menu__choice" onClick={onQuest}>
             <span className="menu__icon" aria-hidden="true">
               🗺️
             </span>
             {t.home.quest}
-            <span className="menu__soon">{t.home.soon}</span>
           </button>
         </div>
       </div>
@@ -254,85 +294,9 @@ function SquadCard({
       aria-label={squad.name}
       onClick={() => onFight({ kind: 'squad', squad })}
     >
-      {/* The fan needs to know how many there are to spread them evenly about
-          the middle, and each card which of them it is. Both go in as custom
-          properties so the angles are the stylesheet's arithmetic, not a pile
-          of inline transforms. */}
-      <span className="card__hand" style={{ '--hand': squad.monsters.length } as React.CSSProperties}>
-        {/* A span and not a button, because a button cannot nest, and the hand
-            as a whole is the one thing being pressed here.
-
-            Keyed by slot: the same monster may stand in a squad twice. */}
-        {squad.monsters.map((monster, slot) => (
-          <span
-            key={slot}
-            className="card card--mini"
-            style={{ '--slot': slot, '--card': monster.color } as React.CSSProperties}
-          >
-            <MonsterFace monster={monster} />
-          </span>
-        ))}
-      </span>
+      <SquadHand squad={squad} />
     </button>
   )
-}
-
-/**
- * What is printed on a monster's card, without the element around it.
- *
- * That element differs and cannot be shared: in the roster the card is a button
- * the child presses, and in a squad's hand it is a plain span, because a button
- * cannot nest inside the button the hand itself is. The printing is the same
- * either way, and this is what makes «the same card, smaller» true rather than
- * a resemblance kept up by hand in two places.
- */
-function MonsterFace({ monster }: { monster: Monster }) {
-  return (
-    <>
-      <CardTop level={monster.level} />
-      <MonsterAvatar monster={monster} size="card" />
-      <span className="card__name">{monster.name}</span>
-    </>
-  )
-}
-
-/**
- * What the card says about difficulty, in its two top corners: the level as a
- * rank on the left, the way a playing card carries one, and the same level as a
- * word on the right.
- *
- * A flow row rather than two absolutely positioned corners, because «Очень
- * сильный» takes most of an eleven-rem card's width — pinned to the corner it
- * would lie across the picture. As a row it also cannot change the card's
- * height, which is what keeps the roster even.
- */
-function CardTop({ level }: { level: number }) {
-  return (
-    <span className="card__top">
-      <span className="card__level">{level}</span>
-      <Strength level={level} />
-    </span>
-  )
-}
-
-/**
- * How hard this opponent is, in a word — the one thing on a selection card that
- * names the difficulty out loud.
- *
- * It took the place of the row of hearts, which named the length instead, and
- * length runs the other way (**G7**): «Непобедимый» is the shortest battle on
- * the screen. So the two are not interchangeable, and the card now answers «how
- * hard» rather than «how long».
- *
- * Drawn in the card's own colour, which is the level's colour — so the word and
- * the frame are one statement said twice, not two facts.
- */
-function Strength({ level }: { level: number }) {
-  // A rung with no wording falls back to its number rather than to nothing, the
-  // same way a missing monster name falls back to its id: next to the pill that
-  // already shows the number it reads as obviously unfinished, which is the
-  // point. A test holds that it never comes to that for a level in use.
-  return <span className="card__strength">{t.strength[level] ?? level}</span>
 }
 
 function FightScreen({

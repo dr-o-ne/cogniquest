@@ -1210,3 +1210,157 @@ img.avatar {
   color: var(--muted);
 }
 
+
+/* --- The quest: a path walked from the top down --- */
+
+/* How far down a path the child has got, under the boss's card on the quest
+   list. Its own line rather than part of the name, because it changes and the
+   name does not. */
+.card__progress {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The path: a switchback. Stops run left to right along a row, right to left
+   along the next, and so on down — which is what «серпантин» means, a road that
+   crosses and comes back as it descends.
+
+   Both the lane and the row are placed explicitly. Left to place itself, the
+   grid packs stops into whatever row they fit in, and the road folds up into a
+   heap: with lanes 1,2,3,4,5 the first five all fit one row and the rest
+   staircase away underneath. */
+.path {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--lanes), 1fr);
+  /* One height for every row, and the road depends on it: the curve is computed
+     in lane-and-row units rather than measured, so a row that stretched to fit a
+     taller stop would pull the road off the stops in it. Tall enough for the
+     tallest thing there is — a squad of three fans out to 286px. */
+  grid-auto-rows: 22rem;
+  /* Stretched, not centred: a stop that fills its lane is a stop whose trail can
+     be «one lane wide» without the stylesheet being told how wide a lane is. */
+  justify-items: stretch;
+  /* No gap and no padding, and both matter: the road is computed in lanes and
+     rows and stretched over this box, so the box has to BE the grid. A gap or a
+     padding is space the road knows nothing about, and it drifts off the stops
+     by however much of it there is — a mistake that grows the further down the
+     path you look. The air between rows lives inside the row instead.*/
+  gap: 0;
+  width: 100%;
+  max-width: 68rem;
+  margin: 0 0 3rem;
+  padding: 0;
+  list-style: none;
+}
+
+.path__stop {
+  position: relative;
+  grid-column: calc(var(--lane) + 1);
+  grid-row: calc(var(--row) + 1);
+  display: grid;
+  place-items: center;
+}
+
+/* The stop itself, at the size the arena draws a card — the same card, so the
+   same size, and the road is laid out around it rather than the other way
+   round. It was half size while the lanes were four; three lanes leave room
+   for a full one, and a shrunken card on a screen the child reaches through a
+   menu is a card they have to lean in to read. */
+.path__go {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+  transition: transform 0.15s ease;
+}
+
+/* The boss ends the path. It used to be told apart by being drawn larger, and
+   that went when the stops took the size the arena draws a card at — so it is
+   told apart by its frame instead, which is the one thing left that can say
+   «this one is different» without saying «this one is bigger». */
+.path__stop--boss .card {
+  border-width: 4px;
+  border-color: var(--card);
+}
+
+/* Walked already, and it stays on the path rather than vanishing: the child
+   should see the road behind them, not only the road left.
+
+   The stroke through it is not drawn here. A cleared stop wears `card--beaten`
+   or `hand--beaten` — the arena's own classes, on the arena's own card — so the
+   line is the same line, in the opponent's own colour and across the card's own
+   corners, rather than a second thing that merely resembles it. This used to
+   draw its own: grey, and set inside the stop's cell rather than the card, so
+   it neither matched nor quite lined up.
+
+   Which leaves one thing to correct. A beaten card on the arena lights up under
+   the pointer, because there it can be picked up and played again. A cleared
+   stop cannot, so it must not offer to. */
+.path__stop--cleared .card--beaten:hover,
+.path__stop--cleared .hand--beaten:hover {
+  opacity: 0.62;
+}
+
+/* Not reached yet. Dimmer than a cleared stop: «not yet» rather than «done». */
+.path__stop--locked {
+  opacity: 0.32;
+}
+
+/* Where the child is standing — the one stop that can be pressed. Lifted, lit,
+   and ringed in the level's colour, the same ring the asking opponent wears in
+   a battle's header. */
+.path__stop--standing {
+  z-index: 2;
+}
+
+.path__stop--standing .path__go {
+  cursor: pointer;
+}
+
+.path__stop--standing .path__go:hover {
+  transform: translateY(-5px);
+}
+
+.path__stop--standing .path__go > * {
+  outline: 4px solid var(--card);
+  outline-offset: 6px;
+  border-radius: 22px;
+}
+
+/* The road. One shape for the whole path rather than a segment per stop, which
+   is what lets it curve: a spline through the stops bends where they turn, and
+   segments between neighbours can only ever be straight lines and corners.
+
+   Stretched over the grid with `preserveAspectRatio: none`, so it needs no
+   measuring and follows the lanes at any width. `overflow: visible` because the
+   smoothing swings the bends a little outside the grid at a turn, which is the
+   part that reads as a switchback. */
+.path__road {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.path__road path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--fg) 22%, transparent);
+  /* In viewBox units, which are lanes across and rows down — so the road keeps
+     its weight whatever the window does. */
+  stroke-width: 0.035;
+  stroke-linecap: round;
+  stroke-dasharray: 0.001 0.07;
+}
+
+/* Above the road, and the one being stood on above its neighbours. */
+.path__stop {
+  z-index: 1;
+}

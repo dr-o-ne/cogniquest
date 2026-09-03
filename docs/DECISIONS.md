@@ -2,7 +2,7 @@
 
 A learning game for a child: math and reading by syllables, answered by voice.
 
-**Last updated:** 2026-09-02
+**Last updated:** 2026-09-03
 **State:** phase 3 closed on the child; reading (phase 4) is next, and the
 ground for it is now clear rather than half-guessed
 **What comes next:** [ROADMAP.md](ROADMAP.md)
@@ -389,6 +389,7 @@ way to answer that can miss will come back the moment reading (**C2**) needs one
 | **G7** | A monster's battle comes from its **level**: how many tasks it runs to, and which math rungs they are drawn from. The harder the tasks, the shorter the battle. | Accepted |
 | **G8** | A row coming back takes a **share of the roster**, not a share of every battle: opponents are dealt out between the rows — an equal share inside each level band — so one battle is a run of one row. The split is **probation and dissolves** once the row has proved itself. | Accepted |
 | **G9** | A battle takes on **one to five** opponents. Squads are **written in the config**, not assembled on the screen. In order they are a **gauntlet**; shuffled, every question comes from a survivor drawn afresh. Each keeps its own hearts. | Accepted |
+| **G10** | A second game beside the arena: the **quest**, a path of opponents walked in order to a mini-boss. The arena is a free pick, a path is a sequence somebody else chose — and choosing it is meant to become the **parent's**, through a list of demands a generator lays out. | Accepted |
 | **G2** | The setting: wizard against a little monster / space / something else. | **Open** — phase 6 |
 | **G3** | The cast of teacher characters. | **Open** — the child may pick them |
 | **G4** | A timer on answers: speed bonus / hard limit / no clock. | **Deferred** — taken off the critical path by **A7** |
@@ -556,6 +557,45 @@ wording will have to come back in some form.
 more rather than less: picking one is now how the child picks a mix of rows, and
 they pick it blind. The cheap fix named under **G8** is the same fix here.
 
+**G10 — why a second game rather than a second roster.** The arena answers «who
+do you want to fight?» and the child answers it. That is right for practice they
+choose to do, and it is exactly wrong for practice somebody has decided they
+need: a child who finds subtraction hard will not pick the subtraction cards. The
+quest is the other half — a path laid out in advance, walked from one end to the
+other, with no way round anything on it.
+
+The point of laying it out is that **a parent will lay it out**. The plan is a
+list of demands — «сложение 1, сложение 1, вычитание 1» — and a generator that
+finds opponents asking those rows at those rungs and puts them on the road. That
+is what makes this worth being a game rather than a second list: it is the seam
+through which somebody who knows what the child is struggling with can say so.
+
+**The generator is deliberately not built yet, and neither is the shape it reads.**
+The maps are hand-written tables today (`src/game/quests.ts`) and the parent's
+list has no form at all. Inventing one now would mean inventing it off a single
+hand-made map, and **A2** already records what that costs: a shape guessed a
+phase early only has to fit what the first example happened to need. What is
+settled here is what a path *is*, which a generator will fill rather than
+replace.
+
+**A lost battle costs the stop, not the walk.** The child stays where they are,
+everything behind them stays behind them, and «Реванш» in the result window
+starts the same fight again — the same rule **P10** already sets for the arena,
+which exists because at six a defeat that takes something away means tears and a
+refusal to play tomorrow. Progress is a count of stops cleared rather than a set
+of them: a path is walked in order, so the third stop is reachable only through
+the first two, and «which ones» is the same fact as «how many».
+
+**Only the stop the child is standing on can be pressed.** Ahead of it is locked
+because a path with a way round it is a roster; behind it is not offered because
+replaying a stop would move nothing. A finished path stays on the screen struck
+through, and opens again at its start — nothing here is spent by being played.
+
+**One thing to watch, and it is the same one G9 has.** A path is thirteen battles
+of ten to twenty questions each. That is far past the ten to fifteen minutes
+**P7** asks of a sitting, so a path is meant to be walked across several — which
+is what saving the progress is for, and what has not yet been tried on the child.
+
 ### A sketch (not a decision, a starting point for phase 6)
 
 - **The core is «the duel».** The child and the teacher against a little
@@ -650,4 +690,5 @@ actually did is in `git log`, which says it better.
 | 2026-09-02 | **A squad became a fanned hand of the roster's own cards**, at the roster's own size, with no frame and no caption — it had been a wide card holding the members as small portraits, which is a card of cards. The frame's contents went with it: the group's name (kept as the button's accessible name), its own strength, and the word for how it takes turns — so **a gauntlet squad would now be indistinguishable from a shuffled one**, which costs nothing while all four are shuffled and will have to be answered the day one is not. Under the pointer the hand opens until every card can be read; the opening is a transform and not a change of the overlap, because the overlap is a margin and opening with it would re-lay-out the row and shove the neighbouring hands aside every time the pointer crossed one. Three things the measurements caught that nothing else would have: a turned card reaches past the box it occupies in layout, so hands laid out 16px apart were drawing on top of each other; the room for that turn has to grow with the hand, or the beaten diagonal — drawn across the button — overshoots a hand of two; and an opened hand of four reaches a hundred pixels past its button, which is about all a 1280px row has to spare, hence the spread it settled at and a `clip` on the row rather than a sideways scrollbar. |
 | 2026-09-02 | **The selection screen gained a top bar and lost its greeting.** «Новая игра» on the left, the child's face and name on the right, sticky rather than fixed — fixed had floated the button over the first row of cards, sticky pushes the roster down and then holds while it scrolls under. Out went «С кем сразимся, {name}?», which spent a heading asking the child their own name back, and «Побед: N». **The victory tally is now shown nowhere**: `Profile.battles` still counts it and the tests still hold what it means, but nothing reads it, and the place it belongs is the PIN-gated parent screen phase 7 already plans. |
 | 2026-09-02 | **A menu screen, and the top bar extracted to serve it.** The child now lands on two big buttons — «Арена», which opens the roster that used to be the first screen, and «Квест», disabled and labelled «скоро» rather than hidden, so what is coming is visible and what is playable is unambiguous. The bar came out of the selection screen because a **second** screen wanted it, not in anticipation of one: it was already carrying two things that belong to the profile rather than to picking a fight, and being locked inside one screen was the accident. Leaving a battle still lands on the roster and not the menu — «выйти» from a fight means «pick another opponent» — so the roster's bar gained a «назад» and the menu's has none. Deliberately **not** done at the same time: any general shape for «a selection screen», which is the mistake **A2** already records paying for once. |
+| 2026-09-03 | **The quest: a second game, and the first path (G10).** A serpentine of thirteen stops — ten single opponents, two squads, a mini-boss — walked in order, each stop the very card the arena would offer, at the arena's own size and wearing the arena's own strike once beaten. The road is one curve and not thirteen joints — a spline through the stop centres, which passes through every point it is given, so it cannot miss a stop, and the switchback at the end of a row comes out of the smoothing rather than being placed. It is computed in lane-and-row units and stretched over the grid, which is what forces the rows to one fixed height and the grid to no gaps and no padding: those are not part of the lanes and rows, so the road drifted off the stops by 28px near the bottom until they came out. Three lanes, because a squad's open hand is 331px wide and a lane has to be wider than that. The arena is a free pick; a path is a sequence, and the point of that is that the sequence is meant to become the **parent's**, through a list of demands a generator lays out. **Neither the generator nor the shape it reads is built**: inventing the parent's format off one hand-made map is the mistake **A2** records paying for, so what is settled is only what a path is. Losing a stop costs the stop and not the walk (**P10**), progress is a count of stops cleared and survives a restart, and `PROFILE_VERSION` is again not bumped. `Opposition` moved down into `game` — a quest's map names the same thing a battle does, and `game` cannot reach into `ui` — and the card components came out of `BattleGame.tsx` for the second caller, the same rule the top bar moved on. The boss picture is a stand-in until the real ones arrive. |
 | 2026-09-02 | **This document trimmed to the rule above** — 57 KB to 40. Out went the folder tree (**A9**) and the install line, both of which the [README](../README.md) already carried, the tree in a copy that still had the project at a path it left months ago; the mechanics of how **A1** is enforced, same reason; and a changelog that had grown from a record of decisions into a prose retelling of `git log`, now one line an entry. Nothing was struck through and nothing was dropped: 53 decision IDs before, 53 after, every status and every **Why** with them. |

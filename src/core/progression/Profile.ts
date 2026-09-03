@@ -21,6 +21,16 @@ export interface ProfileData {
    */
   squadsBeaten: Record<string, number>
   /**
+   * quest id → how many of its stops are cleared, counted from the start of
+   * the path. Equal to the path's length means the quest is finished.
+   *
+   * A count and not a set, because a path is walked in order: the third stop
+   * is reachable only through the first two, so which ones are done is the
+   * same fact as how many. A loss does not move it — the child stays on the
+   * node they lost, tries again, and keeps everything behind them (**P10**).
+   */
+  questProgress: Record<string, number>
+  /**
    * Battles won. Counted apart from `defeated` since a battle can be fought
    * against a squad (**G9**): four opponents beaten at once is four entries
    * there and one victory here.
@@ -40,6 +50,7 @@ function defaults(): ProfileData {
     review: [],
     defeated: {},
     squadsBeaten: {},
+    questProgress: {},
     battles: 0,
     stars: 0,
     solved: 0,
@@ -77,6 +88,11 @@ export class Profile implements SessionObserver {
     // as «no squad has been beaten yet» — there were none to beat.
     if (typeof this.data.squadsBeaten !== 'object' || this.data.squadsBeaten === null) {
       this.data.squadsBeaten = {}
+    }
+    // A save from before quests existed has no such map, which reads
+    // correctly as «no path has been walked yet» — there were none to walk.
+    if (typeof this.data.questProgress !== 'object' || this.data.questProgress === null) {
+      this.data.questProgress = {}
     }
     // A save written before squads existed carries no battle count and needs
     // none: a battle was one opponent then, so the per-opponent tally IS the
@@ -137,6 +153,22 @@ export class Profile implements SessionObserver {
   /** Which squads have been beaten, and how often (**G9**). Also a copy. */
   get squadsBeaten(): Record<string, number> {
     return { ...this.data.squadsBeaten }
+  }
+
+  /** How far along each path the child has walked. A copy, like the others. */
+  get questProgress(): Record<string, number> {
+    return { ...this.data.questProgress }
+  }
+
+  /**
+   * A stop on a path cleared.
+   *
+   * Never goes backwards: replaying a finished quest, or a node behind the
+   * furthest one reached, must not undo what is already walked. So the higher
+   * of the two stands — which also makes the call safe to repeat.
+   */
+  recordQuestStep(questId: string, cleared: number): void {
+    this.data.questProgress[questId] = Math.max(this.data.questProgress[questId] ?? 0, cleared)
   }
 
   /** Battles won in total — one per battle, whatever stood on the other side. */
@@ -202,6 +234,7 @@ export class Profile implements SessionObserver {
       review: this.queue.toJSON(),
       defeated: { ...this.data.defeated },
       squadsBeaten: { ...this.data.squadsBeaten },
+      questProgress: { ...this.data.questProgress },
     }
   }
 }

@@ -187,12 +187,65 @@ describe('Profile', () => {
     })
   })
 
+  describe('walking a quest (G10)', () => {
+    it('a new profile has walked nowhere', () => {
+      expect(new Profile().questProgress).toEqual({})
+    })
+
+    it('a stop cleared is remembered per quest', () => {
+      const profile = new Profile()
+      profile.recordQuestStep('first-path', 1)
+      profile.recordQuestStep('first-path', 2)
+      profile.recordQuestStep('other-path', 1)
+
+      expect(profile.questProgress).toEqual({ 'first-path': 2, 'other-path': 1 })
+    })
+
+    it('a walk never goes backwards', () => {
+      // Replaying a finished path, or an earlier stop of one, must not undo
+      // what is already walked — and it makes the call safe to repeat.
+      const profile = new Profile()
+      profile.recordQuestStep('first-path', 7)
+      profile.recordQuestStep('first-path', 3)
+
+      expect(profile.questProgress['first-path']).toBe(7)
+    })
+
+    it('the walk cannot be edited from outside', () => {
+      const profile = new Profile()
+      profile.recordQuestStep('first-path', 1)
+
+      const copy = profile.questProgress
+      copy['first-path'] = 99
+      expect(profile.questProgress['first-path']).toBe(1)
+    })
+
+    it('a save from before quests reads as none walked', () => {
+      // Same treatment every added field has had: absorbed by the constructor
+      // rather than paid for with a PROFILE_VERSION bump, which wipes.
+      const profile = Profile.fromJSON({ version: PROFILE_VERSION, stars: 5 })
+
+      expect(profile.questProgress).toEqual({})
+      expect(() => profile.recordQuestStep('first-path', 1)).not.toThrow()
+    })
+
+    it('junk in place of the map does not break the game', () => {
+      const profile = Profile.fromJSON({
+        version: PROFILE_VERSION,
+        questProgress: null,
+      } as never)
+
+      expect(profile.questProgress).toEqual({})
+    })
+  })
+
   describe('saving', () => {
     it('survives a write and a read', () => {
       const profile = new Profile()
       profile.name = 'Тимофей'
       profile.recordVictory(['goblin'])
       profile.recordVictory(['peasant', 'robber'], 'two-on-the-path')
+      profile.recordQuestStep('first-path', 4)
       profile.onAnswerAccepted(answer('math:8+5', 'wrong', 3))
       profile.onSessionFinished(sessionResult)
 
@@ -203,6 +256,7 @@ describe('Profile', () => {
       expect(restored.stars).toBe(3)
       expect(restored.defeated).toEqual({ goblin: 1, peasant: 1, robber: 1 })
       expect(restored.squadsBeaten).toEqual({ 'two-on-the-path': 1 })
+      expect(restored.questProgress).toEqual({ 'first-path': 4 })
       expect(restored.victories).toBe(2)
       expect(restored.review.toJSON()).toEqual(profile.review.toJSON())
     })

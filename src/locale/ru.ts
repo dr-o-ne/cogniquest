@@ -448,6 +448,31 @@ export const ru = {
     'motley-band': 'Сборная ватага',
   } as Record<string, string>,
 
+  /**
+   * The quest, which is a walk down a path rather than a pick from a list.
+   *
+   * Two lines and no explanation: the screen shows the mini-boss who ends the
+   * path, and the path shows itself.
+   */
+  quest: {
+    title: 'Тропы',
+    /** Under a path, on its card: how far down it the child has got. */
+    progress: (cleared: number, total: number) => `${cleared} из ${total}`,
+    /** The stop the child is standing on — the only one that can be pressed. */
+    fight: 'В бой',
+  },
+
+  /**
+   * Quest names, keyed by the id in src/game/quests.ts. Every quest in the
+   * table must appear here — there is a test for it.
+   *
+   * Named for the road rather than for who is on it: the card already shows the
+   * mini-boss who ends it.
+   */
+  quests: {
+    'first-path': 'Первая тропа',
+  } as Record<string, string>,
+
   /** Phase 1 measuring rig. Developer tool, kept for when voice starts missing. */
   spike: {
     title: 'Полигон голосового ввода',
