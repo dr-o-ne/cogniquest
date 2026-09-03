@@ -17,6 +17,7 @@
  * the very pile `ASKS` (`monsters.ts`) already deals the arena out of, so a
  * quest and the arena can never disagree about who asks what.
  */
+import { publicUrl } from '@/assets'
 import type { TaskKind } from '@/core/math'
 import { t } from '@/locale'
 import { monstersAsking, type Monster } from './monsters'
@@ -37,11 +38,18 @@ export interface Quest {
   /** In walking order, the boss last. */
   readonly nodes: readonly QuestNode[]
   /**
-   * The face of the quest — what its card on the selection screen shows. The
-   * same monster as the last node's, kept here because that is what the screen
-   * asks for and unwrapping an `Opposition` to find it reads like a riddle.
+   * The monster the last node fields, still kept for its colour — the quest's
+   * card on the selection screen is framed in the same colour the last stop's
+   * own card would be.
    */
   readonly boss: Monster
+  /**
+   * The mini-boss's portrait — what the card on the selection screen actually
+   * shows. Chosen by hand in `BOSS_IMAGES` below, unlike `boss` above: King's
+   * Bounty's own mini-boss for a road is not whoever the generator happened to
+   * draw for its last stop.
+   */
+  readonly image: string
 }
 
 /** A row of the grid, asked at an opponent's own band — one opponent's worth. */
@@ -95,6 +103,17 @@ function assertUniqueIds(entries: readonly Entry[]): void {
   }
 }
 assertUniqueIds(ENTRIES)
+
+// ─────────────────────────────────────────────────────────────────────────
+// BOSS_IMAGES — the King's Bounty mini-boss who fronts each quest's card on
+// the selection screen, keyed by quest id and kept in `public/quests/`
+// (see the README there). A path with no line here has nothing to show, so
+// `build` throws rather than leaving a card blank.
+// ─────────────────────────────────────────────────────────────────────────
+const BOSS_IMAGES: Record<string, string> = {
+  'first-path': '/quests/robber.webp',
+  'second-path': '/quests/joe.webp',
+}
 
 /**
  * Draws a monster for a demand, cycling through the pile rather than always
@@ -180,6 +199,9 @@ function build(id: string, file: QuestFile): Quest {
   const bossOpposition = nodes[nodes.length - 1]!.opposition
   if (bossOpposition.kind !== 'duel') throw new RangeError(`Quest ${id} did not end on a duel`)
 
+  const image = BOSS_IMAGES[id]
+  if (image === undefined) throw new RangeError(`Quest ${id} has no portrait in BOSS_IMAGES`)
+
   return {
     id,
     // Falling back to the id keeps a missing translation visible instead of
@@ -187,6 +209,7 @@ function build(id: string, file: QuestFile): Quest {
     name: t.quests[id] ?? id,
     nodes,
     boss: bossOpposition.monster,
+    image: publicUrl(image),
   }
 }
 

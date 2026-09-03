@@ -1,12 +1,11 @@
 import { QUESTS, type Quest } from '@/game'
 import { t } from '@/locale'
-import { MonsterFace } from './OpponentCard'
 import { TopBar } from './TopBar'
 
 /**
- * Picking a path. Each is offered by the mini-boss who ends it, on the same
- * card the child would meet that boss on — so the screen answers «who is at the
- * end of this?» before it answers anything else.
+ * Picking a path. Each is offered by its own King's Bounty mini-boss, on the
+ * same card the arena draws an opponent on — so the screen answers «who is at
+ * the end of this?» before it answers anything else.
  *
  * The arena's roster and this are two lists of cards, and they are deliberately
  * not one component: what a card stands for differs (an opponent there, a walk
@@ -51,7 +50,11 @@ export function QuestScreen({
 }
 
 /**
- * One path, as its boss's card with a line of progress under it.
+ * One path, as its mini-boss's portrait with a line of progress under it.
+ *
+ * Only the portrait — no rank, no strength, no name — which is the whole
+ * difference from the arena's own card: the child is not sizing up an
+ * opponent here, only picking a road by the face at the end of it.
  *
  * A finished path is struck through and still walkable, exactly like a beaten
  * opponent — and for the same reason: nothing in this game is spent by being
@@ -74,7 +77,7 @@ function QuestCard({
       style={{ '--card': quest.boss.color } as React.CSSProperties}
       onClick={() => onOpen(quest.id)}
     >
-      <MonsterFace monster={quest.boss} />
+      <img className="avatar avatar--card" src={quest.image} alt={quest.name} />
       <span className="card__progress">{t.quest.progress(cleared, quest.nodes.length)}</span>
     </button>
   )
