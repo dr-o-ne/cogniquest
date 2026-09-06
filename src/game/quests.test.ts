@@ -102,18 +102,44 @@ describe('the quest maps', () => {
   })
 
   /**
-   * The first map is written to climb, and that is the half a table cannot hold
-   * on its own: nothing about a list of demands says the walk gets harder, so a
-   * re-shuffle could flatten it without anybody noticing.
+   * A map is written to climb, and that is the half a table cannot hold on its
+   * own: nothing about a list of demands says the walk gets harder, so a
+   * re-shuffle could flatten one without anybody noticing.
    */
-  it('the first map does not get easier as it goes', () => {
-    const levels = questById('first-path').nodes.map((node) =>
-      node.opposition.kind === 'duel' ? node.opposition.monster.level : node.opposition.squad.level,
-    )
+  it('no map gets easier as it goes', () => {
+    for (const quest of QUESTS) {
+      const levels = quest.nodes.map((node) =>
+        node.opposition.kind === 'duel'
+          ? node.opposition.monster.level
+          : node.opposition.squad.level,
+      )
 
-    for (let i = 1; i < levels.length; i++) {
-      expect(levels[i], `stop ${i} is easier than the one before it`).toBeGreaterThanOrEqual(
-        levels[i - 1]!,
+      for (let i = 1; i < levels.length; i++) {
+        expect(
+          levels[i],
+          `${quest.id} stop ${i} is easier than the one before it`,
+        ).toBeGreaterThanOrEqual(levels[i - 1]!)
+      }
+    }
+  })
+
+  /**
+   * And the maps themselves climb, in the order they are offered in — the
+   * `<order>` in a file's name is what the selection screen shows left to
+   * right, so a road placed third has to earn the place by being the harder
+   * walk. Length and the boss's own band are what «harder» comes to here:
+   * a longer road at no easier an end.
+   */
+  it('each path offered is a harder walk than the one before it', () => {
+    for (let i = 1; i < QUESTS.length; i++) {
+      const before = QUESTS[i - 1]!
+      const after = QUESTS[i]!
+
+      expect(after.nodes.length, `${after.id} is no longer than ${before.id}`).toBeGreaterThan(
+        before.nodes.length,
+      )
+      expect(after.boss.level, `${after.id} ends easier than ${before.id}`).toBeGreaterThanOrEqual(
+        before.boss.level,
       )
     }
   })

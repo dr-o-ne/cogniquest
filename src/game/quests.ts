@@ -115,6 +115,7 @@ assertUniqueIds(ENTRIES)
 const BOSS_IMAGES: Record<string, string> = {
   'first-path': '/quests/robber.webp',
   'second-path': '/quests/joe.webp',
+  'third-path': '/quests/hek.webp',
 }
 
 /**

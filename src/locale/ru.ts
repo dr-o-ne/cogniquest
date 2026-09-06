@@ -477,6 +477,7 @@ export const ru = {
   quests: {
     'first-path': 'Первая тропа',
     'second-path': 'Вторая тропа',
+    'third-path': 'Третья тропа',
   } as Record<string, string>,
 
   /**
@@ -488,6 +489,7 @@ export const ru = {
   questBosses: {
     'first-path': 'Грабитель',
     'second-path': 'Безбородый Джо',
+    'third-path': 'Гнилой Хек',
   } as Record<string, string>,
 
   /** Phase 1 measuring rig. Developer tool, kept for when voice starts missing. */
